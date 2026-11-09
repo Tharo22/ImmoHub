@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Besichtigung">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EDF0F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1115" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" type="image/png" href="../shared/icons/icon-192.png">
+<title>Besichtigung</title>
+<style>
+@font-face{font-family:'IBM Plex Mono';src:url(fonts/plexmono-400.woff) format('woff');font-weight:400 500;font-style:normal;font-display:swap}
+@font-face{font-family:'IBM Plex Mono';src:url(fonts/plexmono-600.woff) format('woff');font-weight:600 700;font-style:normal;font-display:swap}
+
+/* Layout: Liste der Besichtigungen. Pro Objekt fünf Reiter (Daten, Check, Fotos, Fragen, Fazit) mit Tab-Leiste unten, große Tippflächen für den Einsatz vor Ort. */
+:root{
+  color-scheme:light;
+  --bg:#EDF0F1; --surface:#FFFFFF; --surface2:#F3F5F6; --ink:#0F1A20; --muted:#55646E; --line:#D3DADE;
+  --accent:#0E6B73; --accent-ink:#FFFFFF; --accent-soft:#D9EEF0;
+  --good:#17804F; --good-soft:#DCF2E6; --mid:#8F5F00; --mid-soft:#FBEECB; --bad:#B3302F; --bad-soft:#F8DDDC;
+  --font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  padding-top:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme: dark){:root{
+  color-scheme:dark;
+  --bg:#0B1115; --surface:#141D23; --surface2:#1A262D; --ink:#E6EEF2; --muted:#9AAAB5; --line:#26343D;
+  --accent:#5CC4CF; --accent-ink:#06161A; --accent-soft:#123338;
+  --good:#47C48A; --good-soft:#12301F; --mid:#E3B341; --mid-soft:#352A0E; --bad:#F27F7D; --bad-soft:#3A1717;}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.45;
+  padding-inline:16px;padding-block:0 110px}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.num,.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.wrap{max-width:640px;margin-inline:auto}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Kopfzeile */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;margin-inline:-16px;padding:10px 16px;background:var(--bg);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.bar h1{font-size:18px;font-weight:600;margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .sub{display:block;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.back{border:0;background:var(--accent-soft);color:var(--accent);border-radius:10px;min-height:40px;padding:0 12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;text-decoration:none}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;min-height:42px;padding:0 14px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.small{min-height:34px;padding:0 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.lnk{border:0;background:none;color:var(--accent);padding:4px 0;font-size:13px;font-weight:600;text-decoration:underline;text-underline-offset:2px}
+main{padding-block:14px 0}
+h2{font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:22px 4px 8px}
+h2:first-child{margin-top:2px}
+.note{font-size:13px;color:var(--muted);margin:8px 4px}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.p-good{background:var(--good-soft);color:var(--good)} .p-mid{background:var(--mid-soft);color:var(--mid)}
+.p-bad{background:var(--bad-soft);color:var(--bad)} .p-none{background:var(--surface2);color:var(--muted)}
+.t-good{color:var(--good)} .t-mid{color:var(--mid)} .t-bad{color:var(--bad)}
+
+/* Listenkarten */
+.cards{display:flex;flex-direction:column;gap:10px}
+.ocard{display:block;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 14px}
+.ocard .t{font-weight:600;font-size:16px}
+.ocard .a{font-size:13px;color:var(--muted);margin-top:1px}
+.ocard .m{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:8px;font-size:13px;color:var(--muted)}
+.ocard .m b{font-family:var(--font-mono);font-weight:500;color:var(--ink);font-variant-numeric:tabular-nums}
+.ocard .p{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.when{font-size:12px;font-weight:600;color:var(--accent);letter-spacing:.02em;margin-bottom:3px}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:26px 18px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:17px;margin-bottom:6px}
+.empty .row-actions{justify-content:center;margin:14px 0 0}
+
+/* Formulare */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 10px;padding:14px}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:12.5px;color:var(--muted)}
+.fld.full{grid-column:1/-1}
+.fld input,.fld textarea,.fld select{width:100%;min-width:0;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 11px;font-size:16px;color:var(--ink)}
+.fld input[inputmode="decimal"],.fld input[inputmode="numeric"]{font-family:var(--font-mono);text-align:right}
+.fld textarea{min-height:88px;resize:vertical;line-height:1.4}
+.unit{position:relative}
+.unit input{padding-right:46px}
+.unit i{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-style:normal;color:var(--muted);font-size:13px;pointer-events:none}
+.derived{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.derived div{background:var(--surface2);padding:10px 14px}
+.derived small{display:block;color:var(--muted);font-size:11.5px}
+.derived b{font-family:var(--font-mono);font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
+
+/* Checkliste */
+.prog{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px}
+.prog .l{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+.prog .l b{color:var(--ink)}
+.meter{display:flex;height:9px;border-radius:5px;overflow:hidden;background:var(--line);margin-top:8px}
+.meter span{display:block;height:100%}
+.m-ok{background:var(--good)} .m-mangel{background:var(--bad)} .m-unklar{background:var(--mid)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;min-height:36px;padding:0 13px;font-size:13.5px;font-weight:500}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+details.sec{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+details.sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px;font-weight:600}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary .c{font-family:var(--font-mono);font-size:13px;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:8px}
+details.sec>summary .c::after{content:"›";font-size:20px;line-height:1;transition:transform .15s}
+details.sec[open]>summary .c::after{transform:rotate(90deg)}
+.item{padding:12px 14px;border-top:1px solid var(--line)}
+.item.s-ok{box-shadow:inset 4px 0 0 var(--good)} .item.s-mangel{box-shadow:inset 4px 0 0 var(--bad)} .item.s-unklar{box-shadow:inset 4px 0 0 var(--mid)}
+.i-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.i-l{font-weight:500}
+.tag{margin-left:8px;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:1px 6px;vertical-align:1px}
+.i-h{font-size:12.5px;color:var(--muted);margin-top:2px}
+.pbtn{flex:none;display:inline-flex;align-items:center;min-height:36px;padding:0 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);font-size:13px;font-weight:600;color:var(--accent);cursor:pointer}
+.seg3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:10px}
+.seg3 button{min-height:44px;border:1px solid var(--line);background:var(--surface2);border-radius:10px;font-weight:500;font-size:14.5px}
+.seg3 button[aria-pressed="true"][data-v="ok"]{background:var(--good-soft);color:var(--good);border-color:var(--good);font-weight:600}
+.seg3 button[aria-pressed="true"][data-v="mangel"]{background:var(--bad-soft);color:var(--bad);border-color:var(--bad);font-weight:600}
+.seg3 button[aria-pressed="true"][data-v="unklar"]{background:var(--mid-soft);color:var(--mid);border-color:var(--mid);font-weight:600}
+.i-fields{display:grid;grid-template-columns:minmax(0,120px) minmax(0,1fr);gap:8px;margin-top:8px}
+.i-fields.one{grid-template-columns:minmax(0,1fr)}
+.i-fields input{width:100%;min-width:0;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:16px}
+.i-fields .cost{position:relative}
+.i-fields .cost input{font-family:var(--font-mono);text-align:right;padding-right:28px}
+.i-fields .cost i{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-style:normal;color:var(--muted);font-size:13px}
+.addrow{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line)}
+.addrow input{flex:1;min-width:0;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 11px;font-size:16px}
+
+/* Fotos */
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.ph{position:relative;display:block;border:0;padding:0;background:var(--surface2);border-radius:10px;overflow:hidden;aspect-ratio:1/1;width:100%}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph span{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.62);color:#fff;font-size:10.5px;padding:3px 6px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.viewer{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.94);display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) 12px calc(12px + env(safe-area-inset-bottom,0px))}
+.viewer .vt{color:#fff;padding:12px 4px;font-size:14px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.viewer .vi{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.viewer img{max-width:100%;max-height:100%;object-fit:contain}
+.viewer .vb{display:flex;gap:8px;justify-content:space-between;padding-top:10px}
+.viewer .btn{background:#222;color:#fff;border-color:#444}
+
+/* Fragen und Unterlagen */
+.q{padding:12px 14px;border-top:1px solid var(--line)}
+.q:first-child{border-top:0}
+.q label.t{display:block;font-weight:500;margin-bottom:6px}
+.q textarea{width:100%;min-height:64px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:16px;line-height:1.4;resize:vertical}
+.chk{display:flex;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--line);min-height:52px}
+.chk:first-child{border-top:0}
+.chk input{width:24px;height:24px;flex:none;accent-color:var(--accent)}
+.chk span{flex:1}
+
+/* Fazit */
+.seg3.verdict button{min-height:48px}
+.seg3 button[aria-pressed="true"][data-v="ja"]{background:var(--good-soft);color:var(--good);border-color:var(--good);font-weight:600}
+.seg3 button[aria-pressed="true"][data-v="vielleicht"]{background:var(--mid-soft);color:var(--mid);border-color:var(--mid);font-weight:600}
+.seg3 button[aria-pressed="true"][data-v="nein"]{background:var(--bad-soft);color:var(--bad);border-color:var(--bad);font-weight:600}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:11px 14px;border-top:1px solid var(--line);align-items:baseline}
+.kv:first-child{border-top:0}
+.kv b{font-family:var(--font-mono);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.kv small{display:block;color:var(--muted);font-size:12px}
+.kv.tot{background:var(--surface2)}
+.xrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:11px 14px;border-top:1px solid var(--line)}
+.xrow:first-child{border-top:0}
+.xrow small{display:block;color:var(--muted);font-size:12px}
+.code{width:100%;min-height:78px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-family:var(--font-mono);font-size:12px;word-break:break-all}
+
+/* Vergleich */
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table.cmp{border-collapse:collapse;min-width:560px;width:100%;font-size:13.5px}
+table.cmp th,table.cmp td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+table.cmp th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface2);font-weight:600;text-align:right}
+table.cmp td:first-child,table.cmp th:first-child{text-align:left;position:sticky;left:0;background:var(--surface2);font-weight:600;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+table.cmp tr:last-child td{border-bottom:0}
+table.cmp td.n{font-family:var(--font-mono)}
+
+/* Tab-Leiste */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;background:var(--surface);
+  border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabbar a{display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 2px;border-radius:10px;text-decoration:none;color:var(--muted);font-size:13px;font-weight:500;min-height:50px;justify-content:center}
+.tabbar a small{font-family:var(--font-mono);font-size:10.5px;opacity:.9;min-height:13px}
+.tabbar a[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.warn{background:var(--mid-soft);color:var(--ink);border:1px solid var(--mid);border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:10px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/*BRAND*/
+@font-face{font-family:'Bricolage Grotesque';src:url(fonts/bricolage-700.woff) format('woff');font-weight:500 800;font-style:normal;font-display:swap}
+.bar{padding-left:58px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 13%,var(--bg)),var(--bg))}
+.bar::before{content:'';position:absolute;left:16px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:8px;background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22 viewBox=%220 0 64 64%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22 stop-opacity=%22.16%22/%3E%3Cstop offset=%221%22 stop-color=%22%23000%22 stop-opacity=%22.14%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22%230E6B73%22/%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22url%28%23g%29%22/%3E%3Cpath d=%22M12 31L32 14l20 17%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M17 28v22h30V28%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M25 38l5 5 10-11%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E") center/cover;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.bar h1,.empty b,.pcard .t,.mcard .t,.tile b,.hero .lab{font-family:'Bricolage Grotesque',var(--font-body)}
+.bar h1{letter-spacing:-.01em}
+.empty::before{content:'';display:block;width:60px;height:60px;margin:0 auto 12px;border-radius:15px;background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22 viewBox=%220 0 64 64%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22 stop-opacity=%22.16%22/%3E%3Cstop offset=%221%22 stop-color=%22%23000%22 stop-opacity=%22.14%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22%230E6B73%22/%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22url%28%23g%29%22/%3E%3Cpath d=%22M12 31L32 14l20 17%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M17 28v22h30V28%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22 stroke-linejoin=%22round%22/%3E%3Cpath d=%22M25 38l5 5 10-11%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E") center/cover;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+/*ENDBRAND*/
+/*VIZ*/
+:root{--c1:#2a78d6;--c2:#eb6834;--neutral:#8a857d}
+@media (prefers-color-scheme: dark){:root{--c1:#3987e5;--c2:#d95926;--neutral:#8f8a82}}
+.viz{padding:8px 12px 4px}.viz svg{display:block;width:100%;height:auto;overflow:visible;max-width:340px;margin:0 auto}
+.viz text{font-family:var(--font-body);fill:var(--muted);font-size:11px}.viz .ink{fill:var(--ink)}.viz .nm{font-family:var(--font-mono)}
+.vrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;padding:8px 14px;border-top:1px solid var(--line);font-size:13.5px}
+.vrow b{font-family:var(--font-mono);font-weight:600}.vrow span.p{font-family:var(--font-mono);color:var(--muted);font-size:12px}
+/*ENDVIZ*/
+</style>
+<link rel="stylesheet" href="../shared/ui.css">
+<script>window.IMMO_I18N=1;</script>
+<script src="../shared/i18n-en.js"></script>
+<script src="../shared/core.js"></script>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Checklisten-Vorlagen ---------- */
+const SECTIONS=[
+ {id:'lage',t:'Lage und Umfeld',items:[
+  {id:'lage_laerm',l:'Lärm',h:'Straße, Bahn, Flugroute, Gewerbe. Fenster öffnen und eine Minute still stehen.'},
+  {id:'lage_oepnv',l:'ÖPNV und Anbindung',h:'Haltestelle, Takt, Fahrzeit zu den wichtigsten Zielen.'},
+  {id:'lage_alltag',l:'Einkauf, Schule und Ärzte in Gehweite'},
+  {id:'lage_parken',l:'Parkplatzsituation',h:'Parkdruck, Anwohnerparken, Stellplatz am Haus.'},
+  {id:'lage_umfeld',l:'Umfeld und Nachbarschaft',h:'Gepflegtheit, Leerstand, Müll, Schmierereien.'},
+  {id:'lage_sonne',l:'Besonnung und Ausrichtung'}]},
+ {id:'geb',t:'Gebäude und Gemeinschaftseigentum',items:[
+  {id:'geb_fassade',l:'Fassade',crit:1,h:'Risse, abplatzender Putz, Feuchteflecken, Dämmung.'},
+  {id:'geb_dach',l:'Dach',crit:1,h:'Außen: Ziegel, Rinnen, Kamin. Im Dachboden: Wasserflecken, Dämmung.'},
+  {id:'geb_treppe',l:'Treppenhaus und Eingang',h:'Der Pflegezustand zeigt, wie gut die WEG verwaltet wird.'},
+  {id:'geb_keller',l:'Keller',crit:1,h:'Feuchte, Geruch, Salzausblühungen, Kellerabteil der Wohnung.'},
+  {id:'geb_heizung',l:'Zentrale Heizung und Technik',crit:1,h:'Alter, Typ, Wartung, geplante Erneuerung und Kosten.'},
+  {id:'geb_aufzug',l:'Aufzug',h:'Falls vorhanden: Zustand, Wartungskosten, Modernisierung.'},
+  {id:'geb_aussen',l:'Außenanlagen, Müllplatz, Fahrradraum'}]},
+ {id:'wo',t:'Wohnung',items:[
+  {id:'wo_grundriss',l:'Grundriss und Raumaufteilung',h:'Zuschnitt, gefangene Räume, Stellfläche für Möbel.'},
+  {id:'wo_feuchte',l:'Feuchtigkeit und Schimmel',crit:1,h:'Ecken, Fensterlaibungen, hinter Schränken, Außenwände, Bad.'},
+  {id:'wo_fenster',l:'Fenster',h:'Alter, Verglasung, Dichtungen, Beschläge, Funktion.'},
+  {id:'wo_waende',l:'Wände und Decken',h:'Risse, Flecken, Tapeten, Putz.'},
+  {id:'wo_boeden',l:'Böden',h:'Belag, Unebenheiten, Trittschall.'},
+  {id:'wo_elektro',l:'Elektrik',crit:1,h:'Zählerkasten, FI-Schalter, Anzahl der Steckdosen, sichtbare Leitungen.'},
+  {id:'wo_wasser',l:'Wasserleitungen und Wasserdruck',h:'Hähne aufdrehen, Armaturen, Abfluss, Leitungsmaterial.'},
+  {id:'wo_bad',l:'Bad',h:'Fliesen, Abdichtung, Lüftung, Sanitärobjekte.'},
+  {id:'wo_kueche',l:'Küche',h:'Im Preis enthalten? Anschlüsse, Geräte, Zustand.'},
+  {id:'wo_heizkoerper',l:'Heizkörper und Thermostate'},
+  {id:'wo_balkon',l:'Balkon oder Loggia',h:'Abdichtung, Brüstung, Entwässerung.'},
+  {id:'wo_schall',l:'Schallschutz',h:'Nachbarn und Trittschall hörbar?'},
+  {id:'wo_netz',l:'Internet und Empfang',h:'Glasfaser, Kabel, Handyempfang in der Wohnung.'}]},
+ {id:'en',t:'Heizung und Energie',items:[
+  {id:'en_ausweis',l:'Energieausweis',h:'Energieklasse, Verbrauchs- oder Bedarfsausweis, Gültigkeit.'},
+  {id:'en_heizart',l:'Heizungsart der Wohnung',h:'Zentral, Gas-Etage, Fernwärme, Wärmepumpe. Alter und Austauschpflichten prüfen.'},
+  {id:'en_daemmung',l:'Dämmung und Wärmebrücken'}]},
+ {id:'ve',t:'Vermietbarkeit',items:[
+  {id:'ve_nachfrage',l:'Nachfrage vor Ort',h:'Zielgruppe, Vermietungsdauer ähnlicher Wohnungen.'},
+  {id:'ve_zustand',l:'Vermietfertig?',h:'Was ist vor der Vermietung zu tun?'},
+  {id:'ve_miete',l:'Erzielbare Miete',h:'Vergleich mit Mietspiegel und aktuellen Inseraten.'},
+  {id:'ve_mieter',l:'Bestehendes Mietverhältnis',h:'Mietvertrag, Miete, Dauer, Kaution, Zahlungsmoral.'},
+  {id:'ve_zubehoer',l:'Stellplatz, Keller, Abstellraum'}]}
+];
+const BJ_HINTS=[
+ {id:'bj_altbau',min:0,max:1949,l:'Altbau: Decken und Statik',h:'Holzbalkendecken, Schallschutz, Risse an tragenden Wänden, Schornsteine.'},
+ {id:'bj_waerme',min:0,max:1978,l:'Wärmedämmung',h:'Vor der ersten Wärmeschutzverordnung (1977) kaum gedämmt. Fenster, Fassade und oberste Geschossdecke prüfen.'},
+ {id:'bj_blei',min:0,max:1973,l:'Bleileitungen im Trinkwasser',crit:1,h:'In älteren Gebäuden verbreitet. Leitungsmaterial im Keller ansehen, bei Verdacht Fachmann fragen.'},
+ {id:'bj_alu',min:1960,max:1980,l:'Aluminium-Leitungen in der Elektrik',crit:1,h:'In den 1960er und 70er Jahren zeitweise üblich. Elektriker prüfen lassen.'},
+ {id:'bj_asbest',min:0,max:1993,l:'Asbestverdacht',crit:1,h:'Bis zum Verbot 1993 verbaut: Bodenbeläge, Fassadenplatten, Nachtspeicheröfen. Nicht anbohren, Fachmann fragen.'},
+ {id:'bj_neu',min:2020,max:3000,l:'Neubau: Gewährleistung',h:'Abnahmeprotokoll, Gewährleistungsfristen und Bauträgerunterlagen klären.'}
+];
+const FRAGEN=[
+ ['q_grund','Warum wird verkauft?'],['q_dauer','Wie lange ist die Wohnung schon im Angebot?'],
+ ['q_interessenten','Gibt es weitere Interessenten oder Preisspielraum?'],
+ ['q_saniert','Was wurde wann saniert (Dach, Fassade, Heizung, Leitungen, Fenster, Bad)?'],
+ ['q_hausgeld','Wie hoch ist das Hausgeld und was ist enthalten?'],
+ ['q_ruecklage','Wie hoch ist die Instandhaltungsrücklage der WEG?'],
+ ['q_massnahmen','Welche Maßnahmen oder Sonderumlagen sind beschlossen oder geplant?'],
+ ['q_streit','Gibt es Streit oder Rechtsstreitigkeiten in der Eigentümergemeinschaft?'],
+ ['q_rueckstaende','Gibt es Hausgeldrückstände einzelner Eigentümer?'],
+ ['q_inventar','Was bleibt in der Wohnung (Küche, Einbauten)?'],
+ ['q_uebergabe','Wann ist die Übergabe möglich?'],
+ ['q_mieter','Vermietet? Mieter, Miete, Mietbeginn, Kaution?']
+];
+const DOCS=[
+ ['d_teilung','Teilungserklärung und Gemeinschaftsordnung'],
+ ['d_protokolle','Protokolle der Eigentümerversammlungen (letzte 3 Jahre)'],
+ ['d_wirtschaft','Wirtschaftsplan und letzte Jahresabrechnung'],
+ ['d_ruecklage','Nachweis der Instandhaltungsrücklage'],
+ ['d_sonder','Beschlüsse zu Sanierungen und Sonderumlagen'],
+ ['d_energie','Energieausweis'],
+ ['d_grundbuch','Grundbuchauszug'],
+ ['d_grundriss','Grundriss und Wohnflächenberechnung'],
+ ['d_mietvertrag','Mietvertrag und Nebenkostenabrechnungen (falls vermietet)']
+];
+
+/* ---------- Hilfen ---------- */
+const $=(s,r)=> (r||document).querySelector(s);
+const {esc,parseDE}=ImmoCore;
+const NF={};
+const nf=d=>NF[d]||(NF[d]=new Intl.NumberFormat(ImmoCore.loc,{minimumFractionDigits:0,maximumFractionDigits:d}));
+const eur=(v,sign)=>(v===null||v===undefined||!isFinite(v))?'–':new Intl.NumberFormat(ImmoCore.loc,{style:'currency',currency:'EUR',maximumFractionDigits:0,signDisplay:sign?'exceptZero':'auto'}).format(v);
+const eur2=v=>(v===null||!isFinite(v))?'–':new Intl.NumberFormat(ImmoCore.loc,{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
+const pct=(v,d)=>(v===null||!isFinite(v))?'–':new Intl.NumberFormat(ImmoCore.loc,{minimumFractionDigits:d==null?1:d,maximumFractionDigits:d==null?1:d}).format(v)+' %';
+const fmtIn=(v,d)=>v?nf(d||0).format(v):'';
+const fmtF=(k,v)=>k==='bj'?(v?String(v):''):fmtIn(v,k==='zi'?1:(k==='qm'?2:0));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function fmtWhen(iso){
+  if(!iso) return '';
+  const d=new Date(iso); if(isNaN(d)) return '';
+  return d.toLocaleString(ImmoCore.loc,{weekday:'short',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+(ImmoCore.lang==='en'?'':' Uhr');
+}
+const b64=(o)=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+
+/* ---------- Daten ---------- */
+const KEY='besichtigung-v1';
+const DEF_SET={apps:{sc:'../immo-schnellcheck/index.html',cp:'../bestands-cockpit/index.html'}};
+let db={v:1,nextId:1,objs:[],settings:JSON.parse(JSON.stringify(DEF_SET))};
+let storageOk=true;
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){ const d=JSON.parse(raw); if(d&&Array.isArray(d.objs)){
+      db=Object.assign(db,d);
+      db.settings=Object.assign({},DEF_SET,d.settings||{}); db.settings.apps=Object.assign({},DEF_SET.apps,(d.settings||{}).apps||{});
+      db.nextId=Math.max(db.nextId||1,...db.objs.map(o=>o.id+1),1);
+    }}
+  }catch(e){ storageOk=false; }
+}
+let saveT=null;
+/* Kachel im Hub: Ampel, Prüfstand und Mängel je verknüpftem Objekt */
+function pubBes(){ try{ const map={}, K={good:'ok',mid:'mid',bad:'bad',none:'none'}; db.objs.forEach(o=>{ if(!o.hubId||map[o.hubId]) return; const a=ampel(o), s=a.s; map[o.hubId]={g:+o.gebot||0,d:s.done,v:s.done+' / '+s.total,s:'geprüft · '+a.t+(s.mangel?' · '+s.mangel+(s.mangel===1?' Mangel':' Mängel'):''),st:K[a.k]||'none'}; }); ImmoCore.pubSum('bes',map); }catch(e){} }
+function save(){
+  clearTimeout(saveT);
+  saveT=setTimeout(flush,250);
+}
+function flush(){
+  try{ localStorage.setItem(KEY,JSON.stringify(db)); }catch(e){ storageOk=false; }
+  pubBes();
+}
+window.addEventListener('pagehide',flush);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) flush(); });
+
+function newObj(extra){
+  const o=Object.assign({id:db.nextId++,created:Date.now(),titel:'',adresse:'',termin:'',kontakt:'',tel:'',link:'',
+    kp:0,bj:0,qm:0,zi:0,etage:'',kalt:0,stell:0,hgUml:0,hgNicht:0,grundst:0,
+    items:{},custom:[],fragen:{},docs:{},notizen:'',extra:0,gebot:0,fazit:'',fazitNotiz:''},extra||{});
+  db.objs.push(o); save(); return o;
+}
+const getObj=id=>db.objs.find(o=>o.id===id);
+/* Kontext für die Kopfzeile: zu welchem Hub-Objekt gehört die Ansicht? */
+window.immoCtx=()=>{ const r=route(); const o=r.v==='obj'&&getObj(r.id); return (o&&o.hubId)||''; };
+/* Kachel im Hub beim Öffnen aktualisieren */
+window.addEventListener('load',()=>{ try{ pubBes(); }catch(e){} });
+
+function sectionsFor(o){
+  const secs=SECTIONS.map(s=>({id:s.id,t:s.t,items:s.items}));
+  const bj=o.bj||0;
+  const hints=BJ_HINTS.filter(h=>bj>0&&bj>=h.min&&bj<=h.max);
+  if(hints.length) secs.unshift({id:'bj',t:'Hinweise zum Baujahr '+bj,items:hints});
+  if((o.custom||[]).length) secs.push({id:'eigen',t:'Eigene Punkte',items:o.custom.map(c=>({id:c.id,l:c.l,custom:1}))});
+  return secs;
+}
+function stats(o){
+  const r={total:0,done:0,ok:0,mangel:0,unklar:0,crit:0,cost:0,critNames:[]};
+  sectionsFor(o).forEach(sec=>sec.items.forEach(it=>{
+    r.total++; const st=o.items[it.id]; if(!st||!st.s) return;
+    r.done++;
+    if(st.s==='ok') r.ok++;
+    else if(st.s==='unklar') r.unklar++;
+    else if(st.s==='mangel'){ r.mangel++; r.cost+=st.cost||0; if(it.crit){ r.crit++; r.critNames.push(it.l);} }
+  }));
+  r.alle=r.cost+(o.extra||0);
+  return r;
+}
+function ampel(o){
+  const s=stats(o);
+  if(!s.done) return {k:'none',t:'Offen',s};
+  const share=o.kp>0?s.alle/o.kp:0;
+  if(s.crit>0||share>=0.10) return {k:'bad',t:'Kritisch',s};
+  if(s.mangel>0||s.unklar>=4||share>=0.04) return {k:'mid',t:'Mit Mängeln',s};
+  if(s.done<s.total*0.6) return {k:'none',t:'In Arbeit',s};
+  return {k:'good',t:'Unauffällig',s};
+}
+const fazitPill=f=>f==='ja'?'<span class="pill p-good">Interessant</span>':f==='vielleicht'?'<span class="pill p-mid">Vielleicht</span>':f==='nein'?'<span class="pill p-bad">Absage</span>':'';
+const ampelPill=a=>`<span class="pill p-${a.k}">${a.t}</span>`;
+const bruttoRendite=o=>o.kp>0?((o.kalt||0)+(o.stell||0))*12/o.kp*100:null;
+
+/* ---------- Fotos (IndexedDB) ---------- */
+let idb=null, idbOk=true;
+const photoCache={};
+function idbOpen(){
+  return new Promise((res,rej)=>{
+    if(!window.indexedDB) return rej(new Error('kein IndexedDB'));
+    const r=indexedDB.open('besichtigung-fotos',1);
+    r.onupgradeneeded=()=>{ const d=r.result;
+      const p=d.createObjectStore('photos',{keyPath:'id'}); p.createIndex('obj','obj');
+      d.createObjectStore('full',{keyPath:'id'}); };
+    r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);
+  });
+}
+const rq=q=>new Promise((res,rej)=>{ q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); });
+const store=(n,m)=>idb.transaction(n,m||'readonly').objectStore(n);
+async function loadPhotos(objId){
+  if(!idb) return [];
+  (photoCache[objId]||[]).forEach(p=>{ if(p.url) URL.revokeObjectURL(p.url); });
+  const list=await rq(store('photos').index('obj').getAll(objId));
+  list.sort((a,b)=>a.ts-b.ts);
+  list.forEach(p=>{ if(!p.url) p.url=URL.createObjectURL(p.thumb||new Blob()); });
+  photoCache[objId]=list; return list;
+}
+function loadImg(file){
+  return new Promise((res,rej)=>{
+    const u=URL.createObjectURL(file), im=new Image();
+    im.onload=()=>{ URL.revokeObjectURL(u); res(im); };
+    im.onerror=()=>{ URL.revokeObjectURL(u); rej(new Error('Bild nicht lesbar')); };
+    im.src=u;
+  });
+}
+function scaled(im,max,q){
+  const k=Math.min(1,max/Math.max(im.naturalWidth,im.naturalHeight));
+  const c=document.createElement('canvas'); c.width=Math.max(1,Math.round(im.naturalWidth*k)); c.height=Math.max(1,Math.round(im.naturalHeight*k));
+  c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+  return new Promise(r=>c.toBlob(b=>r(b),'image/jpeg',q));
+}
+async function addPhotos(objId,itemId,files){
+  if(!idb){ try{ idb=await idbOpen(); }catch(e){ idbOk=false; toast('Fotos lassen sich in diesem Browser nicht speichern.'); render(true); return; } }
+  let fail=0, full_=0;
+  for(const f of files){
+    try{
+      const im=await loadImg(f);
+      const full=await scaled(im,1400,.72), thumb=await scaled(im,280,.7);
+      const rec={id:uid(),obj:objId,item:itemId||'',ts:Date.now(),thumb};
+      await rq(store('photos','readwrite').put(rec));
+      await rq(store('full','readwrite').put({id:rec.id,blob:full}));
+    }catch(e){ if(e&&e.name==='QuotaExceededError') full_++; else fail++; }
+  }
+  await loadPhotos(objId);
+  toast(full_?`Speicher voll: ${full_} Foto(s) nicht gespeichert.`:fail?`${fail} Foto(s) konnten nicht gelesen werden.`:'Foto gespeichert.');
+  render(true);
+}
+async function delPhoto(objId,id){
+  try{ await rq(store('photos','readwrite').delete(id)); await rq(store('full','readwrite').delete(id)); }catch(e){}
+  const l=photoCache[objId]||[]; const p=l.find(x=>x.id===id); if(p&&p.url) URL.revokeObjectURL(p.url);
+  await loadPhotos(objId);
+}
+/* Fotos eines Objekts über das Teilen-Menü weitergeben (Originalgröße wie gespeichert). */
+async function sharePhotos(o){
+  if(!idb) return;
+  const list=await rq(store('photos').index('obj').getAll(o.id)); if(!list.length){ toast('Keine Fotos vorhanden.'); return; }
+  list.sort((a,b)=>a.ts-b.ts);
+  const base=(o.name||o.adresse||'Besichtigung').replace(/[^\wÄÖÜäöüß-]+/g,'-').replace(/-+/g,'-').slice(0,40)||'Besichtigung';
+  const files=[];
+  for(let i=0;i<list.length;i++){ const f=await rq(store('full').get(list[i].id)); const bl=(f&&f.blob)||list[i].thumb; if(bl) files.push(new File([bl],base+'-'+String(i+1).padStart(2,'0')+'.jpg',{type:'image/jpeg'})); }
+  try{ if(navigator.canShare&&navigator.canShare({files})){ await navigator.share({files,title:o.name||'Fotos'}); return; } }
+  catch(e){ if(e&&e.name==='AbortError') return; }
+  toast('Teilen ist hier nicht möglich. Die Fotos stecken in der Backup-Datei des Hubs.');
+}
+async function delPhotosOf(objId){
+  if(!idb) return;
+  const l=await rq(store('photos').index('obj').getAll(objId));
+  for(const p of l){ try{ await rq(store('photos','readwrite').delete(p.id)); await rq(store('full','readwrite').delete(p.id)); }catch(e){} }
+  delete photoCache[objId];
+}
+
+/* ---------- Meldungen und Bestätigung ---------- */
+let toastT=null;
+function toast(msg){
+  let t=$('#toast');
+  if(!t){ t=document.createElement('div'); t.id='toast'; t.setAttribute('role','status');
+    t.style.cssText='position:fixed;left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:30;max-width:560px;margin:auto;background:var(--ink);color:var(--bg);padding:11px 14px;border-radius:12px;font-size:14px;text-align:center';
+    document.body.appendChild(t); }
+  t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>{ t.hidden=true; },2600);
+}
+let pend=null, pendT=null;
+let bPaste='';
+function twice(key){ if(pend===key){ pend=null; return true; } pend=key; clearTimeout(pendT); pendT=setTimeout(()=>{ pend=null; render(true); },4000); render(true); return false; }
+
+/* ---------- Routing ---------- */
+function route(){
+  const p=location.hash.replace(/^#\/?/,'').split('/').filter(Boolean);
+  if(p[0]==='o'&&getObj(+p[1])) return {v:'obj',id:+p[1],tab:['daten','check','fotos','fragen','fazit'].includes(p[2])?p[2]:'daten'};
+  if(p[0]==='vergleich') return {v:'cmp'};
+  if(p[0]==='einstellungen') return {v:'set'};
+  return {v:'list'};
+}
+function nav(h,replace){
+  if(replace||location.hash===h){ if(replace) history.replaceState(null,'',h); render(); }
+  else location.hash=h;
+}
+window.addEventListener('hashchange',()=>render());
+
+let checkFilter='all';
+const collapsed={};
+document.addEventListener('toggle',e=>{ const d=e.target; if(d&&d.dataset&&d.dataset.sec) collapsed[d.dataset.sec]=!d.open; },true);
+
+/* ---------- Ansichten ---------- */
+const app=$('#app');
+function header(title,sub,back){
+  return `<div class="bar">${back?`<a class="back" href="${back}" data-nav>‹ Zurück</a>`:''}<h1>${sub?`<span class="sub">${esc(sub)}</span>`:''}${esc(title)}</h1></div>`;
+}
+function hubPick(){
+  const taken=new Set(db.objs.map(x=>x.hubId).filter(Boolean)), free=hubMasters().filter(m=>!taken.has(m.id)); if(!free.length) return '';
+  return `<label class="fld" style="margin:0 0 10px">Besichtigung für ein Objekt aus dem Hub anlegen<select data-hubnew="1"><option value="">– Objekt wählen –</option>${free.map(m=>`<option value="${esc(m.id)}">${esc(m.name||'Objekt')}${m.adresse?' · '+esc(m.adresse):''}</option>`).join('')}</select></label>`;
+}
+function viewList(){
+  const now=Date.now()-3*3600e3;
+  const up=db.objs.filter(o=>o.termin&&new Date(o.termin).getTime()>=now).sort((a,b)=>new Date(a.termin)-new Date(b.termin));
+  const rest=db.objs.filter(o=>!up.includes(o)).sort((a,b)=>(new Date(b.termin||b.created))-(new Date(a.termin||a.created)));
+  const card=o=>{
+    const a=ampel(o), s=a.s, ppm=o.qm>0?o.kp/o.qm:0;
+    return `<a class="ocard" href="#/o/${o.id}/daten" data-nav>
+      ${o.termin?`<div class="when">${esc(fmtWhen(o.termin))}</div>`:''}
+      <div class="t">${esc(o.titel||'Ohne Bezeichnung')}</div>${o.adresse?`<div class="a">${esc(o.adresse)}</div>`:''}
+      <div class="m">${o.kp?`<span><b>${eur(o.kp)}</b></span>`:''}${o.qm?`<span><b>${nf(1).format(o.qm)}</b> m²</span>`:''}${ppm?`<span><b>${eur(ppm)}</b>/m²</span>`:''}${o.bj?`<span>Bj. <b>${o.bj}</b></span>`:''}</div>
+      <div class="p">${ampelPill(a)}<span class="pill p-none">${s.done} von ${s.total} geprüft</span>${s.alle>0?`<span class="pill p-none">Mängel ${eur(s.alle)}</span>`:''}${fazitPill(o.fazit)}</div></a>`;
+  };
+  let h=`<div class="bar"><h1><span class="sub">Immobilien</span>Besichtigungen</h1><a class="btn small" href="#/einstellungen" data-nav>Einstellungen</a></div><main>`;
+  if(!storageOk) h+=`<div class="warn">Speichern im Browser ist nicht möglich. Deine Eingaben gehen beim Schließen verloren.</div>`;
+  if(!db.objs.length){
+    h+=hubPick()+`<div class="empty"><b>Noch keine Besichtigung</b>Lege vor dem Termin ein Objekt an. Die Checkliste, die Fragen und die Unterlagenliste sind schon vorbereitet.
+      <div class="row-actions"><button class="btn primary" data-act="new">Neue Besichtigung</button><button class="btn" data-act="sample">Beispiel ansehen</button></div></div>`;
+  }else{
+    h+=hubPick()+`<div class="row-actions"><button class="btn primary" data-act="new">Neue Besichtigung</button>${db.objs.length>1?`<a class="btn" href="#/vergleich" data-nav>Vergleichen</a>`:''}</div>`;
+    if(up.length) h+=`<h2>Anstehend</h2><div class="cards">${up.map(card).join('')}</div>`;
+    if(rest.length) h+=`<h2>${up.length?'Bisherige und ohne Termin':'Besichtigungen'}</h2><div class="cards">${rest.map(card).join('')}</div>`;
+  }
+  return h+`</main>`;
+}
+
+
+/* ---------- Gemeinsames Objekt im Hub ---------- */
+const {hubRead,hubSave,hubMasters,hubAvail}=ImmoCore, HUBKEY=ImmoCore.HUBKEY;
+const HSH=[['titel','name'],['adresse','adresse'],['kp','kp'],['qm','qm'],['bj','bj'],['zi','zi'],['kalt','kalt']];
+const hEmpty=ImmoCore.hEmpty;
+const hSame=(a,b)=>(typeof a==='number'||typeof b==='number')?Math.abs((+a||0)-(+b||0))<0.005:String(a||'').trim()===String(b||'').trim();
+const hubAvailable=()=>location.protocol==='app:'||hubRead()!==null;
+/* Leere Felder werden von der anderen Seite gefüllt, bei Abweichung gilt das Hub-Objekt. */
+/* Beim ersten Verknüpfen füllt die App leere Felder im Hub. Danach gilt der Hub, auch dort gelöschte Werte werden hier geleert. */
+function hubMerge(o,m){
+  let chO=false, chM=false; const first=!o.hubSynced;
+  HSH.forEach(([bk,mk])=>{ const ov=o[bk], mv=m[mk];
+    if(hEmpty(mv)&&!hEmpty(ov)){ if(first){ m[mk]=ov; chM=true; } else if(mk!=='name'){ o[bk]=(mk==='adresse')?'':0; chO=true; } }
+    else if(!hEmpty(mv)&&!hSame(mv,ov)){ o[bk]=mv; chO=true; } });
+  if(first){ o.hubSynced=true; chO=true; }
+  return {chO,chM};
+}
+function syncFromHub(){
+  const h=hubRead(); if(!h) return; let chB=false, chH=false;
+  db.objs.forEach(o=>{ if(!o.hubId) return; const m=(h.objs||[]).find(x=>x.id===o.hubId);
+    if(!m){ delete o.hubId; chB=true; return; }
+    m.links=m.links||{}; if(String(m.links.bes||'')!==String(o.id)&&(!m.links.bes||m.links.bes==='pending')){ m.links.bes=String(o.id); chH=true; }
+    const r=hubMerge(o,m); if(r.chO) chB=true; if(r.chM) chH=true; });
+  if(chH) hubSave(h); if(chB) save();
+}
+function hubWriteField(o,bk){
+  if(!o.hubId) return; const h=hubRead(); if(!h) return; const m=(h.objs||[]).find(x=>x.id===o.hubId); if(!m) return;
+  const pair=HSH.find(x=>x[0]===bk); if(!pair) return; m[pair[1]]=o[bk]; hubSave(h);
+}
+function hubLink(o,mid){
+  const h=hubRead()||{v:1,urls:{},map:{},lastBackup:0,objs:[]}; const m=(h.objs||[]).find(x=>x.id===mid); if(!m) return false;
+  o.hubId=m.id; m.links=m.links||{}; m.links.bes=String(o.id); hubMerge(o,m); hubSave(h); save(); return true;
+}
+function hubMake(o){
+  const h=hubRead()||{v:1,urls:{},map:{},lastBackup:0,objs:[]}; if(!Array.isArray(h.objs)) h.objs=[];
+  const m={id:'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:o.titel||'Neues Objekt',adresse:o.adresse||'',kp:o.kp||0,qm:o.qm||0,bj:o.bj||0,zi:o.zi||0,kalt:o.kalt||0,links:{bes:String(o.id)}};
+  h.objs.push(m); hubSave(h); o.hubId=m.id; save();
+}
+function hubUnlink(o){ const h=hubRead(); if(h){ const m=(h.objs||[]).find(x=>x.id===o.hubId); if(m&&m.links&&String(m.links.bes)===String(o.id)){ delete m.links.bes; hubSave(h); } } delete o.hubId; delete o.hubSynced; save(); }
+function hubCard(o){
+  if(!hubAvailable()) return '';
+  const ms=hubMasters();
+  if(o.hubId){ const m=ms.find(x=>x.id===o.hubId);
+    return `<h2>Hub-Objekt</h2><div class="card"><div class="fields"><p style="margin:0;grid-column:1/-1"><b>${esc(m?m.name:'Objekt')}</b><br><span class="note" style="margin:0">Bezeichnung, Adresse, Kaufpreis, Fläche, Baujahr, Zimmer und Kaltmiete sind mit dem Hub abgeglichen. Änderungen hier gelten dort ebenfalls.</span></p>
+      <button class="btn small" data-act="hubunlink" style="grid-column:1/-1;justify-self:start">Verknüpfung lösen</button></div></div>`; }
+  const taken=new Set(db.objs.map(x=>x.hubId).filter(Boolean)), free=ms.filter(m=>!taken.has(m.id));
+  return `<h2>Hub-Objekt</h2><div class="card"><div class="fields">
+    ${free.length?`<label class="fld full">Mit einem Objekt aus dem Hub verknüpfen<select data-hublink="1"><option value="">– auswählen –</option>${free.map(m=>`<option value="${esc(m.id)}">${esc(m.name||'Objekt')}${m.adresse?' · '+esc(m.adresse):''}</option>`).join('')}</select></label>`:''}
+    <button class="btn small" data-act="hubmake" style="grid-column:1/-1;justify-self:start">Als neues Hub-Objekt speichern</button></div></div>`;
+}
+
+const F_OBJ=[['titel','Bezeichnung','text','full','z. B. 2-Zimmer-Wohnung Hauptstraße 5'],['adresse','Adresse','text','full'],
+  ['termin','Termin','datetime-local','full'],['kontakt','Ansprechpartner','text'],['tel','Telefon','tel'],['link','Link zur Anzeige','url','full']];
+const F_NUM=[['kp','Kaufpreis','€'],['bj','Baujahr',''],['qm','Wohnfläche','m²'],['zi','Zimmer',''],
+  ['kalt','Kaltmiete (Ziel oder Ist), pro Monat','€'],['stell','Stellplatz, pro Monat','€'],
+  ['hgUml','Hausgeld umlagefähig, pro Monat','€'],['hgNicht','Hausgeld nicht umlagefähig, pro Monat','€'],['grundst','Grundsteuer, pro Jahr','€']];
+function fieldIn(o,f){
+  const [k,l,t,w,ph]=f;
+  return `<label class="fld ${w||''}">${l}<input type="${t}" data-f="${k}" data-t="txt" value="${esc(o[k])}" ${ph?`placeholder="${esc(ph)}"`:''} autocomplete="off"></label>`;
+}
+function derivedHtml(o){
+  const warm=(o.kalt||0)+(o.stell||0)+(o.hgUml||0)+(o.grundst||0)/12;
+  return `<div><small>Kaufpreis pro m²</small><b>${o.qm>0&&o.kp>0?eur(o.kp/o.qm):'–'}</b></div>
+    <div><small>Kaltmiete pro m²</small><b>${o.qm>0&&o.kalt>0?eur2(o.kalt/o.qm):'–'}</b></div>
+    <div><small>Bruttomietrendite</small><b>${pct(bruttoRendite(o),2)}</b></div>
+    <div><small>Warmmiete pro Monat</small><b>${warm>0?eur(warm):'–'}</b></div>`;
+}
+function tabDaten(o){
+  const nums=F_NUM.map(([k,l,u])=>{
+    const num=(k==='bj'||k==='zi')?'numeric':'decimal';
+    return `<label class="fld"><span>${l}</span><span class="unit"><input inputmode="${num}" data-f="${k}" data-t="num" value="${fmtF(k,o[k])}" autocomplete="off">${u?`<i>${u}</i>`:''}</span></label>`;
+  }).join('');
+  return hubCard(o)+`<h2>Termin und Kontakt</h2><div class="card"><div class="fields">${F_OBJ.map(f=>fieldIn(o,f)).join('')}</div>
+    ${(o.tel||o.link)?`<div class="fields" style="padding-top:0">${o.tel?`<a class="btn" href="tel:${esc(o.tel.replace(/[^\d+]/g,''))}">Anrufen</a>`:''}${o.link&&/^https?:/i.test(o.link)?`<a class="btn" href="${esc(o.link)}" target="_blank" rel="noopener">Anzeige öffnen</a>`:''}</div>`:''}</div>
+    <h2>Eckdaten und Miete</h2><div class="card"><div class="fields">${nums}</div><div class="derived" id="derived">${derivedHtml(o)}</div></div>
+    <p class="note">Diese Werte nimmst du später in den Schnellcheck mit. Schätze die Miete, wenn du die Ist-Miete nicht kennst.</p>
+    <h2>Notizen</h2><div class="card"><div class="fields"><label class="fld full"><span class="vh">Notizen</span><textarea data-f="notizen" data-t="txt" placeholder="Allgemeine Eindrücke, Namen, Absprachen">${esc(o.notizen)}</textarea></label></div></div>
+    <div class="row-actions" style="margin-top:14px"><button class="btn danger" data-act="delobj">${pend==='delobj'?'Wirklich löschen?':'Besichtigung löschen'}</button></div>`;
+}
+
+function itemHtml(o,it){
+  const st=o.items[it.id]||{}, n=(photoCache[o.id]||[]).filter(p=>p.item===it.id).length;
+  const seg=[['ok','In Ordnung'],['mangel','Mangel'],['unklar','Unklar']].map(([v,l])=>`<button data-act="st" data-id="${it.id}" data-v="${v}" aria-pressed="${st.s===v}">${l}</button>`).join('');
+  const fields=st.s?`<div class="i-fields ${st.s==='mangel'?'':'one'}">${st.s==='mangel'?`<label class="cost"><span class="vh">Kosten in Euro</span><input inputmode="decimal" data-item="${it.id}" data-fld="cost" value="${fmtIn(st.cost)}" placeholder="Kosten"><i>€</i></label>`:''}<input type="text" data-item="${it.id}" data-fld="note" value="${esc(st.note||'')}" placeholder="Notiz" aria-label="Notiz"></div>`:'';
+  return `<div class="item ${st.s?'s-'+st.s:''}" id="i-${it.id}"><div class="i-top"><div><span class="i-l">${esc(it.l)}</span>${it.crit?'<span class="tag">Wichtig</span>':''}</div>
+    ${idbOk?`<label class="pbtn">Foto${n?` (${n})`:''}<input class="vh" type="file" accept="image/*" multiple data-photo="${it.id}"></label>`:''}</div>
+    ${it.h?`<div class="i-h">${esc(it.h)}</div>`:''}<div class="seg3" role="group" aria-label="Bewertung ${esc(it.l)}">${seg}</div>${fields}
+    ${it.custom?`<button class="lnk" data-act="delcustom" data-id="${it.id}">${pend==='cu'+it.id?'Wirklich entfernen?':'Punkt entfernen'}</button>`:''}</div>`;
+}
+function tabCheck(o){
+  const s=stats(o), pc=v=>s.total?v/s.total*100:0;
+  const flt=it=>{ const st=(o.items[it.id]||{}).s; return checkFilter==='all'||(checkFilter==='open'&&!st)||checkFilter===st; };
+  let h=`<div class="prog"><div class="l"><span><b>${s.done}</b> von ${s.total} geprüft</span><span>${s.mangel} Mängel · ${s.unklar} unklar</span></div>
+    <div class="meter" aria-hidden="true"><span class="m-ok" style="width:${pc(s.ok)}%"></span><span class="m-mangel" style="width:${pc(s.mangel)}%"></span><span class="m-unklar" style="width:${pc(s.unklar)}%"></span></div></div>
+    <div class="chips" role="group" aria-label="Filter">${[['all','Alle'],['open','Offen'],['mangel','Mängel'],['unklar','Unklar']].map(([v,l])=>`<button class="chip" data-act="flt" data-v="${v}" aria-pressed="${checkFilter===v}">${l}</button>`).join('')}</div>`;
+  if(!o.bj) h+=`<p class="note">Trage im Reiter „Daten“ das Baujahr ein. Dann ergänzt die App Hinweise, die zum Alter des Hauses passen.</p>`;
+  sectionsFor(o).forEach(sec=>{
+    const items=sec.items.filter(flt), d=sec.items.filter(it=>(o.items[it.id]||{}).s).length;
+    if(!items.length&&sec.id!=='eigen') return;
+    h+=`<details class="sec" data-sec="${sec.id}" ${collapsed[sec.id]?'':'open'}><summary><span>${esc(sec.t)}</span><span class="c">${d}/${sec.items.length}</span></summary>${items.map(it=>itemHtml(o,it)).join('')}</details>`;
+  });
+  h+=`<details class="sec" data-sec="add" ${collapsed.add===false?'open':''}><summary><span>Eigenen Punkt hinzufügen</span><span class="c"></span></summary><form class="addrow" id="addForm"><input id="addLabel" type="text" placeholder="z. B. Wasserflecken im Treppenhaus" aria-label="Eigener Punkt" maxlength="80"><button class="btn primary" type="submit">Hinzufügen</button></form></details>`;
+  return h;
+}
+function tabFotos(o){
+  const list=photoCache[o.id]||[];
+  const label=id=>{ if(!id) return 'Allgemein'; for(const sec of sectionsFor(o)){ const it=sec.items.find(x=>x.id===id); if(it) return it.l; } return 'Allgemein'; };
+  if(!idbOk) return `<div class="warn">Fotos lassen sich in diesem Browser nicht speichern.</div>`;
+  return `<div class="row-actions"><label class="btn primary">Foto aufnehmen oder auswählen<input class="vh" type="file" accept="image/*" multiple data-photo=""></label>${list.length?`<button class="btn" data-act="phshare">Fotos teilen</button>`:''}</div>
+   ${list.length?`<div class="grid">${list.map(p=>`<button class="ph" data-act="view" data-id="${p.id}" aria-label="Foto ansehen: ${esc(label(p.item))}"><img src="${p.url}" alt=""><span>${esc(label(p.item))}</span></button>`).join('')}</div>`:
+   `<div class="empty"><b>Noch keine Fotos</b>Fotografiere Mängel direkt im Reiter „Check“. Dann hängt das Foto am richtigen Punkt. Allgemeine Fotos legst du hier ab.</div>`}
+   <p class="note">Fotos werden verkleinert und nur auf diesem Gerät gespeichert. Sie stecken im automatischen Backup und in der Backup-Datei des Hubs, nicht in der Textsicherung dieser App.</p>`;
+}
+function tabFragen(o){
+  const got=DOCS.filter(([id])=>o.docs[id]).length;
+  return `<h2>Fragen an Verkäufer oder Makler</h2><div class="card">${FRAGEN.map(([id,q])=>`<div class="q"><label class="t" for="q-${id}">${esc(q)}</label><textarea id="q-${id}" data-q="${id}" placeholder="Antwort">${esc(o.fragen[id]||'')}</textarea></div>`).join('')}</div>
+   <h2>Unterlagen anfordern · ${got} von ${DOCS.length} erhalten</h2><div class="card">${DOCS.map(([id,l])=>`<label class="chk"><input type="checkbox" data-doc="${id}" ${o.docs[id]?'checked':''}><span>${esc(l)}</span></label>`).join('')}</div>
+   <p class="note">Hake ab, was du bekommen hast. Die Unterlagen entscheiden oft mehr über den Kauf als die Wohnung selbst.</p>`;
+}
+const SHORT={lage:'Lage',geb:'Gebäude',wo:'Wohnung',en:'Energie',ve:'Vermietbar',bj:'Baujahr',eigen:'Eigene'};
+function radar(o){
+  const ax=sectionsFor(o).map(sec=>{ let n=0,ok=0,m=0,u=0; sec.items.forEach(it=>{ const st=o.items[it.id]; if(!st||!st.s) return; n++; if(st.s==='ok') ok++; else if(st.s==='mangel') m++; else u++; }); return {id:sec.id,l:SHORT[sec.id]||sec.t,n,ok,m,u,v:n?ok/n:null}; }).filter(a=>a.n>0);
+  if(ax.length<3) return '';
+  const cx=150,cy=115,R=78,N=ax.length, ang=i=>-Math.PI/2+i*2*Math.PI/N, P=(i,f)=>[cx+R*f*Math.cos(ang(i)),cy+R*f*Math.sin(ang(i))];
+  let g=''; [0.5,1].forEach(f=>{ g+=`<polygon points="${ax.map((_,i)=>P(i,f).map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="var(--line)" stroke-width="${f===1?1.2:.7}"/>`; });
+  ax.forEach((a,i)=>{ const [x,y]=P(i,1); g+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width=".7"/>`; });
+  g+=`<polygon points="${ax.map((a,i)=>P(i,Math.max(0.03,a.v)).map(v=>v.toFixed(1)).join(',')).join(' ')}" fill="var(--c1)" fill-opacity=".18" stroke="var(--c1)" stroke-width="2" stroke-linejoin="round"/>`;
+  ax.forEach((a,i)=>{ const [x,y]=P(i,Math.max(0.03,a.v)); g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="var(--c1)" stroke="var(--surface)" stroke-width="2"><title>${a.l}: ${a.ok} von ${a.n} in Ordnung</title></circle>`;
+    const [lx,ly]=P(i,1.2), an=Math.abs(lx-cx)<8?'middle':(lx>cx?'start':'end'); g+=`<text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" text-anchor="${an}" class="ink" style="font-size:11px">${a.l}</text>`; });
+  const rows=ax.map(a=>`<div class="vrow"><span>${esc(a.l)}</span><b>${a.ok} von ${a.n}</b><span class="p">${Math.round(a.v*100)} %</span></div>`).join('');
+  return `<h2>Zustand je Bereich</h2><div class="card"><div class="viz"><svg viewBox="0 0 300 230" role="img" aria-label="Anteil der Punkte in Ordnung je Bereich: ${ax.map(a=>a.l+' '+Math.round(a.v*100)+' Prozent').join(', ')}">${g}</svg></div>${rows}</div><p class="note">Anteil der geprüften Punkte ohne Mangel oder offene Frage. Je weiter außen, desto besser. Bereiche ohne geprüfte Punkte fehlen.</p>`;
+}
+function tabFazit(o){
+  const a=ampel(o), s=a.s, alle=s.alle, preis=o.gebot>0?o.gebot:o.kp;
+  const seg=[['ja','Interessant'],['vielleicht','Vielleicht'],['nein','Absage']].map(([v,l])=>`<button data-act="fz" data-v="${v}" aria-pressed="${o.fazit===v}">${l}</button>`).join('');
+  const apps=(location.protocol==='app:')?DEF_SET.apps:db.settings.apps;
+  const crit=s.critNames.length?`<p class="note t-bad">Wichtige Mängel: ${esc(s.critNames.join(', '))}</p>`:'';
+  return `<h2>Gesamteindruck</h2><div class="card"><div class="fields" style="grid-template-columns:1fr"><div class="seg3 verdict" role="group" aria-label="Gesamteindruck">${seg}</div>
+    <label class="fld full">Notiz zum Fazit<textarea data-f="fazitNotiz" data-t="txt" placeholder="Was spricht dafür, was dagegen?">${esc(o.fazitNotiz)}</textarea></label></div></div>
+   <h2>Zustand</h2><div class="card"><div class="kv"><span>Einschätzung nach Checkliste</span><span>${ampelPill(a)}</span></div>
+    <div class="kv"><span>Geprüfte Punkte</span><b>${s.done} von ${s.total}</b></div>
+    <div class="kv"><span>Mängel / unklare Punkte</span><b>${s.mangel} / ${s.unklar}</b></div></div>${crit}
+   ${radar(o)}
+   <h2>Kosten und Preis</h2><div class="card"><div class="kv"><span>Mängelkosten aus der Checkliste</span><b>${eur(s.cost)}</b></div>
+    <div class="fields" style="grid-template-columns:1fr 1fr"><label class="fld">Weitere Kosten (Küche, Reserve)<span class="unit"><input inputmode="decimal" data-f="extra" data-t="num" value="${fmtIn(o.extra)}"><i>€</i></span></label>
+     <label class="fld">Mein Gebot<span class="unit"><input inputmode="decimal" data-f="gebot" data-t="num" value="${fmtIn(o.gebot)}"><i>€</i></span></label></div>
+    <div class="kv tot" id="kvTot"><span>Kosten vor Vermietung gesamt<small>${o.kp>0?pct(alle/o.kp*100,1)+' vom Kaufpreis':''}</small></span><b>${eur(alle)}</b></div>
+    <div class="kv" id="kvNeg"><span>Kaufpreis abzüglich Mängelkosten<small>Argument für die Preisverhandlung</small></span><b>${o.kp>0?eur(o.kp-alle):'–'}</b></div></div>
+   <h2>In andere Apps übernehmen</h2><div class="card">
+    <div class="xrow"><span>Schnellcheck<small>Preis ${eur(preis)}, Fläche, Miete, Hausgeld, Kosten vor Vermietung</small></span><button class="btn small" data-act="xfer" data-app="sc">Öffnen</button></div>
+    <div class="xrow"><span>Bestands-Cockpit<small>Als neues Objekt anlegen</small></span><button class="btn small" data-act="xfer" data-app="cp">Öffnen</button></div>
+    <div class="fields" style="grid-template-columns:1fr"><button class="btn" data-act="code">Übergabecode kopieren</button>
+     <textarea class="code" id="codeBox" readonly hidden aria-label="Übergabecode"></textarea></div></div>
+   <p class="note">Die Links öffnen die jeweilige App im selben Fenster und füllen die Felder. Läuft eine App als Home-Bildschirm-Symbol, hat sie einen eigenen Speicher. Kopiere dann den Übergabecode und füge ihn dort im Bereich „Aus Besichtigung übernehmen“ ein.</p>`;
+}
+function tabs(o,cur){
+  const s=stats(o), np=(photoCache[o.id]||[]).length, got=DOCS.filter(([id])=>o.docs[id]).length;
+  const t=[['daten','Daten',''],['check','Check',`${s.done}/${s.total}`],['fotos','Fotos',np?String(np):''],['fragen','Fragen',`${got}/${DOCS.length}`],['fazit','Fazit','']];
+  return `<nav class="tabbar" aria-label="Bereiche">${t.map(([id,l,sm])=>`<a href="#/o/${o.id}/${id}" data-nav data-replace ${cur===id?'aria-current="page"':''}>${l}<small>${sm}</small></a>`).join('')}</nav>`;
+}
+function viewObj(r){
+  const o=getObj(r.id), a=ampel(o);
+  const body={daten:tabDaten,check:tabCheck,fotos:tabFotos,fragen:tabFragen,fazit:tabFazit}[r.tab](o);
+  return `<div class="bar"><a class="back" href="#/" data-nav>‹ Liste</a><h1><span class="sub">${esc(fmtWhen(o.termin)||'Besichtigung')}</span>${esc(o.titel||'Ohne Bezeichnung')}</h1>${ampelPill(a)}</div><main>${body}</main>${tabs(o,r.tab)}`;
+}
+function viewCmp(){
+  const os=db.objs.slice().sort((a,b)=>a.id-b.id);
+  const row=(l,f,cls)=>`<tr><td>${l}</td>${os.map(o=>`<td class="${cls||'n'}">${f(o)}</td>`).join('')}</tr>`;
+  return header('Vergleich','Besichtigungen','#/')+`<main>${os.length<2?`<div class="empty"><b>Zu wenig Objekte</b>Lege mindestens zwei Besichtigungen an.</div>`:
+   `<div class="scroll"><table class="cmp"><thead><tr><th>Kennzahl</th>${os.map(o=>`<th>${esc((o.titel||'Objekt '+o.id).slice(0,18))}</th>`).join('')}</tr></thead><tbody>
+    ${row('Termin',o=>o.termin?esc(new Date(o.termin).toLocaleDateString(ImmoCore.loc)):'–')}
+    ${row('Kaufpreis',o=>o.kp?eur(o.kp):'–')}
+    ${row('Wohnfläche',o=>o.qm?nf(1).format(o.qm)+' m²':'–')}
+    ${row('Preis pro m²',o=>o.qm>0&&o.kp>0?eur(o.kp/o.qm):'–')}
+    ${row('Baujahr',o=>o.bj||'–')}
+    ${row('Kaltmiete',o=>o.kalt?eur(o.kalt):'–')}
+    ${row('Bruttorendite',o=>pct(bruttoRendite(o),2))}
+    ${row('Mängelkosten',o=>{const s=stats(o); return s.alle?eur(s.alle):'–';})}
+    ${row('Mängel / unklar',o=>{const s=stats(o); return s.mangel+' / '+s.unklar;})}
+    ${row('Geprüft',o=>{const s=stats(o); return s.done+'/'+s.total;})}
+    ${row('Einschätzung',o=>ampelPill(ampel(o)),'')}
+    ${row('Fazit',o=>fazitPill(o.fazit)||'–','')}
+    </tbody></table></div><p class="note">Zum Öffnen eines Objekts gehst du zurück zur Liste. Die Bruttorendite nutzt Kaltmiete und Stellplatz ohne Nebenkosten.</p>`}</main>`;
+}
+function viewSet(){
+  const s=db.settings;
+  return header('Einstellungen','Besichtigungen','#/')+`<main>
+   <h2>Andere Apps</h2><div class="card"><div class="fields" style="grid-template-columns:1fr">
+    <label class="fld">Adresse des Schnellchecks<input type="text" data-set="sc" value="${esc(s.apps.sc)}" autocapitalize="off" autocorrect="off"></label>
+    <label class="fld">Adresse des Bestands-Cockpits<input type="text" data-set="cp" value="${esc(s.apps.cp)}" autocapitalize="off" autocorrect="off"></label>
+    </div></div>
+   <p class="note">Die Voreinstellung gilt, wenn alle Apps als Repositories mit den Namen immo-schnellcheck und bestands-cockpit unter demselben GitHub-Konto liegen. Sonst trage die vollständigen Adressen ein.</p>
+   <h2>Sicherung</h2><div class="card"><div class="fields" style="grid-template-columns:1fr"><textarea class="code" id="backup" aria-label="Sicherung als Text" style="min-height:110px"></textarea>
+    <div class="row-actions" style="margin:0"><button class="btn" data-act="bcopy">Kopieren</button><button class="btn" data-act="bload">${pend==='bload'?'Alle Daten ersetzen?':'Eingefügten Text laden'}</button></div>
+    <div class="note" id="bmsg" aria-live="polite" style="margin:0"></div></div></div>
+   <p class="note">Die Sicherung enthält alle Eingaben außer den Fotos. Fotos sicherst du über die Backup-Datei im Hub. Sichere regelmäßig. Safari kann Website-Daten löschen, wenn du die Seite lange nicht öffnest. Eine App auf dem Home-Bildschirm ist davon nicht betroffen.</p>
+   <h2>Zurücksetzen</h2><div class="row-actions"><button class="btn danger" data-act="wipe">${pend==='wipe'?'Wirklich alles löschen?':'Alle Daten löschen'}</button></div></main>`;
+}
+
+/* ---------- Rendern ---------- */
+let curPhotoObj=null;
+async function ensurePhotos(id){
+  if(!idb) return;
+  if(curPhotoObj===id&&photoCache[id]) return;
+  curPhotoObj=id; await loadPhotos(id); if(route().v==='obj'&&route().id===id) render(true);
+}
+function render(keep){
+  const r=route(), y=keep?window.scrollY:0;
+  let h='';
+  if(r.v==='list') h=viewList(); else if(r.v==='obj'){ h=viewObj(r); ensurePhotos(r.id); }
+  else if(r.v==='cmp') h=viewCmp(); else h=viewSet();
+  app.innerHTML=h;
+  if(r.v==='set'){ const b=$('#backup'); if(b) b.value=bPaste||JSON.stringify(db); }
+  window.scrollTo(0,y);
+  document.title=r.v==='obj'?(getObj(r.id).titel||'Besichtigung'):'Besichtigung';
+}
+
+/* ---------- Übergabe an andere Apps ---------- */
+function payloadFor(o){
+  const s=stats(o);
+  /* v2: kp ist der Angebotspreis, das Gebot kommt getrennt. kosten = Mängel, extra = weitere Kosten (Küche, Reserve). hubId verknüpft das richtige Hub-Objekt. */
+  return {src:'besichtigung',v:2,name:o.titel||'',kp:o.kp,kpAnzeige:o.kp,gebot:o.gebot||0,bj:o.bj,qm:o.qm,zi:o.zi,kalt:o.kalt,stell:o.stell,
+    hgUml:o.hgUml,hgNicht:o.hgNicht,grundst:o.grundst,kosten:Math.round(s.cost),extra:Math.round(o.extra||0),hubId:o.hubId||''};
+}
+function joinUrl(base,hash){ return base.replace(/#.*$/,'')+hash; }
+
+/* ---------- Ereignisse ---------- */
+document.addEventListener('click',async e=>{
+  const nv=e.target.closest('a[data-nav]');
+  if(nv){ e.preventDefault(); nav(nv.getAttribute('href'),nv.hasAttribute('data-replace')); return; }
+  const b=e.target.closest('[data-act]'); if(!b) return;
+  const r=route(), o=r.v==='obj'?getObj(r.id):null, act=b.dataset.act;
+  if(act==='phshare'&&o){ sharePhotos(o); return; }
+  if(act==='hubunlink'&&o){ hubUnlink(o); render(true); toast('Verknüpfung gelöst.'); return; }
+  if(act==='hubmake'&&o){ hubMake(o); render(true); toast('Im Hub angelegt. Dort kannst du es an die anderen Apps weitergeben.'); return; }
+  if(act==='new'){ const n=newObj(); nav('#/o/'+n.id+'/daten'); return; }
+  if(act==='sample'){
+    const n=newObj({titel:'Beispiel: 2-Zimmer-Wohnung',adresse:'Musterstraße 12 (Beispieldaten)',kp:190000,bj:1971,qm:62,zi:2,kalt:760,stell:35,hgUml:150,hgNicht:70,grundst:300,
+      termin:ImmoCore.localIso(new Date(Date.now()+2*86400e3)).slice(0,11)+'17:00',kontakt:'Frau Muster',
+      items:{wo_feuchte:{s:'mangel',cost:1500,note:'Schimmel an der Außenwand im Schlafzimmer'},geb_dach:{s:'unklar',note:'Dachboden nicht zugänglich'},wo_fenster:{s:'ok'},wo_bad:{s:'ok'},lage_laerm:{s:'ok'},wo_elektro:{s:'mangel',cost:2500,note:'Zählerkasten alt'}}});
+    nav('#/o/'+n.id+'/check'); return; }
+  if(act==='delobj'&&o){ if(!twice('delobj')) return; if(o.hubId) hubUnlink(o); await delPhotosOf(o.id); db.objs=db.objs.filter(x=>x.id!==o.id); save(); nav('#/'); return; }
+  if(act==='st'&&o){ const st=o.items[b.dataset.id]||(o.items[b.dataset.id]={}); st.s=st.s===b.dataset.v?'':b.dataset.v; save(); render(true); return; }
+  if(act==='flt'){ checkFilter=b.dataset.v; render(true); return; }
+  if(act==='delcustom'&&o){ const id=b.dataset.id; if(!twice('cu'+id)) return; o.custom=o.custom.filter(c=>c.id!==id); delete o.items[id]; save(); render(true); return; }
+  if(act==='fz'&&o){ o.fazit=o.fazit===b.dataset.v?'':b.dataset.v; save(); render(true); return; }
+  if(act==='view'&&o){ openViewer(o,b.dataset.id); return; }
+  if(act==='xfer'&&o){
+    const app=b.dataset.app, p=payloadFor(o);
+    flush(); location.href=joinUrl(((location.protocol==='app:')?DEF_SET.apps:db.settings.apps)[app],'#import='+encodeURIComponent(b64(p))); return; }
+  if(act==='code'&&o){
+    const code='BESICHTIGUNG:'+b64(payloadFor(o)), box=$('#codeBox'); box.hidden=false; box.value=code;
+    const fb=()=>{ box.focus(); box.select(); toast('Code markiert. Kopiere ihn mit „Kopieren“ im Menü.'); };
+    try{ navigator.clipboard.writeText(code).then(()=>toast('Übergabecode kopiert.'),fb); }catch(err){ fb(); } return; }
+  if(act==='bcopy'){ bPaste=''; const t=$('#backup'); t.value=JSON.stringify(db);
+    const fb=()=>{ t.focus(); t.select(); $('#bmsg').textContent='Text markiert. Kopiere ihn mit dem Menü deines Geräts.'; };
+    try{ navigator.clipboard.writeText(t.value).then(()=>{ $('#bmsg').textContent='Kopiert. Speichere den Text an einem sicheren Ort.'; },fb); }catch(err){ fb(); } return; }
+  if(act==='bload'){
+    const txt=$('#backup').value;
+    try{ const d=JSON.parse(txt); if(!d||!Array.isArray(d.objs)) throw 0;
+      if(pend!=='bload') bPaste=txt; if(!twice('bload')) return; bPaste='';
+      db=Object.assign({v:1,nextId:1,settings:JSON.parse(JSON.stringify(DEF_SET))},d);
+      db.settings=Object.assign({},DEF_SET,d.settings||{}); db.settings.apps=Object.assign({},DEF_SET.apps,(d.settings||{}).apps||{});
+      db.nextId=Math.max(db.nextId||1,...db.objs.map(x=>x.id+1),1); save(); render(true); toast('Daten geladen. Die bisherigen Daten wurden ersetzt.'); }
+    catch(err){ $('#bmsg').textContent='Das ist keine gültige Sicherung. Füge den kompletten kopierten Text ein.'; } return; }
+  if(act==='wipe'){ if(!twice('wipe')) return; for(const x of db.objs){ await delPhotosOf(x.id); if(x.hubId) hubUnlink(x); }
+    db={v:1,nextId:1,objs:[],settings:JSON.parse(JSON.stringify(DEF_SET))}; save(); nav('#/'); return; }
+});
+
+document.addEventListener('input',e=>{
+  const t=e.target, r=route(), o=r.v==='obj'?getObj(r.id):null;
+  if(t.dataset.f&&o){
+    const k=t.dataset.f; o[k]=t.dataset.t==='num'?parseDE(t.value):t.value;
+    if(k==='bj') o.bj=Math.round(o.bj);
+    save(); hubWriteField(o,k); const d=$('#derived'); if(d) d.innerHTML=derivedHtml(o);
+    if(k==='extra'||k==='gebot') refreshTotals(o);
+  }else if(t.dataset.item&&o){
+    const st=o.items[t.dataset.item]||(o.items[t.dataset.item]={});
+    st[t.dataset.fld]=t.dataset.fld==='cost'?parseDE(t.value):t.value; save();
+  }else if(t.dataset.q&&o){ o.fragen[t.dataset.q]=t.value; save(); }
+  else if(t.dataset.set){ const k=t.dataset.set; db.settings.apps[k]=t.value.trim(); save(); }
+});
+function refreshTotals(o){
+  const s=stats(o), a=$('#kvTot'), n=$('#kvNeg');
+  if(a) a.innerHTML=`<span>Kosten vor Vermietung gesamt<small>${o.kp>0?pct(s.alle/o.kp*100,1)+' vom Kaufpreis':''}</small></span><b>${eur(s.alle)}</b>`;
+  if(n) n.querySelector('b').textContent=o.kp>0?eur(o.kp-s.alle):'–';
+}
+document.addEventListener('change',async e=>{
+  const t=e.target, r=route(), o=r.v==='obj'?getObj(r.id):null;
+  if(t.dataset.hublink!==undefined&&o&&t.value){ if(hubLink(o,t.value)){ render(true); toast('Verknüpft. Leere Felder wurden ergänzt, bei Abweichung gilt das Hub-Objekt.'); } return; }
+  if(t.dataset.hubnew!==undefined&&t.value){ const m=hubMasters().find(x=>x.id===t.value); if(m){ const n=newObj({titel:m.name==='Neues Objekt'?'':(m.name||''),adresse:m.adresse||'',kp:+m.kp||0,qm:+m.qm||0,bj:+m.bj||0,zi:+m.zi||0,kalt:+m.kalt||0}); hubLink(n,m.id); nav('#/o/'+n.id+'/daten'); } return; }
+  if(t.dataset.doc&&o){ o.docs[t.dataset.doc]=t.checked; save(); render(true); return; }
+  if(t.dataset.photo!==undefined&&o&&t.files&&t.files.length){ const files=Array.from(t.files); t.value=''; await addPhotos(o.id,t.dataset.photo,files); return; }
+  if(t.dataset.f&&t.dataset.t==='num'&&o){ const k=t.dataset.f; t.value=fmtF(k,o[k]); }
+  if(t.dataset.f==='bj'&&o) render(true);
+  if(t.dataset.fld==='cost'&&o){ t.value=fmtIn(parseDE(t.value)); render(true); }
+  if(t.dataset.item&&t.dataset.fld==='note') save();
+});
+document.addEventListener('submit',e=>{
+  if(e.target.id!=='addForm') return; e.preventDefault();
+  const r=route(), o=r.v==='obj'?getObj(r.id):null; const inp=$('#addLabel'); const l=inp.value.trim(); if(!o||!l) return;
+  o.custom.push({id:'c'+uid(),l}); collapsed.eigen=false; collapsed.add=true; save(); render(true);
+});
+
+/* Foto-Viewer */
+async function openViewer(o,id){
+  const list=photoCache[o.id]||[]; let i=list.findIndex(p=>p.id===id); if(i<0) return;
+  const v=document.createElement('div'); v.className='viewer'; v.setAttribute('role','dialog'); v.setAttribute('aria-label','Foto');
+  document.body.appendChild(v);
+  let url=null, confirmDel=false;
+  const close=()=>{ if(url) URL.revokeObjectURL(url); v.remove(); };
+  async function show(){
+    const p=list[i]; if(url){ URL.revokeObjectURL(url); url=null; }
+    let rec=null; try{ rec=await rq(store('full').get(p.id)); }catch(e){}
+    url=rec?URL.createObjectURL(rec.blob):p.url;
+    v.innerHTML=`<div class="vt"><span>${i+1} von ${list.length} · ${esc(fmtWhen(ImmoCore.localIso(new Date(p.ts))))}</span><button class="btn small" data-v="close">Schließen</button></div>
+      <div class="vi"><img src="${url}" alt="Foto"></div>
+      <div class="vb"><button class="btn" data-v="prev" ${i===0?'disabled':''}>‹</button><button class="btn danger" data-v="del">${confirmDel?'Wirklich löschen?':'Löschen'}</button><button class="btn" data-v="next" ${i===list.length-1?'disabled':''}>›</button></div>`;
+  }
+  v.addEventListener('click',async ev=>{
+    const b=ev.target.closest('[data-v]'); if(!b) return; const a=b.dataset.v;
+    if(a==='close') close();
+    else if(a==='prev'&&i>0){ i--; confirmDel=false; show(); }
+    else if(a==='next'&&i<list.length-1){ i++; confirmDel=false; show(); }
+    else if(a==='del'){ if(!confirmDel){ confirmDel=true; show(); return; }
+      await delPhoto(o.id,list[i].id); const nl=photoCache[o.id]||[]; close(); render(true); if(nl.length) {} }
+  });
+  show();
+}
+
+/* ---------- Start ---------- */
+load();
+syncFromHub();
+idbOpen().then(d=>{ idb=d; if(route().v==='obj') ensurePhotos(route().id); }).catch(()=>{ idbOk=false; render(true); });
+if(navigator.storage&&navigator.storage.persist){ try{ navigator.storage.persist(); }catch(e){} }
+render();
+/* Service Worker: zentral in shared/core.js */
+})();
+</script>
+<footer class="legal-foot"><a id="hubLink" href="../immobilien-hub/index.html">‹ Zum Hub</a> <button type="button" id="legalBtn">Impressum, Haftung &amp; Datenschutz</button></footer>
+<script>(function(){try{var u=localStorage.getItem('immo-hub-url-v1');if(u)document.getElementById('hubLink').href=u;}catch(e){}})();</script>
+<dialog id="legalDlg"><form method="dialog"><h2>Impressum, Haftung &amp; Datenschutz</h2>
+<p id="legalWho" hidden></p>
+<h3>Haftung</h3><p>Diese App liefert Orientierungsrechnungen. Sie ersetzt keine Steuer-, Rechts-, Finanzierungs- oder Anlageberatung. Ergebnisse, Fristen und Rechtshinweise können unvollständig oder nicht mehr aktuell sein und hängen von deinen Eingaben und vom Einzelfall ab. Für Richtigkeit und Vollständigkeit wird keine Gewähr übernommen. Prüfe wichtige Entscheidungen mit Steuerberater, Rechtsanwalt oder Bank.</p>
+<h3>Datenschutz</h3><p>Es gibt kein Konto, keinen Server der App und keine Werbung. Deine Eingaben werden ausschließlich lokal im Speicher deines Browsers auf deinem Gerät abgelegt und nicht an mich oder Dritte übertragen. Es werden weder Tracking noch Cookies zu Analysezwecken eingesetzt, und alle Schriften liegen auf demselben Server, es werden keine Schriften bei Google geladen.</p>
+<p>Beim Aufruf der Seite verarbeitet der Hosting-Anbieter GitHub (GitHub Pages) technisch notwendig Verbindungsdaten wie die IP-Adresse. Darauf hat die App keinen Einfluss, siehe die Datenschutzerklärung von GitHub.</p>
+<p>Die Daten bleiben auf deinem Gerät, solange du sie nicht selbst exportierst oder weitergibst. Wenn du Browserdaten löschst oder die App entfernst, sind sie weg. Lege deshalb regelmäßig ein Backup an, soweit die App es anbietet. Besonders bei Mieterdaten bist du selbst für den datenschutzgerechten Umgang verantwortlich.</p>
+<button class="legal-ok" value="ok">Schließen</button></form></dialog>
+<style>
+.legal-foot{text-align:center;padding:18px 16px calc(100px + env(safe-area-inset-bottom));font:12px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+.legal-foot button{background:none;border:0;color:inherit;opacity:.6;text-decoration:underline;font:inherit;padding:8px;cursor:pointer}
+.legal-foot a{color:inherit;opacity:.6;text-decoration:underline;font:inherit;padding:8px;display:inline-block}
+#legalDlg{color-scheme:light dark;background:Canvas;color:CanvasText;border:1px solid color-mix(in srgb,CanvasText 25%,transparent);border-radius:14px;padding:18px;max-width:min(460px,calc(100vw - 32px));max-height:80vh;font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+#legalDlg::backdrop{background:rgba(0,0,0,.5)}
+#legalDlg h2{font-size:18px;margin:0 0 8px}#legalDlg h3{font-size:14px;margin:14px 0 4px}#legalDlg p{margin:0 0 8px}
+.legal-ok{margin-top:8px;width:100%;min-height:44px;border-radius:10px;border:1px solid color-mix(in srgb,CanvasText 30%,transparent);background:none;color:inherit;font:inherit;font-weight:600;cursor:pointer}
+</style>
+<script>
+/* Anbieter (optional, z. B. Name und E-Mail für öffentliche Weitergabe): */
+var LEGAL_ANBIETER='';
+(function(){var b=document.getElementById('legalBtn'),d=document.getElementById('legalDlg'),w=document.getElementById('legalWho');
+if(LEGAL_ANBIETER){w.textContent='Anbieter: '+LEGAL_ANBIETER;w.hidden=false}
+if(location.protocol==='app:'){document.querySelectorAll('#legalDlg p').forEach(function(p){if(/GitHub Pages/.test(p.textContent))p.remove()})}
+b.addEventListener('click',function(){if(d.showModal)d.showModal();else d.setAttribute('open','')})})();
+</script>
+</body>
+</html>

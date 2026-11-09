@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sanierung">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F1EEE8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14110F" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" type="image/png" href="../shared/icons/icon-192.png">
+<title>Renovierung und Sanierung</title>
+<style>
+@font-face{font-family:'IBM Plex Mono';src:url(fonts/plexmono-400.woff) format('woff');font-weight:400 500;font-style:normal;font-display:swap}
+@font-face{font-family:'IBM Plex Mono';src:url(fonts/plexmono-600.woff) format('woff');font-weight:600 700;font-style:normal;font-display:swap}
+/* Layout: Projektliste, darin fünf Reiter (Kosten, Steuer, Miete, Finanzierung, Ergebnis). Ziegelrot als Akzent, Zahlen in Mono wie in einem Angebot. */
+:root{
+  color-scheme:light;
+  --bg:#F1EEE8; --surface:#FFFFFF; --surface2:#F7F4EE; --ink:#221C17; --muted:#6A5F55; --line:#DDD5C9;
+  --accent:#A63D2F; --accent-ink:#FFFFFF; --accent-soft:#F6DDD8;
+  --good:#17804F; --good-soft:#DCF2E6; --mid:#8F5F00; --mid-soft:#FBEECB; --bad:#B3302F; --bad-soft:#F8DDDC;
+  --font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  padding-top:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme: dark){:root{
+  color-scheme:dark;
+  --bg:#14110F; --surface:#1E1A17; --surface2:#26211D; --ink:#F0E9E1; --muted:#B0A598; --line:#352E28;
+  --accent:#F08A78; --accent-ink:#2E0F09; --accent-soft:#3B1D17;
+  --good:#47C48A; --good-soft:#12301F; --mid:#E3B341; --mid-soft:#352A0E; --bad:#F27F7D; --bad-soft:#3A1717;}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.45;padding-inline:16px;padding-block:0 110px}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.wrap{max-width:680px;margin-inline:auto}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;margin-inline:-16px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.bar h1{font-size:18px;font-weight:600;margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .sub{display:block;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.back{border:0;background:var(--accent-soft);color:var(--accent);border-radius:10px;min-height:40px;padding:0 12px;font-weight:600;display:inline-flex;align-items:center;text-decoration:none}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;min-height:42px;padding:0 14px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.small{min-height:34px;padding:0 10px;font-size:13px}
+main{padding-block:14px 0}
+h2{font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:22px 4px 8px}
+h2:first-child{margin-top:2px}
+.note{font-size:13px;color:var(--muted);margin:8px 4px}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.p-good{background:var(--good-soft);color:var(--good)} .p-mid{background:var(--mid-soft);color:var(--mid)} .p-bad{background:var(--bad-soft);color:var(--bad)} .p-none{background:var(--surface2);color:var(--muted)}
+.t-good{color:var(--good)} .t-mid{color:var(--mid)} .t-bad{color:var(--bad)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.card.pad{padding:14px}
+.cards{display:flex;flex-direction:column;gap:10px}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:24px 18px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:17px;margin-bottom:6px}
+.empty .row-actions{justify-content:center}
+.warn{background:var(--mid-soft);border:1px solid var(--mid);border-radius:12px;padding:10px 12px;font-size:13.5px;margin:0 0 10px}
+.bad{background:var(--bad-soft);border:1px solid var(--bad);border-radius:12px;padding:10px 12px;font-size:13.5px;margin:0 0 10px}
+.hero{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:14px;padding:14px}
+.hero .big{font-family:var(--font-mono);font-weight:600;font-size:28px;line-height:1.1;margin:4px 0 2px}
+.hero .lab{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 12px;min-width:0}
+.kpi .l{font-size:12px;color:var(--muted);line-height:1.3;overflow-wrap:anywhere}
+.kpi .v{font-family:var(--font-mono);font-weight:600;font-size:17px;margin-top:3px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.3}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:10px 14px;border-top:1px solid var(--line);align-items:baseline}
+.kv:first-child{border-top:0}
+.kv b{font-family:var(--font-mono);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.kv small{display:block;color:var(--muted);font-size:12px;font-weight:400;font-family:var(--font-body)}
+.kv.tot{background:var(--surface2)}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 10px;padding:14px}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:12.5px;color:var(--muted)}
+.fld.full{grid-column:1/-1}
+.fld input[type=text],.fld select,.fld textarea{width:100%;min-width:0;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 11px;font-size:16px;color:var(--ink)}
+.fld input[inputmode]{font-family:var(--font-mono);text-align:right}
+.unit{position:relative;display:block}
+.unit input{padding-right:46px!important}
+.unit i{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-style:normal;color:var(--muted);font-size:13px;pointer-events:none}
+.chk{display:flex;gap:10px;align-items:center;padding:10px 14px;border-top:1px solid var(--line);font-size:14.5px}
+.chk input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.derived{padding:11px 14px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted);background:var(--surface2)}
+.derived b{font-family:var(--font-mono);color:var(--ink);font-weight:600}
+.pcard{display:block;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 14px}
+.pcard .t{font-weight:600;font-size:16px} .pcard .a{font-size:13px;color:var(--muted);margin-top:1px}
+.pcard .m{display:flex;flex-wrap:wrap;gap:2px 14px;margin-top:8px;font-size:13px;color:var(--muted)}
+.pcard .m b{font-family:var(--font-mono);font-weight:500;color:var(--ink)}
+.pos{padding:12px 14px;border-top:1px solid var(--line);display:grid;gap:8px}
+.pos:first-child{border-top:0}
+.pos .l1{display:grid;grid-template-columns:minmax(0,1fr) 34px;gap:8px;align-items:center}
+.pos input[type=text],.pos select{width:100%;min-width:0;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:16px}
+.pos .ang{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.pos .ang label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:var(--muted);padding:6px;border:1px solid var(--line);border-radius:10px}
+.pos .ang label.on{border-color:var(--accent);background:var(--accent-soft)}
+.pos .ang input[type=text]{padding:7px 8px;font-family:var(--font-mono);text-align:right;font-size:15px}
+.pos .ang .r{display:flex;align-items:center;gap:6px}
+.pos .ang input[type=radio]{accent-color:var(--accent);width:18px;height:18px}
+.pos .l3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;align-items:end}
+.pos .l3 label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:var(--muted)}
+.pos .l3 input[type=text]{font-family:var(--font-mono);text-align:right}
+.pos .del{border:0;background:none;color:var(--bad);font-size:22px;min-height:34px}
+.pos .cost{font-family:var(--font-mono);font-weight:600;text-align:right}
+.bars{padding:12px 14px;display:grid;gap:7px}
+.bars .r{display:grid;grid-template-columns:96px minmax(0,1fr) 74px;gap:8px;align-items:center;font-size:12.5px}
+.bars .r span.n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bars .r .tr{height:10px;border-radius:5px;background:var(--surface2);overflow:hidden}
+.bars .r .tr i{display:block;height:100%;background:var(--accent);border-radius:5px}
+.bars .r b{font-family:var(--font-mono);font-size:12px;text-align:right}
+.code{width:100%;min-height:110px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px;font-family:var(--font-mono);font-size:12px;line-height:1.5}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:10px;padding:10px 16px;font-size:14px;z-index:20;max-width:calc(100vw - 32px)}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;background:var(--surface);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabbar a{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 2px;border-radius:10px;text-decoration:none;color:var(--muted);font-size:11px;font-weight:500;min-height:50px;text-align:center;line-height:1.15}
+.tabbar a[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/*BRAND*/
+@font-face{font-family:'Bricolage Grotesque';src:url(fonts/bricolage-700.woff) format('woff');font-weight:500 800;font-style:normal;font-display:swap}
+.bar{padding-left:58px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 13%,var(--bg)),var(--bg))}
+.bar::before{content:'';position:absolute;left:16px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:8px;background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22 viewBox=%220 0 64 64%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22 stop-opacity=%22.16%22/%3E%3Cstop offset=%221%22 stop-color=%22%23000%22 stop-opacity=%22.14%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22%23A63D2F%22/%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22url%28%23g%29%22/%3E%3Crect x=%2210%22 y=%2212%22 width=%2234%22 height=%2214%22 rx=%223.5%22 fill=%22%23fff%22/%3E%3Cpath d=%22M44 19h8v14H33v7%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22 stroke-linejoin=%22round%22 stroke-linecap=%22round%22/%3E%3Crect x=%2228%22 y=%2240%22 width=%2210%22 height=%2214%22 rx=%223%22 fill=%22%23fff%22/%3E%3C/svg%3E") center/cover;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.bar h1,.empty b,.pcard .t,.mcard .t,.tile b,.hero .lab{font-family:'Bricolage Grotesque',var(--font-body)}
+.bar h1{letter-spacing:-.01em}
+.empty::before{content:'';display:block;width:60px;height:60px;margin:0 auto 12px;border-radius:15px;background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22 viewBox=%220 0 64 64%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22 stop-opacity=%22.16%22/%3E%3Cstop offset=%221%22 stop-color=%22%23000%22 stop-opacity=%22.14%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22%23A63D2F%22/%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22url%28%23g%29%22/%3E%3Crect x=%2210%22 y=%2212%22 width=%2234%22 height=%2214%22 rx=%223.5%22 fill=%22%23fff%22/%3E%3Cpath d=%22M44 19h8v14H33v7%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22 stroke-linejoin=%22round%22 stroke-linecap=%22round%22/%3E%3Crect x=%2228%22 y=%2240%22 width=%2210%22 height=%2214%22 rx=%223%22 fill=%22%23fff%22/%3E%3C/svg%3E") center/cover;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+/*ENDBRAND*/
+/*VIZ*/
+:root{--c1:#2a78d6;--c2:#eb6834;--c3:#1baf7a;--c4:#eda100;--c5:#e87ba4;--c6:#008300;--c7:#6250d6;--c8:#e34948;--neutral:#8a857d}
+@media (prefers-color-scheme: dark){:root{--c1:#3987e5;--c2:#d95926;--c3:#199e70;--c4:#c98500;--c5:#d55181;--c6:#008300;--c7:#9085e9;--c8:#e66767;--neutral:#8f8a82}}
+.viz{padding:12px 12px 8px}
+.viz svg{display:block;width:100%;height:auto;overflow:visible}
+.viz text{font-family:var(--font-body);fill:var(--muted);font-size:11px}
+.viz .t-ink{fill:var(--ink)}
+.viz .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.vleg{display:flex;flex-direction:column}
+.vleg .r{display:grid;grid-template-columns:14px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:8px 14px;border-top:1px solid var(--line);font-size:13.5px}
+.vleg .r i{width:10px;height:10px;border-radius:3px;display:block}
+.vleg .r b{font-family:var(--font-mono);font-weight:600}
+.vleg .r span.p{font-family:var(--font-mono);color:var(--muted);font-size:12px;min-width:38px;text-align:right}
+.vtip{position:fixed;z-index:30;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:8px;padding:6px 9px;font-size:12px;line-height:1.35;max-width:220px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.vtip b{font-family:var(--font-mono)}
+details.vtab{margin:6px 14px 10px;font-size:12.5px;color:var(--muted)}
+details.vtab table{width:100%;border-collapse:collapse;margin-top:6px}
+details.vtab td,details.vtab th{padding:4px 2px;border-top:1px solid var(--line);text-align:right;font-family:var(--font-mono);font-size:12px}
+details.vtab td:first-child,details.vtab th:first-child{text-align:left;font-family:var(--font-body)}
+.vrow{display:grid;align-items:center;padding:7px 14px;font-size:13.5px}.vrow b{font-family:var(--font-mono);font-weight:600;font-size:13px}
+.rch{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0 2px;font-size:12px;color:var(--muted)}.rch button{min-height:32px;padding:0 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface2);color:var(--ink);font:inherit;font-size:12.5px}.rch button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+/*ENDVIZ*/
+</style>
+<link rel="stylesheet" href="../shared/ui.css">
+<script>window.IMMO_I18N=1;</script>
+<script src="../shared/i18n-en.js"></script>
+<script src="../shared/core.js"></script>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+'use strict';
+/* =====================  ENGINE  ===================== */
+/*ENGINE*/
+const num=v=>{ const x=+v; return isFinite(x)?x:0; };
+const KAT={erh:'Instandhaltung',schoen:'Schönheitsreparatur',mod:'Modernisierung',energ:'Energetisch, förderfähig',erw:'Erweiterung, Anbau',kueche:'Einbauküche'};
+const KAT_KEYS=Object.keys(KAT);
+const TEMPL=[['Bad','mod'],['Fußböden','erh'],['Malerarbeiten','schoen'],['Elektrik','mod'],['Sanitärleitungen','mod'],['Heizung','mod'],['Fenster','energ'],['Dach und Dämmung','energ'],['Fassade','energ'],['Türen','erh'],['Küche','kueche'],['Entkernung und Entsorgung','erh'],['Planung und Gutachten','erh'],['Treppenhaus','erh'],['Balkon oder Anbau','erw'],['Sonstiges','erh']];
+function annuitySched(P,zins,tilg,years){
+  const rate=P*(zins+tilg)/100/12, r=zins/100/12; let b=P, int1=0, bal=[];
+  for(let m=1;m<=years*12;m++){ const i=b*r, t=Math.min(b,rate-i); if(m<=12) int1+=i; b=Math.max(0,b-t); if(m%12===0) bal.push(b); }
+  return {rate,int1,bal};
+}
+function irrNPV(cf,r){ return cf.reduce((a,c,i)=>a+c/Math.pow(1+r,i),0); }
+function calc(p){
+  const usf=p.brutto?1.19:1, pf=1+num(p.puffer)/100;
+  const pos=p.pos.map(x=>{ const raw=num(x.a[x.sel]), c=raw*(1-Math.min(100,num(x.eigen))/100)*pf; return Object.assign({},x,{c,net:c/usf}); });
+  const sumK=k=>pos.filter(x=>x.kat===k).reduce((a,x)=>a+x.c,0), sumN=k=>pos.filter(x=>x.kat===k).reduce((a,x)=>a+x.net,0);
+  const K={}, N={}; KAT_KEYS.forEach(k=>{ K[k]=sumK(k); N[k]=sumN(k); });
+  const total=pos.reduce((a,x)=>a+x.c,0), totalNet=total/usf;
+  const puffer=pos.reduce((a,x)=>a+x.c,0)-pos.reduce((a,x)=>a+x.c/pf,0);
+  // Förderung (BEG Einzelmaßnahmen)
+  const we=Math.max(1,Math.round(num(p.we)));
+  const capStd=30000+15000*(Math.min(we,6)-1)+8000*Math.max(0,we-6);
+  const capIsfp=60000+30000*(Math.min(we,6)-1)+15000*Math.max(0,we-6);
+  const elig=K.energ, base=Math.min(elig,p.isfp?capIsfp:capStd);
+  let foerd=p.foerdAn?num(p.foerdRate)/100*base:0;
+  if(p.foerdAn&&p.isfp) foerd+=0.05*Math.max(0,base-capStd);
+  // 15-%-Grenze
+  const AK=num(p.kp)*(1+num(p.nkPct)/100)*num(p.gebAnt)/100, limit=0.15*AK;
+  const counted=N.erh+N.schoen+N.mod+N.energ+num(p.vorher);
+  const inWindow=num(p.mSeit)<=36;
+  const kern=['heiz','sanit','elek','fenster'].filter(k=>p.sh[k]).length;
+  const stdHebung=kern>=3;
+  const trigger=(inWindow&&AK>0&&counted>limit)||stdHebung;
+  const ratio=limit>0?counted/limit:0;
+  // Steuerpools (tatsächliche Kosten, Förderung mindert den Aufwand)
+  const poolCore=K.erh+K.schoen+K.mod+K.energ-foerd;
+  const E=trigger?0:Math.max(0,poolCore), H=K.erw+(trigger?Math.max(0,poolCore):0), KU=K.kueche;
+  const grenz=num(p.grenz)/100, afa=num(p.afa)/100, nV=Math.max(2,Math.min(5,Math.round(num(p.verteil)||5)));
+  const sched=(mode)=>{ const d=[]; for(let t=1;t<=10;t++){ let e=0; if(mode==='sofort') e=t===1?E:0; else e=t<=nV?E/nV:0; d.push(e+H*afa+(t<=10?KU/10:0)); } return d; };
+  const mk=(d)=>{ const s=d.map(x=>x*grenz); return {y1:s[0],s5:s.slice(0,5).reduce((a,b)=>a+b,0),s10:s.reduce((a,b)=>a+b,0),npv:irrNPV([0].concat(s),num(p.zins0)/100),s}; };
+  const tSofort=mk(sched('sofort')), tVerteilt=mk(sched('verteilt'));
+  const tSel=(trigger||p.wahl==='sofort')?tSofort:tVerteilt;
+  // Mieterhöhung
+  const qm=num(p.qm), miete0=num(p.miete0);
+  /* § 559c BGB: vereinfachtes Verfahren nur bis 10.000 € Kosten je Wohnung, pauschal 30 % Abzug für Erhaltung. Darüber gilt das reguläre Verfahren. */
+  const perWe=(K.mod+K.energ)/we, vereinOk=perWe<=10000, v559=!!p.v559&&vereinOk;
+  const modBase=pos.filter(x=>x.kat==='mod'||x.kat==='energ').reduce((a,x)=>a+x.c*(1-(v559?30:Math.min(100,num(x.inst)))/100),0)-foerd;
+  const umlJahr=0.08*Math.max(0,modBase);
+  const capM=(qm>0&&miete0>0&&miete0/qm<7)?2:3, capJahr=capM*qm*12;
+  const umlEff=Math.min(umlJahr,capJahr);
+  const neuJahr=(num(p.mieteZiel)*qm-miete0)*12;
+  const dMiete=p.modus==='neu'?neuJahr:umlEff;
+  // Kosten, Finanzierung
+  const nettoNach=total-foerd;
+  const bauKosten=num(p.leerM)*(miete0+num(p.nkLeer));
+  const need=nettoNach, darl=Math.max(0,need-num(p.ek)), am=annuitySched(darl,num(p.zins),num(p.tilg),10);
+  const bauZins=darl*num(p.zins)/100/12*num(p.leerM);
+  const invest=nettoNach+bauKosten+bauZins;
+  const rendite=invest>0?dMiete/invest:0;
+  const cfY1=dMiete+tSel.y1-am.rate*12;
+  const netAfter=invest-tSel.y1;
+  const pb=dMiete>0?netAfter/dMiete:null;
+  return {pos,K,N,total,totalNet,puffer,foerd,we,capStd,capIsfp,base,elig,AK,limit,counted,inWindow,kern,stdHebung,trigger,ratio,E,H,KU,tSofort,tVerteilt,tSel,nV,
+    modBase,perWe,vereinOk,umlJahr,capM,capJahr,umlEff,neuJahr,dMiete,nettoNach,bauKosten,bauZins,invest,darl,am,rendite,cfY1,pb,qm};
+}
+/*END*/
+
+
+/* ---------- Grafiken ---------- */
+const polar=(cx,cy,r,a)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
+function arcPath(cx,cy,r,a0,a1){ const [x0,y0]=polar(cx,cy,r,a0),[x1,y1]=polar(cx,cy,r,a1); return `M${x0.toFixed(2)} ${y0.toFixed(2)}A${r} ${r} 0 ${a1-a0>Math.PI?1:0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`; }
+function donut(items,centerTop,centerSub){
+  const tot=items.reduce((a,x)=>a+x.v,0); if(tot<=0) return '';
+  let a=-Math.PI/2, g='';
+  items.forEach((x,i)=>{ const da=x.v/tot*Math.PI*2; if(da<=0) return; const a1=a+da-(items.length>1?0.012:0); g+=`<path d="${arcPath(80,80,58,a,Math.max(a+0.01,a1))}" fill="none" stroke="var(--c${(i%8)+1})" stroke-width="22"><title>${esc(x.n)}: ${eur(x.v)} (${nf(x.v/tot*100,0)} %)</title></path>`; a+=da; });
+  return `<svg viewBox="0 0 160 160" role="img" aria-label="Kostenanteile: ${items.map(x=>esc(x.n)+' '+nf(x.v/tot*100,0)+' Prozent').join(', ')}" style="max-width:220px;margin:0 auto">${g}<text x="80" y="76" text-anchor="middle" class="t-ink num" style="font-size:17px;font-weight:600">${esc(centerTop)}</text><text x="80" y="94" text-anchor="middle" style="font-size:10.5px">${esc(centerSub)}</text></svg>`;
+}
+function limitBar(R){
+  const W=360, max=Math.max(R.counted,R.limit)*1.2||1, x=v=>8+(W-16)*Math.max(0,v)/max;
+  const st=R.ratio>1?'var(--bad)':R.ratio>0.8?'var(--mid)':'var(--good)';
+  const lx=x(R.limit), vx=x(R.counted), anchor=lx>W-90?'end':'middle';
+  return `<div class="viz"><svg viewBox="0 0 ${W} 92" role="img" aria-label="Gezählte Kosten ${eur(R.counted)} gegen die Grenze von ${eur(R.limit)}, ${nf(R.ratio*100,0)} Prozent ausgeschöpft">
+  <rect x="8" y="38" width="${W-16}" height="16" rx="4" fill="var(--surface2)"/>
+  <rect x="8" y="38" width="${Math.max(2,vx-8).toFixed(1)}" height="16" rx="4" fill="${st}"/>
+  <line x1="${lx.toFixed(1)}" x2="${lx.toFixed(1)}" y1="28" y2="64" stroke="var(--ink)" stroke-width="2"/>
+  <text x="${lx.toFixed(1)}" y="20" text-anchor="${anchor}" class="t-ink">Grenze 15 %: <tspan class="num" font-weight="600">${eur(R.limit)}</tspan></text>
+  <text x="${Math.min(vx,W-8).toFixed(1)}" y="${R.counted>R.limit?82:82}" text-anchor="${vx>W-110?'end':'start'}" class="t-ink">Gezählt: <tspan class="num" font-weight="600">${eur(R.counted)}</tspan> · ${nf(R.ratio*100,0)} %</text></svg></div>`;
+}
+
+/* =====================  ZUSTAND  ===================== */
+const KEY='renovierung-v1';
+let db={v:1,nextId:1,projs:[]}, storageOk=true;
+function load(){ try{ const r=localStorage.getItem(KEY); if(r){ const j=JSON.parse(r); if(j&&Array.isArray(j.projs)){ db=Object.assign(db,j); db.nextId=Math.max(db.nextId||1,...db.projs.map(x=>x.id+1),1); } } }catch(e){ storageOk=false; } }
+let saveT=null;
+function save(){ clearTimeout(saveT); saveT=setTimeout(flush,250); }
+function flush(){ try{ localStorage.setItem(KEY,JSON.stringify(db)); }catch(e){ storageOk=false; } try{ const tot=db.projs.reduce((a,x)=>a+calc(x).total,0); localStorage.setItem('renovierung-summary-v1',JSON.stringify({ts:Date.now(),n:db.projs.length,total:tot}));
+  const map={}; db.projs.forEach(p=>{ if(!p.hubId||map[p.hubId]) return; const R=calc(p); map[p.hubId]={v:R.total>0?ImmoCore.nf(Math.round(R.total),0)+' €':'–',s:R.total>0?'Kosten · '+(p.name||'Projekt'):'Noch keine Kosten',st:R.total>0?'ok':'none'}; }); ImmoCore.pubSum('ren',map); }catch(e){} }
+window.addEventListener('pagehide',flush);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) flush(); });
+load();
+let uidN=0; const uid=()=>Date.now().toString(36)+(uidN++).toString(36);
+function newProj(x){
+  const p=Object.assign({id:db.nextId++,name:'Neues Projekt',adresse:'',qm:60,bj:1985,kp:0,nkPct:10.6,gebAnt:80,mSeit:6,vorher:0,brutto:true,puffer:10,we:1,afa:2,grenz:42,zins0:3,
+    sh:{heiz:false,sanit:false,elek:false,fenster:false},wahl:'sofort',verteil:5,foerdAn:true,foerdRate:15,isfp:false,
+    miete0:0,mieteZiel:0,modus:'bestand',rooms:[],rates:Object.assign({},DEFRATES),v559:false,leerM:2,nkLeer:150,ek:0,zins:3.8,tilg:2,pos:[],notiz:''},x||{});
+  db.projs.push(p); return p;
+}
+const getP=id=>{ const p=db.projs.find(p=>p.id===id); if(p){ if(!Array.isArray(p.rooms)) p.rooms=[]; p.rates=Object.assign({},DEFRATES,p.rates||{}); } return p; };
+function newPos(p,n,k){ const x={id:uid(),n:n||'',kat:k||'erh',a:[0,0,0],sel:0,eigen:0,inst:0,rooms:[]}; p.pos.push(x); return x; }
+
+/* =====================  HILFEN  ===================== */
+const $=q=>document.querySelector(q);
+const {esc,nf,parseDE,toast,kpi}=ImmoCore;
+const eur=v=>(v<0?'−':'')+nf(Math.abs(Math.round(v)),0)+' €';
+const pct=(v,d)=>v===null||v===undefined||!isFinite(v)?'–':nf(v*100,d===undefined?1:d)+' %';
+let toastT=null,armed=null;
+function twice(k){ if(armed===k){ armed=null; return true; } armed=k; toast('Zum Bestätigen nochmal tippen.'); setTimeout(()=>{ if(armed===k) armed=null; },3500); return false; }
+function kv(l,v,sub,cls){ return `<div class="kv ${cls||''}"><div>${l}${sub?`<small>${sub}</small>`:''}</div><b>${v}</b></div>`; }
+function f(k,l,unit,opt){ opt=opt||{}; const v=opt.src[k]; return `<label class="fld ${opt.full?'full':''}">${l}<span class="unit"><input type="text" ${opt.txt?'':'inputmode="decimal"'} data-k="${k}" value="${esc(opt.txt?v:String(v).replace('.',ImmoCore.dc))}" autocomplete="off">${unit?`<i>${unit}</i>`:''}</span></label>`; }
+function getPath(o,path){ return path.split('.').reduce((t,k)=>t==null?t:t[k],o); }
+function cb(k,l,src){ return `<label class="chk"><input type="checkbox" data-k="${k}" ${getPath(src,k)?'checked':''}><span>${l}</span></label>`; }
+function selF(k,l,opts,src,full){ return `<label class="fld ${full?'full':''}">${l}<select data-k="${k}" data-s="1">${opts.map(([v,t])=>`<option value="${v}" ${String(src[k])===String(v)?'selected':''}>${esc(t)}</option>`).join('')}</select></label>`; }
+
+/* =====================  ANSICHTEN  ===================== */
+let route={v:'list'}, laterRoute=null;
+function parseHash(){ const h=location.hash.replace(/^#\/?/,''); const m=h.match(/^p\/(\d+)\/?(\w+)?/); if(m) return {v:'proj',id:+m[1],tab:m[2]||'kosten'}; if(h.startsWith('einstellungen')) return {v:'set'}; return {v:'list'}; }
+function nav(h){ if(location.hash===h) render(); else location.hash=h; }
+window.addEventListener('hashchange',()=>{ route=parseHash(); render(); window.scrollTo(0,0); });
+
+function bar(title,sub,back,extra){ return `<div class="bar">${back?`<a class="back" href="${back}">‹ Zurück</a>`:''}<h1>${sub?`<span class="sub">${esc(sub)}</span>`:''}${esc(title)}</h1>${extra||''}</div>`; }
+function tabs(p,cur){ const t=[['erg','Ergebnis'],['schaetz','Schätzung'],['kosten','Kosten'],['steuer','Steuer'],['miete','Miete'],['fin','Finanzen']]; return `<nav class="tabbar" aria-label="Bereiche">${t.map(([i,l])=>`<a href="#/p/${p.id}/${i}" ${cur===i?'aria-current="page"':''}>${l}</a>`).join('')}</nav>`; }
+
+function viewList(){
+  let h=bar('Renovierung','Sanierung',null,`<a class="btn small" href="#/einstellungen">Einstellungen</a>`)+'<main>';
+  if(!db.projs.length) h+=hubPickP()+`<div class="empty"><b>Noch kein Projekt</b>Lege ein Projekt für eine Wohnung oder ein Haus an. Du trägst die Gewerke mit Angeboten ein und bekommst Kosten, Steuerwirkung, Mieterhöhung und Rendite.<div class="row-actions"><button class="btn primary" data-act="new">Projekt anlegen</button><button class="btn" data-act="sample">Beispiel ansehen</button></div></div>`;
+  else { h+=hubPickP()+'<div class="row-actions" style="margin-top:0"><button class="btn primary" data-act="new">Projekt anlegen</button></div><div class="cards">'+db.projs.map(p=>{ const R=calc(p); return `<a class="pcard" href="#/p/${p.id}/${calc(p).total>0?'erg':'kosten'}"><div class="t">${esc(p.name||'Ohne Namen')}</div><div class="a">${esc(p.adresse||'')}${p.qm?' · '+nf(p.qm,0)+' m²':''}</div><div class="m"><span>Kosten <b>${eur(R.total)}</b></span><span>je m² <b>${R.qm>0?eur(R.total/R.qm):'–'}</b></span><span>Positionen <b>${p.pos.length}</b></span></div></a>`; }).join('')+'</div>'; }
+  return h+'<p class="note">Orientierungsrechnung, keine Steuer- oder Rechtsberatung. Prüfe Steuerfragen mit deinem Steuerberater.</p></main>';
+}
+function posCard(x,p){
+  const c=num(x.a[x.sel])*(1-Math.min(100,num(x.eigen))/100);
+  return `<div class="pos" data-pid="${x.id}"><div class="l1"><input type="text" data-pf="n" value="${esc(x.n)}" placeholder="Gewerk, zum Beispiel Bad" aria-label="Gewerk"><button class="del" data-act="delpos" data-id="${x.id}" aria-label="Position löschen">×</button></div>
+  <select data-pf="kat" data-s="1" aria-label="Art der Maßnahme">${KAT_KEYS.map(k=>`<option value="${k}" ${x.kat===k?'selected':''}>${KAT[k]}</option>`).join('')}</select>
+  ${p&&p.rooms&&p.rooms.length?`<div class="rch" role="group" aria-label="Räume zu ${esc(x.n||'Gewerk')}"><span>Räume:</span>${p.rooms.map(r=>`<button type="button" data-act="toggleroom" data-pid="${x.id}" data-rid="${r.id}" aria-pressed="${(x.rooms||[]).includes(r.id)}">${esc(r.n||ARTS[r.art].n)}</button>`).join('')}</div>`:''}
+  <div class="ang">${[0,1,2].map(i=>`<label class="${x.sel===i?'on':''}"><span class="r"><input type="radio" name="sel-${x.id}" data-pf="sel" value="${i}" ${x.sel===i?'checked':''} aria-label="Angebot ${'ABC'[i]} wählen">Angebot ${'ABC'[i]}</span><input type="text" inputmode="decimal" data-pf="a${i}" value="${x.a[i]?esc(String(x.a[i]).replace('.',ImmoCore.dc)):''}" placeholder="€" aria-label="Preis Angebot ${'ABC'[i]}"></label>`).join('')}</div>
+  <div class="l3"><label>Eigenleistung %<input type="text" inputmode="decimal" data-pf="eigen" value="${x.eigen?esc(String(x.eigen).replace('.',ImmoCore.dc)):''}" placeholder="0"></label><label>Instandh.-Anteil %<input type="text" inputmode="decimal" data-pf="inst" value="${x.inst?esc(String(x.inst).replace('.',ImmoCore.dc)):''}" placeholder="0"></label><div class="cost" id="pc-${x.id}">${eur(c)}</div></div></div>`;
+}
+
+/* ---------- Schätzung nach Räumen ---------- */
+const ARTS={bad:{n:'Bad, WC',r:400,f:100},kueche:{n:'Küche',r:250,f:100},wohn:{n:'Wohnzimmer',r:150,f:100},schlaf:{n:'Schlafzimmer',r:120,f:100},kind:{n:'Kinder- oder Arbeitszimmer',r:120,f:100},flur:{n:'Flur, Diele',r:200,f:100},abst:{n:'Abstellraum, HWR',r:100,f:100},balk:{n:'Balkon, Terrasse',r:150,f:25}};
+const DEFRATES=Object.fromEntries(Object.entries(ARTS).map(([k,v])=>[k,v.r]));
+/* Neue Projekte aus dem Hub (gemeinsames Objekt) übernehmen */
+(function(){ try{ const raw=localStorage.getItem('renovierung-pending-v1'); if(!raw) return; localStorage.removeItem('renovierung-pending-v1'); const L=JSON.parse(raw); if(!Array.isArray(L)||!L.length) return;
+  L.forEach(x=>{ if(db.projs.some(p=>p.hubId===x.hubId)) return; newProj({name:x.name||'Neues Projekt',adresse:x.adresse||'',qm:+x.qm||60,bj:+x.bj||1985,kp:+x.kp||0,hubId:x.hubId}); }); flush(); }catch(e){} })();
+
+/* ---------- Gemeinsames Objekt im Hub ---------- */
+const {hubRead,hubSave,hubMasters,hubAvail}=ImmoCore, HUBKEY=ImmoCore.HUBKEY, HMAP=['name','adresse','qm','bj','kp'];
+const hEmpty=ImmoCore.hEmpty;
+const hSame=ImmoCore.hSame;
+/* Leere Felder werden von der anderen Seite gefüllt, bei Abweichung gilt das Hub-Objekt. */
+/* Beim ersten Verknüpfen füllt die App leere Felder im Hub. Danach gilt der Hub, auch dort gelöschte Werte werden hier geleert. */
+function hubMergeP(p,m){ let chP=false, chM=false; const first=!p.hubSynced;
+  HMAP.forEach(k=>{ const mv=m[k], pv=p[k];
+    if(hEmpty(mv)&&!hEmpty(pv)&&!(k==='name'&&pv==='Neues Projekt')){ if(first){ m[k]=pv; chM=true; } else if(k!=='name'){ p[k]=k==='adresse'?'':0; chP=true; } }
+    else if(!hEmpty(mv)&&!hSame(mv,pv)){ p[k]=['name','adresse'].includes(k)?String(mv):+mv; chP=true; } });
+  if(first){ p.hubSynced=true; chP=true; }
+  return {chP,chM}; }
+function syncFromHub(){
+  const h=hubRead(); if(!h) return; let chP=false, chH=false;
+  db.projs.forEach(p=>{ if(!p.hubId) return; const m=(h.objs||[]).find(x=>x.id===p.hubId);
+    if(!m){ delete p.hubId; chP=true; return; }
+    m.links=m.links||{}; if(String(m.links.ren||'')!==String(p.id)){ m.links.ren=String(p.id); chH=true; }
+    const r=hubMergeP(p,m); if(r.chP) chP=true; if(r.chM) chH=true; });
+  if(chH) hubSave(h); if(chP) flush();
+}
+/* Kontext für die Kopfzeile: zu welchem Hub-Objekt gehört die Ansicht? */
+window.immoCtx=()=>{ const r=parseHash(); const p=r.v==='proj'&&db.projs.find(x=>x.id===r.id); return (p&&p.hubId)||''; };
+/* Kachel im Hub beim Öffnen aktualisieren */
+window.addEventListener('load',()=>{ try{ flush(); }catch(e){} });
+function hubWrite(p,k){ if(!p.hubId||!HMAP.includes(k)) return; const h=hubRead(); if(!h) return; const m=(h.objs||[]).find(x=>x.id===p.hubId); if(!m) return; m[k]=p[k]; hubSave(h); }
+function hubDrop(p){ if(!p||!p.hubId) return; const h=hubRead(); if(!h) return; const m=(h.objs||[]).find(x=>x.id===p.hubId); if(m&&m.links&&String(m.links.ren)===String(p.id)){ delete m.links.ren; hubSave(h); } }
+function hubCardP(p){
+  if(!hubAvail()) return '';
+  const ms=hubMasters(), m=p.hubId?ms.find(x=>x.id===p.hubId):null;
+  if(m) return `<h2>Hub-Objekt</h2><div class="card pad"><b>${esc(m.name||'Objekt')}</b><p class="note" style="margin:4px 0 8px">Bezeichnung, Adresse, Fläche, Baujahr und Kaufpreis sind mit dem Hub abgeglichen. Änderungen hier gelten dort ebenfalls.</p><div class="row-actions" style="margin:0"><button class="btn small" data-act="hubun">Verknüpfung lösen</button></div></div>`;
+  const taken=new Set(db.projs.map(x=>x.hubId).filter(Boolean)), free=ms.filter(x=>!taken.has(x.id));
+  return `<h2>Hub-Objekt</h2><div class="card pad">${free.length?`<label class="fld">Mit einem Objekt aus dem Hub verknüpfen<select data-hublink="1"><option value="">– auswählen –</option>${free.map(x=>`<option value="${esc(x.id)}">${esc(x.name||'Objekt')}${x.adresse?' · '+esc(x.adresse):''}</option>`).join('')}</select></label>`:''}<div class="row-actions" style="margin:${free.length?'8px':'0'} 0 0"><button class="btn small" data-act="hubmake">Im Hub als Objekt speichern</button></div></div>`;
+}
+function hubPickP(){
+  if(!hubAvail()) return ''; const taken=new Set(db.projs.map(x=>x.hubId).filter(Boolean)), free=hubMasters().filter(x=>!taken.has(x.id)); if(!free.length) return '';
+  return `<label class="fld" style="margin:0 0 10px">Projekt für ein Objekt aus dem Hub anlegen<select data-hubnew="1"><option value="">– Objekt wählen –</option>${free.map(x=>`<option value="${esc(x.id)}">${esc(x.name||'Objekt')}${x.adresse?' · '+esc(x.adresse):''}</option>`).join('')}</select></label>`;
+}
+syncFromHub();
+
+const FAKT=[[100,'100 %, voll'],[50,'50 %, Dachschräge 1 bis 2 m, Wintergarten'],[25,'25 %, Balkon, Terrasse'],[0,'0 %, unter 1 m Höhe']];
+function estCalc(p){
+  const rooms=(p.rooms||[]).map(r=>{ const rate=num((p.rates||{})[r.art]), anr=num(r.fl)*num(r.faktor)/100; return Object.assign({},r,{anr,rate,cost:anr*rate+num(r.fest),off:0,cnt:0}); });
+  const byId={}; rooms.forEach(r=>byId[r.id]=r);
+  const R=calc(p); let assigned=0, unassigned=0, unN=0;
+  p.pos.forEach(x=>{
+    const rp=R.pos.find(z=>z.id===x.id), c=rp?rp.c:0; if(!(c>0)) return;
+    const rs=(x.rooms||[]).map(id=>byId[id]).filter(Boolean);
+    if(!rs.length){ unassigned+=c; unN++; return; }
+    const wsum=rs.reduce((a,r)=>a+r.anr,0);
+    rs.forEach(r=>{ r.off+=c*(wsum>0?r.anr/wsum:1/rs.length); r.cnt++; });
+    assigned+=c;
+  });
+  const sum=rooms.reduce((a,r)=>a+r.cost,0), wfl=rooms.reduce((a,r)=>a+r.anr,0), off=R.total-R.puffer;
+  // Vergleich: nur zugeordnete Angebote, sobald es welche gibt
+  const useAssigned=assigned>0, cmpOff=useAssigned?assigned:off;
+  const cmpSum=useAssigned?rooms.filter(r=>r.cnt>0).reduce((a,r)=>a+r.cost,0):sum;
+  return {rooms,sum,wfl,off,assigned,unassigned,unN,useAssigned,cmpOff,cmpSum,dev:cmpOff-cmpSum,devPct:cmpSum>0?(cmpOff-cmpSum)/cmpSum:null,avg:wfl>0?sum/wfl:0};
+}
+function roomCard(r){
+  return `<div class="pos" data-rid="${r.id}"><div class="l1"><input type="text" data-rf="n" value="${esc(r.n)}" placeholder="Raum" aria-label="Raumname"><button class="del" data-act="delroom" data-id="${r.id}" aria-label="Raum löschen">×</button></div>
+  <select data-rf="art" data-s="1" aria-label="Raumart">${Object.entries(ARTS).map(([k,v])=>`<option value="${k}" ${r.art===k?'selected':''}>${v.n}</option>`).join('')}</select>
+  <div class="l3"><label>Fläche m²<input type="text" inputmode="decimal" data-rf="fl" value="${r.fl?esc(String(r.fl).replace('.',ImmoCore.dc)):''}" placeholder="0"></label><label>Festbetrag €<input type="text" inputmode="decimal" data-rf="fest" value="${r.fest?esc(String(r.fest).replace('.',ImmoCore.dc)):''}" placeholder="0"></label><div class="cost" id="rc-${r.id}"></div></div>
+  <select data-rf="faktor" data-s="1" aria-label="Anrechnung der Fläche" style="margin-top:6px">${FAKT.map(([v,t])=>`<option value="${v}" ${+r.faktor===v?'selected':''}>${t}</option>`).join('')}</select>
+  <div class="note" style="margin:6px 0 0" id="rn-${r.id}"></div></div>`;
+}
+function devPill(pct){ if(pct===null) return ''; const a=Math.abs(pct); return a<=0.15?`<span class="pill p-good">✓ ${pct>=0?'+':'−'}${nf(a*100,0)} %</span>`:`<span class="pill p-mid">${pct>0?'▲':'▼'} ${pct>0?'+':'−'}${nf(a*100,0)} %</span>`; }
+function estChart(E){
+  if(!E.rooms.length) return '';
+  const mx=Math.max(1,...E.rooms.map(r=>Math.max(r.cost,r.off)));
+  const hasOff=E.rooms.some(r=>r.off>0);
+  const bar=(v,c,h)=>`<span style="display:block;background:var(--surface2);border-radius:4px;height:${h}px;margin:2px 0"><span style="display:block;height:${h}px;border-radius:4px;background:${c};width:${Math.max(v>0?1:0,v/mx*100).toFixed(1)}%"></span></span>`;
+  const rows=E.rooms.map(r=>{ const pc=r.off>0&&r.cost>0?(r.off-r.cost)/r.cost:null;
+    return `<div class="vrow" role="listitem" style="grid-template-columns:minmax(0,84px) minmax(0,1fr) 84px;gap:8px;align-items:center"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.n||ARTS[r.art].n)}</span><span>${bar(r.cost,'var(--c1)',10)}${hasOff?bar(r.off,'var(--c2)',10):''}</span><span style="text-align:right;line-height:1.25"><b>${eur(r.cost)}</b>${hasOff?`<br><b style="color:var(--muted);font-weight:500">${r.off>0?eur(r.off):'–'}</b>`:''}${pc!==null?`<br>${devPill(pc)}`:''}</span></div>`; }).join('');
+  const leg=`<div class="vl" style="display:flex;gap:14px;padding:8px 14px 0;font-size:12px;color:var(--muted)"><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c1);margin-right:5px"></i>Schätzung</span>${hasOff?'<span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c2);margin-right:5px"></i>Angebote, zugeordnet</span>':''}</div>`;
+  return `<h2>Kosten je Raum</h2><div class="card">${leg}<div class="viz" role="list" aria-label="Geschätzte Kosten und zugeordnete Angebote je Raum" style="padding:4px 0 2px">${rows}</div></div>${hasOff?'':'<p class="note">Ordne im Reiter Kosten jedem Gewerk die Räume zu. Dann siehst du hier die Angebote je Raum.</p>'}`;
+}
+function estCompare(E){
+  if(E.sum<=0) return '';
+  const mx=Math.max(E.cmpSum,E.cmpOff)||1, bar=(l,v,c)=>`<div class="vrow" style="grid-template-columns:minmax(0,92px) minmax(0,1fr) auto;gap:8px"><span>${l}</span><span style="background:var(--surface2);border-radius:4px;height:18px;display:block"><span style="display:block;height:18px;border-radius:4px;background:${c};width:${Math.max(1,v/mx*100).toFixed(1)}%"></span></span><b>${eur(v)}</b></div>`;
+  const pill=E.cmpOff>0&&E.devPct!==null?(Math.abs(E.devPct)<=0.15?`<span class="pill p-good">✓ im Rahmen (±15 %)</span>`:E.devPct>0?`<span class="pill p-mid">▲ Angebote ${nf(E.devPct*100,0)} % höher</span>`:`<span class="pill p-mid">▼ Angebote ${nf(-E.devPct*100,0)} % niedriger</span>`):'';
+  const note=E.useAssigned?`Verglichen werden die Räume mit zugeordneten Gewerken.${E.unN?` ${E.unN} Position${E.unN===1?'':'en'} ohne Raum (${eur(E.unassigned)}) ${E.unN===1?'bleibt':'bleiben'} außen vor, zum Beispiel Dach, Fassade oder Heizung.`:''}`:'Noch kein Gewerk einem Raum zugeordnet. Verglichen wird die Summe aller Angebote.';
+  return `<h2>Schätzung gegen Angebote</h2><div class="card"><div class="viz" style="padding:6px 0 2px">${bar('Schätzung',E.cmpSum,'var(--c1)')}${E.cmpOff>0?bar('Angebote',E.cmpOff,'var(--c2)'):''}</div>
+  <div class="kv"><div>Abweichung<small>Angebote minus Schätzung, ohne Puffer</small></div><b>${E.cmpOff>0?(E.dev>=0?'+':'')+eur(E.dev):'–'}</b></div>${pill?`<div style="padding:0 14px 8px">${pill}</div>`:'<div class="kv"><div>Noch keine Angebote<small>Trage im Reiter Kosten Preise ein.</small></div></div>'}<p class="note" style="margin:0;padding:0 14px 12px">${note}</p></div>`;
+}
+function viewSchaetz(p){
+  const E=estCalc(p); let h=bar(p.name||'Projekt','Schätzung','#/')+'<main>';
+  h+='<p class="note" style="margin-top:0">Grobe Schätzung vor den Angeboten: anrechenbare Fläche je Raum mal Satz je m², plus optional ein Festbetrag. Sie ersetzt keine Angebote, sie hilft beim Einordnen.</p>';
+  h+='<h2>Sätze je Raumart</h2><div class="card"><div class="fields">'+Object.entries(ARTS).map(([k,v])=>`<label class="fld">${v.n}<span class="unit"><input type="text" inputmode="decimal" data-k="rates.${k}" value="${esc(String((p.rates||{})[k]).replace('.',ImmoCore.dc))}"><i>€/m²</i></span></label>`).join('')+'</div></div>';
+  h+='<p class="note">Die Sätze sind Platzhalter und gehören an deine Region und den Standard angepasst. Der Satz gilt für alle Arbeiten im Raum zusammen, auch Sanitär, Fliesen und Elektrik.</p>';
+  h+='<h2>Räume</h2><div class="card" id="roomlist">'+(p.rooms.length?p.rooms.map(roomCard).join(''):'<div class="kv"><div>Noch kein Raum<small>Füge unten Räume hinzu, am besten aus deiner Wohnflächenberechnung.</small></div></div>')+'</div>';
+  h+=`<div class="row-actions"><select id="rtpl" aria-label="Raumart wählen" style="min-height:42px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0 10px;font-size:16px">${Object.entries(ARTS).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join('')}</select><button class="btn primary" data-act="addroom">Raum hinzufügen</button></div>`;
+  h+=`<div class="card" style="margin-top:6px">${kv('Anrechenbare Wohnfläche','<span id="eWfl">'+nf(E.wfl,1)+' m²</span>','<span id="eWflN"></span>')}${kv('Durchschnitt je m²','<span id="eAvg">'+eur(E.avg)+'</span>')}${kv('<b>Geschätzte Kosten</b>','<span id="eSum">'+eur(E.sum)+'</span>','ohne Puffer','tot')}</div>`;
+  h+='<div class="row-actions"><button class="btn" data-act="takeqm">Fläche als Wohnfläche des Projekts übernehmen</button></div>';
+  h+='<div id="estChart">'+estChart(E)+'</div><div id="estCmp">'+estCompare(E)+'</div>';
+  h+='<p class="note">Anrechnung nach Wohnflächenverordnung: Räume voll, Dachschrägen von 1 bis 2 m Höhe zur Hälfte, darunter gar nicht, Balkone und Terrassen in der Regel zu einem Viertel, bis zur Hälfte möglich. Keller und Räume außerhalb der Wohnung zählen nicht.</p></main>';
+  return h+tabs(p,'schaetz');
+}
+function estLive(p){
+  const E=estCalc(p), set=(id,t)=>{ const e=document.getElementById(id); if(e) e.textContent=t; };
+  E.rooms.forEach(r=>{ set('rc-'+r.id,eur(r.cost)); set('rn-'+r.id,nf(r.anr,1)+' m² anrechenbar × '+nf(r.rate,0)+' €/m²'+(num(r.fest)?' + '+eur(num(r.fest)):'')); });
+  set('eWfl',nf(E.wfl,1)+' m²'); set('eAvg',eur(E.avg)); set('eSum',eur(E.sum));
+  set('eWflN',num(p.qm)>0?(Math.abs(E.wfl-num(p.qm))<0.05?'':'Projekt: '+nf(num(p.qm),1)+' m²'):'');
+  const c=document.getElementById('estChart'); if(c) c.innerHTML=estChart(E); const d=document.getElementById('estCmp'); if(d) d.innerHTML=estCompare(E);
+}
+function viewKosten(p){
+  const R=calc(p); let h=bar(p.name||'Projekt','Kosten','#/')+'<main>';
+  h+='<h2>Projekt</h2><div class="card"><div class="fields">'+f('name','Bezeichnung','',{src:p,txt:true,full:true})+f('adresse','Adresse','',{src:p,txt:true,full:true})+f('qm','Wohnfläche','m²',{src:p})+f('we','Wohneinheiten','',{src:p})+f('puffer','Puffer für Unvorhergesehenes','%',{src:p})+'</div>'+cb('brutto','Preise enthalten 19 % Umsatzsteuer',p)+'</div>';
+  h+=hubCardP(p);
+  h+='<p class="note">Wohnungsvermieter können die Umsatzsteuer nicht abziehen. Trage deshalb die Bruttopreise ein. Die Steuerrechnung nutzt für die 15-%-Grenze die Nettobeträge.</p>';
+  h+='<h2>Gewerke und Angebote</h2><div class="card" id="poslist">'+(p.pos.length?p.pos.map(x=>posCard(x,p)).join(''):'<div class="kv"><div>Noch keine Position<small>Füge unten ein Gewerk hinzu.</small></div></div>')+'</div>';
+  h+=`<div class="row-actions"><select id="tpl" aria-label="Gewerk wählen" style="min-height:42px;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0 10px;font-size:16px">${TEMPL.map(([n,k],i)=>`<option value="${i}">${n}</option>`).join('')}</select><button class="btn primary" data-act="addpos">Hinzufügen</button></div>`;
+  h+=`<div class="card" style="margin-top:6px">${kv('Summe der Positionen',eur(R.total-R.puffer),'ohne Puffer')}${kv('Puffer '+nf(num(p.puffer),0)+' %',eur(R.puffer))}${kv('<b>Gesamtkosten</b>','<span id="sumTot">'+eur(R.total)+'</span>',R.qm>0?'<span id="sumM2">'+eur(R.total/R.qm)+' je m²</span>':'','tot')}</div>`;
+  h+='<p class="note">Wähle je Gewerk mit dem Punkt das Angebot, mit dem du rechnest. Eigenleistung ist der Anteil, den du selbst erbringst und nicht bezahlst. Der Instandhaltungsanteil ist der Teil einer Modernisierung, der ohnehin als Reparatur nötig gewesen wäre. Er zählt für die Mieterhöhung nicht mit.</p></main>';
+  return h+tabs(p,'kosten');
+}
+function viewSteuer(p){
+  const R=calc(p); let h=bar(p.name||'Projekt','Steuer','#/')+'<main>';
+  h+='<h2>Kaufdaten für die 15-%-Grenze</h2><div class="card"><div class="fields">'+f('kp','Kaufpreis','€',{src:p})+f('nkPct','Kaufnebenkosten','%',{src:p})+f('gebAnt','Gebäudeanteil am Kaufpreis','%',{src:p})+f('mSeit','Monate seit dem Kauf bis zum Bauende','',{src:p})+f('vorher','Schon aufgewendet in den 3 Jahren (netto)','€',{src:p,full:true})+'</div>'+
+    `<div class="derived">Anschaffungskosten Gebäude: <b id="d-ak">${eur(R.AK)}</b> · 15 % davon: <b id="d-lim">${eur(R.limit)}</b></div></div>`;
+  const rc=R.AK<=0?'p-none':R.ratio>1?'p-bad':R.ratio>0.8?'p-mid':'p-good';
+  let txt;
+  if(R.AK<=0) txt='Trage den Kaufpreis ein, um die Grenze zu prüfen.';
+  else if(!R.inWindow) txt='Das Bauende liegt mehr als drei Jahre nach dem Kauf. Die 15-%-Regel greift nicht.';
+  else if(R.ratio>1) txt='Über der Grenze um '+eur(R.counted-R.limit)+'. Die Kosten gelten als anschaffungsnahe Herstellungskosten und müssen über die Abschreibung verteilt werden.';
+  else txt='Noch '+eur(R.limit-R.counted)+' unter der Grenze ('+nf(R.ratio*100,0)+' % ausgeschöpft).';
+  h+=`<div class="card" style="margin-top:10px">${R.AK>0?limitBar(R):''}<div class="pad"><span class="pill ${rc}">${R.AK<=0?'offen':R.ratio>1?'über der Grenze':R.ratio>0.8?'knapp':'unter der Grenze'}</span><p style="margin:8px 0 0">${txt}</p><p class="note" style="margin:8px 0 0">Gezählt werden netto ${eur(R.counted)}: Instandhaltung, Schönheitsreparaturen, Modernisierung und energetische Maßnahmen. Erweiterungen und die Einbauküche zählen nicht mit.</p></div></div>`;
+  h+='<h2>Standard gehoben?</h2><div class="card">'+cb('sh.heiz','Heizung wurde auf ein höheres Niveau gebracht',p)+cb('sh.sanit','Sanitär wurde auf ein höheres Niveau gebracht',p)+cb('sh.elek','Elektro wurde auf ein höheres Niveau gebracht',p)+cb('sh.fenster','Fenster wurden auf ein höheres Niveau gebracht',p)+'</div>';
+  h+=`<p class="note">Wenn mindestens drei der vier Bereiche hochwertiger werden (zum Beispiel neue Elektrik, Bäder, Fenster), spricht man von Standardhebung. Dann sind die Kosten Herstellungskosten, auch unter der 15-%-Grenze.${R.stdHebung?' <b>Hier ausgelöst.</b>':''}</p>`;
+  h+='<h2>Behandlung der Kosten</h2><div class="card"><div class="fields">'+f('afa','Abschreibung Gebäude pro Jahr','%',{src:p})+f('grenz','Grenzsteuersatz','%',{src:p})+selF('wahl','Instandhaltung',[['sofort','sofort abziehen'],['verteilt','auf Jahre verteilen']],p)+f('verteil','Verteilung auf Jahre (2 bis 5)','',{src:p})+'</div></div>';
+  h+='<h2>Was das steuerlich bringt</h2><div class="card">'+
+    kv('Sofort abziehbar (Instandhaltung)',eur(R.E),R.trigger?'wegen Grenze oder Standardhebung nicht möglich':'')+
+    kv('Abschreibbar über das Gebäude',eur(R.H),'Herstellungskosten')+
+    kv('Einbauküche, 10 Jahre',eur(R.KU))+'</div>';
+  const row=(t,x)=>kv(t,eur(x.s10),'Jahr 1 '+eur(x.y1)+' · 5 Jahre '+eur(x.s5)+' · Barwert '+eur(x.npv));
+  h+='<div class="card" style="margin-top:10px">'+row(R.trigger?'Steuerersparnis über die Abschreibung':'Steuerersparnis, sofort',R.tSofort)+(R.trigger?'':row('Steuerersparnis, verteilt auf '+R.nV+' Jahre',R.tVerteilt))+'</div>';
+  h+='<p class="note">Summe über 10 Jahre. Der Barwert rechnet mit dem Kalkulationszins aus dem Reiter Finanzierung. Eine Förderung mindert hier den Aufwand. Eigenleistung ist nicht abziehbar, Material schon. Das Wahlrecht, Erhaltungsaufwand bei Wohngebäuden auf 2 bis 5 Jahre zu verteilen, gilt nur bei überwiegender Wohnnutzung.</p></main>';
+  return h+tabs(p,'steuer');
+}
+function viewMiete(p){
+  const R=calc(p); let h=bar(p.name||'Projekt','Miete','#/')+'<main>';
+  h+='<h2>Heutige Miete</h2><div class="card"><div class="fields">'+f('miete0','Kaltmiete aktuell, gesamt','€ / Monat',{src:p,full:true})+selF('modus','Wie holst du die Miete herein?',[['bestand','Mieterhöhung beim Bestandsmieter (§ 559 BGB)'],['neu','Neuvermietung zu neuer Miete']],p,true)+(p.modus==='neu'?f('mieteZiel','Neue Kaltmiete','€ / m²',{src:p}):'')+'</div></div>';
+  h+='<h2>Umlage der Modernisierung</h2><div class="card">'+cb('v559','Vereinfachtes Verfahren (§ 559c), pauschal 30 % Abzug',p)+
+    kv('Umlagefähige Kosten',eur(R.modBase),'Modernisierung und Energetik, abzüglich Instandhaltungsanteil und Förderung')+
+    kv('8 % pro Jahr',eur(R.umlJahr))+
+    kv('Obergrenze',eur(R.capJahr)+' pro Jahr',nf(R.capM,0)+' € je m² und Monat, innerhalb von 6 Jahren')+
+    kv('<b>Mieterhöhung durch Umlage</b>',eur(R.umlEff)+' pro Jahr',R.qm>0?eur(R.umlEff/12/R.qm*100)+' ct je m² und Monat':'','tot')+'</div>';
+  if(p.v559&&!R.vereinOk) h+=`<div class="warn" style="margin-top:10px">Das vereinfachte Verfahren ist nur bis 10.000 € Kosten je Wohnung zulässig. Du liegst bei ${eur(R.perWe)} je Wohneinheit. Gerechnet wird deshalb mit dem regulären Verfahren und deinen Instandhaltungsanteilen.</div>`;
+  else if(p.v559) h+='<p class="note" style="margin-top:8px">Im vereinfachten Verfahren zählen Modernisierungen der letzten 5 Jahre an derselben Wohnung mit, und weitere Erhöhungen nach § 559 sind für 5 Jahre weitgehend ausgeschlossen.</p>';
+  if(p.modus==='neu'){
+    h+=`<div class="card" style="margin-top:10px">${kv('Mehrertrag bei Neuvermietung',eur(R.neuJahr)+' pro Jahr','Neue Miete mal Fläche minus bisherige Miete')}</div><p class="note">In Gebieten mit Mietpreisbremse darf die Neumiete die ortsübliche Vergleichsmiete höchstens um 10 % übersteigen. Ausnahmen gibt es bei höherer Vormiete und nach umfassender Modernisierung. Prüfe das für deinen Ort.</p>`;
+  }
+  h+='<p class="note">Die Umlage setzt eine Ankündigung in Textform voraus und erhöht sich nach Abzug von Zuschüssen. Instandhaltungsanteile reduzieren die Basis. Die Kappung von 3 € je m² (2 € bei Mieten unter 7 € je m²) gilt innerhalb von sechs Jahren.</p></main>';
+  return h+tabs(p,'miete');
+}
+function viewFin(p){
+  const R=calc(p); let h=bar(p.name||'Projekt','Finanzierung','#/')+'<main>';
+  h+='<h2>Förderung (BEG Einzelmaßnahmen)</h2><div class="card">'+cb('foerdAn','Förderung für energetische Maßnahmen ansetzen',p)+cb('isfp','Mit individuellem Sanierungsfahrplan (iSFP)',p)+'<div class="fields">'+f('foerdRate','Fördersatz','%',{src:p})+'</div>'+
+    `<div class="derived">Förderfähig bis <b id="d-cap">${eur(p.isfp?R.capIsfp:R.capStd)}</b> · Basis <b>${eur(R.base)}</b> · Zuschuss <b id="d-fb">${eur(R.foerd)}</b></div></div>`;
+  h+='<p class="note">Stand 17.10.2026 laut Ratgeberquellen: Gebäudehülle und Anlagentechnik (ohne Heizung) 15 %. Höchstgrenze 30.000 € für die 1. Wohneinheit, 15.000 € für die 2. bis 6., 8.000 € ab der 7. (mit iSFP doppelt so hoch). Der iSFP-Bonus von 5 % gilt nur auf Beträge über der Standardgrenze. Ob Vermieter antragsberechtigt sind, prüfe in der BEG-Richtlinie und beim BAFA. Der Antrag muss vor Auftragsvergabe gestellt sein.</p>';
+  h+='<h2>Bauzeit</h2><div class="card"><div class="fields">'+f('leerM','Leerstand während der Arbeiten','Monate',{src:p})+f('nkLeer','Laufende Kosten ohne Miete','€ / Monat',{src:p})+'</div>'+`<div class="derived">Kosten der Bauzeit: <b id="d-bau">${eur(R.bauKosten+R.bauZins)}</b> <span>(entgangene Miete, laufende Kosten und Zinsen)</span></div></div>`;
+  h+='<h2>Finanzierung</h2><div class="card"><div class="fields">'+f('ek','Eigenkapital','€',{src:p})+f('zins','Sollzins pro Jahr','%',{src:p})+f('tilg','Anfangstilgung pro Jahr','%',{src:p})+f('zins0','Kalkulationszins für Barwerte','%',{src:p})+'</div>'+
+    `<div class="derived">Darlehen: <b id="d-dl">${eur(R.darl)}</b> · Rate: <b id="d-rate">${eur(R.am.rate)}</b> pro Monat · Zinsen Jahr 1: <b id="d-int">${eur(R.am.int1)}</b></div></div>`;
+  h+='<p class="note">Schuldzinsen sind als Werbungskosten abziehbar, wenn das Darlehen die Vermietung finanziert. Die Zinsen sind in der Steuerrechnung hier nicht enthalten.</p></main>';
+  return h+tabs(p,'fin');
+}
+function viewErg(p){
+  const R=calc(p); let h=bar(p.name||'Projekt','Ergebnis','#/')+'<main>';
+  if(R.total<=0){ return h+`<div class="empty"><b>Noch keine Kosten</b>Trage im Reiter Kosten Gewerke und Angebote ein.</div></main>`+tabs(p,'erg'); }
+  h+=`<div class="hero"><div class="lab">Gesamtkosten inkl. ${nf(num(p.puffer),0)} % Puffer</div><div class="big">${eur(R.total)}</div><div style="font-size:13.5px;color:var(--muted)">${R.qm>0?eur(R.total/R.qm)+' je m² · ':''}nach Förderung ${eur(R.nettoNach)}${R.foerd>0?' (Zuschuss '+eur(R.foerd)+')':''}</div></div>`;
+  h+='<div class="kpis" style="margin-top:10px">'+
+    kpi('Einsatz inkl. Bauzeit',eur(R.invest),'Kosten nach Förderung plus Leerstand')+
+    kpi('Mehrertrag pro Jahr',eur(R.dMiete),p.modus==='neu'?'Neuvermietung':'Umlage nach § 559',R.dMiete>0?'t-good':'t-bad')+
+    kpi('Bruttorendite auf den Einsatz',pct(R.rendite),'Mehrertrag durch Einsatz',R.rendite>=0.05?'t-good':(R.rendite>=0.03?'t-mid':'t-bad'))+
+    kpi('Amortisation nach Steuervorteil',R.pb===null?'–':nf(R.pb,1)+' Jahre',R.pb===null?'kein Mehrertrag':'Einsatz minus Steuervorteil Jahr 1')+
+    kpi('Steuerersparnis Jahr 1',eur(R.tSel.y1),'10 Jahre: '+eur(R.tSel.s10))+
+    kpi('Ergebnis Jahr 1 nach Rate',eur(R.cfY1),'Mehrertrag plus Steuer minus Kapitaldienst',R.cfY1>=0?'t-good':'t-mid')+'</div>';
+  const w=R.ratio>1||R.stdHebung;
+  h+=`<div class="${w?'bad':'card pad'}" style="margin-top:10px"><b>15-%-Grenze:</b> ${R.AK<=0?'Kaufpreis fehlt, Prüfung offen.':!R.inWindow?'nicht anwendbar (mehr als 3 Jahre nach Kauf).':R.stdHebung?'Standardhebung, Kosten sind Herstellungskosten.':R.ratio>1?'überschritten um '+eur(R.counted-R.limit)+'.':'eingehalten, noch '+eur(R.limit-R.counted)+' Spielraum.'}</div>`;
+  if(R.dMiete<=0) h+='<div class="warn" style="margin-top:10px">Ohne Mehrertrag rechnet sich die Maßnahme über die Miete nicht. Prüfe Umlage oder Neuvermietung unter Miete.</div>';
+  const mx=Math.max(...R.pos.map(x=>x.c),1);
+  const by=R.pos.filter(x=>x.c>0).sort((a,b)=>b.c-a.c);
+  if(by.length) h+='<h2>Kosten nach Gewerk</h2><div class="card bars">'+by.map(x=>`<div class="r"><span class="n">${esc(x.n||KAT[x.kat])}</span><span class="tr"><i style="width:${(x.c/mx*100).toFixed(1)}%"></i></span><b>${eur(x.c)}</b></div>`).join('')+'</div>';
+  const items=KAT_KEYS.filter(k=>R.K[k]>0).map(k=>({n:KAT[k],v:R.K[k]}));
+  h+='<h2>Kostenarten</h2><div class="card"><div class="viz">'+donut(items,eur(R.total),'Gesamtkosten')+'</div><div class="vleg">'+items.map((x,i)=>`<div class="r"><i style="background:var(--c${(i%8)+1})"></i><span>${esc(x.n)}</span><b>${eur(x.v)}</b><span class="p">${nf(x.v/R.total*100,0)} %</span></div>`).join('')+'</div></div>';
+  h+=`<h2>An das Bestands-Cockpit übergeben</h2><div class="card pad"><p style="margin:0 0 10px">Kosten nach Förderung <b>${eur(R.nettoNach)}</b> und Mehrmiete <b>${eur(R.dMiete/12)}</b> pro Monat gehen als Renovierungskosten an ein Objekt im Cockpit.</p><div class="row-actions" style="margin:0"><button class="btn primary" data-act="tocp" data-id="${p.id}">Im Cockpit öffnen</button><button class="btn" data-act="cpcode" data-id="${p.id}">Übergabecode kopieren</button><button class="btn" data-act="toflip" data-id="${p.id}">Im Flip-Rechner öffnen</button></div><textarea class="code" id="cpBox" readonly hidden aria-label="Übergabecode" style="margin-top:10px"></textarea></div>
+  <p class="note">Läuft das Cockpit als eigenes Home-Bildschirm-Symbol, hat es einen eigenen Speicher. Kopiere dann den Code und füge ihn im Cockpit unter Objekte ein.</p>`;
+  h+='<h2>Notizen</h2><div class="card pad"><textarea class="code" data-k="notiz" aria-label="Notizen">'+esc(p.notiz)+'</textarea></div>';
+  h+='<div class="row-actions"><button class="btn danger" data-act="delproj" data-id="'+p.id+'">Projekt löschen</button><button class="btn" data-act="dup" data-id="'+p.id+'">Kopieren</button></div>';
+  h+='<p class="note">Orientierungsrechnung, keine Steuer- oder Rechtsberatung. Steuerliche Einordnung, Umlage und Förderung hängen vom Einzelfall ab.</p></main>';
+  return h+tabs(p,'erg');
+}
+const CPURL_DEF='../bestands-cockpit/index.html';
+const b64=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+function cpPayload(p){ const R=calc(p); return {src:'renovierung',v:2,hubId:p.hubId||'',name:p.name||'',qm:num(p.qm),kosten:Math.round(R.nettoNach),mehrMiete:Math.round(Math.max(0,R.dMiete)/12)}; }
+function viewSet(){
+  let h=bar('Einstellungen','Renovierung','#/')+'<main><h2>Daten</h2><div class="card pad"><p style="margin:0 0 10px">Die Daten liegen nur auf diesem Gerät. Sichere sie als Text.</p><div class="row-actions" style="margin:0"><button class="btn" data-act="exp">Backup anzeigen</button><button class="btn danger" data-act="wipe">Alles löschen</button></div><textarea class="code" id="bk" placeholder="Backup-Text" style="margin-top:10px"></textarea><div class="row-actions"><button class="btn" data-act="cpy">Kopieren</button><button class="btn primary" data-act="imp">Einlesen</button></div></div>';
+  h+=`<h2>Adresse des Cockpits</h2><div class="card pad"><input type="text" id="cpu" class="code" style="min-height:42px" value="${esc((location.protocol==='app:'?CPURL_DEF:(db.cpUrl||CPURL_DEF)))}" aria-label="Adresse des Cockpits"><p class="note" style="margin:8px 0 0">Wohin der Knopf „Im Cockpit öffnen“ führt, relativ zu dieser App oder als volle Adresse.</p></div>`;
+  h+=`<h2>Aus der Besichtigung übernehmen</h2><div class="card pad"><p style="margin:0 0 10px">Füge den Übergabecode aus der Besichtigungs-App ein.</p><textarea class="code" id="xf" placeholder="BESICHTIGUNG:..."></textarea><div class="row-actions"><button class="btn primary" data-act="xfer">Projekt anlegen</button></div></div>`;
+  if(!storageOk) h+='<div class="warn" style="margin-top:10px">Speichern im Browser ist nicht möglich.</div>';
+  return h+'</main>';
+}
+function render(keep){
+  const y=keep?window.scrollY:0, r=route=parseHash(); let h;
+  if(r.v==='proj'){ const p=getP(r.id); if(!p){ location.hash='#/'; return; } h={schaetz:viewSchaetz,kosten:viewKosten,steuer:viewSteuer,miete:viewMiete,fin:viewFin,erg:viewErg}[r.tab]||viewKosten; h=h(p); }
+  else h=r.v==='set'?viewSet():viewList();
+  $('#app').innerHTML=h; if(r.v==='proj'&&r.tab==='schaetz'){ const q=getP(r.id); if(q) estLive(q); } window.scrollTo(0,y);
+}
+function live(){
+  const r=route; if(r.v!=='proj') return; const p=getP(r.id); if(!p) return; const R=calc(p), set=(id,t)=>{ const e=document.getElementById(id); if(e) e.textContent=t; };
+  set('sumTot',eur(R.total)); set('sumM2',R.qm>0?eur(R.total/R.qm)+' je m²':''); set('d-ak',eur(R.AK)); set('d-lim',eur(R.limit));
+  set('d-cap',eur(p.isfp?R.capIsfp:R.capStd)); set('d-fb',eur(R.foerd)); set('d-bau',eur(R.bauKosten+R.bauZins)); set('d-dl',eur(R.darl)); set('d-rate',eur(R.am.rate)); set('d-int',eur(R.am.int1));
+  R.pos.forEach(x=>set('pc-'+x.id,eur(x.c)));
+  if(r.tab==='schaetz') estLive(p);
+}
+function setPath(o,path,v){ const a=path.split('.'); let t=o; for(let i=0;i<a.length-1;i++) t=t[a[i]]; t[a[a.length-1]]=v; }
+
+/* =====================  EREIGNISSE  ===================== */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return; const a=b.dataset.act, r=route, p=r.v==='proj'?getP(r.id):null;
+  if(a==='hubun'&&p){ hubDrop(p); delete p.hubId; save(); render(true); toast('Verknüpfung gelöst.'); return; }
+  if(a==='hubmake'&&p){ const h=hubRead()||{v:1,urls:{},map:{},lastBackup:0,objs:[]}; if(!Array.isArray(h.objs)) h.objs=[];
+    const m={id:'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:p.name||'Neues Objekt',adresse:p.adresse||'',kp:+p.kp||0,qm:+p.qm||0,bj:+p.bj||0,zi:0,kalt:0,links:{ren:String(p.id)}}; h.objs.push(m); hubSave(h); p.hubId=m.id; save(); render(true); toast('Im Hub gespeichert.'); return; }
+  if(a==='new'){ const x=newProj({}); save(); nav('#/p/'+x.id+'/kosten'); return; }
+  if(a==='sample'){ const x=newProj({name:'Beispiel: Wohnung Altbau',adresse:'Musterstraße 1',qm:62,bj:1968,kp:180000,mSeit:4,miete0:520,mieteZiel:10.5,we:1,ek:15000,leerM:3,wahl:'verteilt'});
+    [['Bad komplett','mod',[11500,9800,0],1],['Elektrik erneuern','mod',[8200,7600,0],1],['Fenster','energ',[9400,8900,0],1],['Böden','erh',[4800,0,0],0],['Malerarbeiten','schoen',[3200,2700,0],1],['Küche','kueche',[6500,0,0],0]].forEach(([n,k,a2,s])=>{ const q=newPos(x,n,k); q.a=a2; q.sel=s; });
+    [['Bad','bad',8,100],['Küche','kueche',10,100],['Wohnzimmer','wohn',22,100],['Schlafzimmer','schlaf',15,100],['Flur','flur',6,100],['Balkon','balk',4,25]].forEach(([n,k,fl,fa])=>x.rooms.push({id:uid(),n,art:k,fl,faktor:fa,fest:0}));
+    { const rid=n=>(x.rooms.find(r=>r.n===n)||{}).id, asg={'Bad komplett':['Bad'],'Böden':['Wohnzimmer','Schlafzimmer','Flur'],'Malerarbeiten':['Wohnzimmer','Schlafzimmer','Flur','Küche'],'Küche':['Küche']}; x.pos.forEach(q=>{ if(asg[q.n]) q.rooms=asg[q.n].map(rid).filter(Boolean); }); }
+    Object.assign(x.rates,{bad:1150,kueche:400,wohn:420,schlaf:380,kind:380,flur:350,abst:200,balk:150});
+    x.sh.elek=true; x.sh.sanit=true; save(); nav('#/p/'+x.id+'/erg'); return; }
+  if(a==='tocp'&&p){ flush(); location.href=((location.protocol==='app:'?CPURL_DEF:(db.cpUrl||CPURL_DEF))).replace(/#.*$/,'')+'#import='+encodeURIComponent('RENOVIERUNG:'+b64(cpPayload(p))); return; }
+  if(a==='toflip'&&p){ flush(); location.href='../flip-rechner/index.html#import='+encodeURIComponent('RENOVIERUNG:'+b64(cpPayload(p))); return; }
+  if(a==='cpcode'&&p){ const code='RENOVIERUNG:'+b64(cpPayload(p)), box=$('#cpBox'); box.hidden=false; box.value=code; const fb=()=>{ box.focus(); box.select(); toast('Code markiert. Kopiere ihn mit dem Menü deines Geräts.'); }; try{ navigator.clipboard.writeText(code).then(()=>toast('Übergabecode kopiert.'),fb); }catch(err){ fb(); } return; }
+  if(a==='toggleroom'&&p){ const x=p.pos.find(z=>z.id===b.dataset.pid); if(x){ x.rooms=x.rooms||[]; const i=x.rooms.indexOf(b.dataset.rid); if(i>=0) x.rooms.splice(i,1); else x.rooms.push(b.dataset.rid); save(); render(true); } return; }
+  if(a==='addroom'&&p){ const k=$('#rtpl').value; p.rooms.push({id:uid(),n:ARTS[k].n,art:k,fl:0,faktor:ARTS[k].f,fest:0}); save(); render(true); return; }
+  if(a==='delroom'&&p){ if(!twice('dr'+b.dataset.id)) return; p.rooms=p.rooms.filter(x=>x.id!==b.dataset.id); p.pos.forEach(z=>{ if(z.rooms) z.rooms=z.rooms.filter(i=>i!==b.dataset.id); }); save(); render(true); return; }
+  if(a==='takeqm'&&p){ const E=estCalc(p); if(E.wfl>0){ p.qm=Math.round(E.wfl*100)/100; hubWrite(p,'qm'); save(); render(true); toast('Wohnfläche übernommen.'); } return; }
+  if(a==='addpos'&&p){ const t=TEMPL[+$('#tpl').value]; newPos(p,t[0],t[1]); save(); render(true); return; }
+  if(a==='delpos'&&p){ if(!twice('dp'+b.dataset.id)) return; p.pos=p.pos.filter(x=>x.id!==b.dataset.id); save(); render(true); return; }
+  if(a==='delproj'){ if(!twice('pj'+b.dataset.id)) return; hubDrop(db.projs.find(x=>x.id===+b.dataset.id)); db.projs=db.projs.filter(x=>x.id!==+b.dataset.id); save(); nav('#/'); return; }
+  if(a==='dup'&&p){ const c=JSON.parse(JSON.stringify(p)); delete c.hubId; c.id=db.nextId++; c.name=(p.name||'Projekt')+' (Kopie)'; c.pos.forEach(x=>x.id=uid()); db.projs.push(c); save(); nav('#/p/'+c.id+'/kosten'); toast('Kopie angelegt.'); return; }
+  if(a==='exp'){ $('#bk').value=JSON.stringify({src:'renovierung',v:1,db}); return; }
+  if(a==='cpy'){ const ta=$('#bk'); if(!ta.value){ toast('Zuerst Backup anzeigen.'); return; } const ok=()=>toast('Kopiert.'); if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(ok,()=>{ ta.select(); document.execCommand('copy'); ok(); }); else { ta.select(); document.execCommand('copy'); ok(); } return; }
+  if(a==='imp'){ try{ const j=JSON.parse($('#bk').value.trim()); if(!j||j.src!=='renovierung'||!j.db||!Array.isArray(j.db.projs)) throw 0; if(!twice('imp')) return; db=Object.assign({v:1,nextId:1,projs:[]},j.db); db.nextId=Math.max(db.nextId||1,...db.projs.map(x=>x.id+1),1); flush(); render(); toast('Eingelesen.'); }catch(err){ toast('Das ist kein gültiges Backup.'); } return; }
+  if(a==='wipe'){ if(!twice('wipe')) return; db={v:1,nextId:1,projs:[]}; flush(); nav('#/'); toast('Alles gelöscht.'); return; }
+  if(a==='xfer'){ try{ let t=$('#xf').value.trim().replace(/^BESICHTIGUNG:/,''); const q=JSON.parse(t.charAt(0)==='{'?t:decodeURIComponent(escape(atob(t.replace(/\s+/g,''))))); if(!q||q.src!=='besichtigung') throw 0;
+      const x=newProj({name:q.name||'Aus Besichtigung',qm:num(q.qm),bj:num(q.bj),kp:num(q.kp),nkPct:num(q.nkPct)||10.6});
+      if(num(q.kosten)>0){ const z=newPos(x,'Kosten laut Besichtigung (grob)','mod'); z.a[0]=num(q.kosten); } save(); nav('#/p/'+x.id+'/kosten'); toast('Projekt angelegt.'); }catch(err){ toast('Der Code ist ungültig.'); } return; }
+});
+function applyField(el){
+  const r=route, p=r.v==='proj'?getP(r.id):null; if(!p) return false;
+  if(el.dataset.pf){ const row=el.closest('[data-pid]'), x=p.pos.find(z=>z.id===row.dataset.pid); if(!x) return false; const k=el.dataset.pf;
+    if(k==='n') x.n=el.value; else if(k==='kat') x.kat=el.value; else if(k==='sel'){ x.sel=+el.value; row.querySelectorAll('.ang label').forEach((l,i)=>l.classList.toggle('on',i===x.sel)); }
+    else if(k==='eigen'||k==='inst') x[k]=parseDE(el.value); else if(/^a[012]$/.test(k)) x.a[+k[1]]=parseDE(el.value); return true; }
+  if(el.dataset.rf){ const row=el.closest('[data-rid]'), x=p.rooms.find(z=>z.id===row.dataset.rid); if(!x) return false; const k=el.dataset.rf;
+    if(k==='n') x.n=el.value; else if(k==='art'){ x.art=el.value; x.faktor=ARTS[x.art].f; } else if(k==='faktor') x.faktor=+el.value; else x[k]=parseDE(el.value); return true; }
+  if(el.dataset.k){ const k=el.dataset.k; let v;
+    if(el.type==='checkbox') v=el.checked; else if(el.tagName==='SELECT') v=el.value; else if(['name','adresse','notiz'].includes(k)) v=el.value; else v=parseDE(el.value);
+    setPath(p,k,v); hubWrite(p,k); return true; }
+  return false;
+}
+document.addEventListener('input',e=>{ if(e.target.id==='cpu'){ db.cpUrl=e.target.value.trim(); save(); return; } const t=e.target; if(t.type==='checkbox'||t.type==='radio'||t.tagName==='SELECT') return; if(applyField(t)){ save(); live(); } });
+document.addEventListener('change',e=>{ const t=e.target; if(!(t.dataset&&(t.dataset.k||t.dataset.pf||t.dataset.rf))) return; if(t.type==='text'&&t.tagName!=='SELECT') return;
+  if(applyField(t)){ save(); if(t.tagName==='SELECT'||t.dataset.pf==='sel'||t.type==='checkbox'){ render(true); } else live(); } });
+document.addEventListener('change',e=>{ const t=e.target; if(!t.dataset) return;
+  if(t.dataset.hublink!==undefined&&t.value){ const r=route, p=r.v==='proj'?getP(r.id):null, h=hubRead(), m=h&&(h.objs||[]).find(x=>x.id===t.value); if(!p||!m) return;
+    p.hubId=m.id; m.links=m.links||{}; m.links.ren=String(p.id); hubMergeP(p,m); hubSave(h); save(); render(true); toast('Verknüpft. Bei Abweichung gilt das Hub-Objekt.'); return; }
+  if(t.dataset.hubnew!==undefined&&t.value){ const h=hubRead(), m=h&&(h.objs||[]).find(x=>x.id===t.value); if(!m) return;
+    const x=newProj({name:m.name||'Neues Projekt',adresse:m.adresse||'',qm:+m.qm||60,bj:+m.bj||1985,kp:+m.kp||0,hubId:m.id}); m.links=m.links||{}; m.links.ren=String(x.id); hubSave(h); save(); nav('#/p/'+x.id+'/kosten'); } });
+render();
+</script>
+<footer class="legal-foot"><a id="hubLink" href="../immobilien-hub/index.html">‹ Zum Hub</a> <button type="button" id="legalBtn">Impressum, Haftung &amp; Datenschutz</button></footer>
+<script>(function(){try{var u=localStorage.getItem('immo-hub-url-v1');if(u)document.getElementById('hubLink').href=u;}catch(e){}})();</script>
+<dialog id="legalDlg"><form method="dialog"><h2>Impressum, Haftung &amp; Datenschutz</h2>
+<p id="legalWho" hidden></p>
+<h3>Haftung</h3><p>Diese App liefert Orientierungsrechnungen. Sie ersetzt keine Steuer-, Rechts-, Finanzierungs- oder Anlageberatung. Ergebnisse, Fristen und Rechtshinweise können unvollständig oder nicht mehr aktuell sein und hängen von deinen Eingaben und vom Einzelfall ab. Für Richtigkeit und Vollständigkeit wird keine Gewähr übernommen. Prüfe wichtige Entscheidungen mit Steuerberater, Rechtsanwalt oder Bank.</p>
+<h3>Datenschutz</h3><p>Es gibt kein Konto, keinen Server der App und keine Werbung. Deine Eingaben werden ausschließlich lokal im Speicher deines Browsers auf deinem Gerät abgelegt und nicht an mich oder Dritte übertragen. Es werden weder Tracking noch Cookies zu Analysezwecken eingesetzt, und alle Schriften liegen auf demselben Server, es werden keine Schriften bei Google geladen.</p>
+<p>Beim Aufruf der Seite verarbeitet der Hosting-Anbieter GitHub (GitHub Pages) technisch notwendig Verbindungsdaten wie die IP-Adresse. Darauf hat die App keinen Einfluss, siehe die Datenschutzerklärung von GitHub.</p>
+<p>Die Daten bleiben auf deinem Gerät, solange du sie nicht selbst exportierst oder weitergibst. Wenn du Browserdaten löschst oder die App entfernst, sind sie weg. Lege deshalb regelmäßig ein Backup an, soweit die App es anbietet. Besonders bei Mieterdaten bist du selbst für den datenschutzgerechten Umgang verantwortlich.</p>
+<button class="legal-ok" value="ok">Schließen</button></form></dialog>
+<style>
+.legal-foot{text-align:center;padding:18px 16px calc(100px + env(safe-area-inset-bottom));font:12px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+.legal-foot button{background:none;border:0;color:inherit;opacity:.6;text-decoration:underline;font:inherit;padding:8px;cursor:pointer}
+.legal-foot a{color:inherit;opacity:.6;text-decoration:underline;font:inherit;padding:8px;display:inline-block}
+#legalDlg{color-scheme:light dark;background:Canvas;color:CanvasText;border:1px solid color-mix(in srgb,CanvasText 25%,transparent);border-radius:14px;padding:18px;max-width:min(460px,calc(100vw - 32px));max-height:80vh;font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+#legalDlg::backdrop{background:rgba(0,0,0,.5)}
+#legalDlg h2{font-size:18px;margin:0 0 8px}#legalDlg h3{font-size:14px;margin:14px 0 4px}#legalDlg p{margin:0 0 8px}
+.legal-ok{margin-top:8px;width:100%;min-height:44px;border-radius:10px;border:1px solid color-mix(in srgb,CanvasText 30%,transparent);background:none;color:inherit;font:inherit;font-weight:600;cursor:pointer}
+</style>
+<script>
+/* Anbieter (optional, z. B. Name und E-Mail für öffentliche Weitergabe): */
+var LEGAL_ANBIETER='';
+(function(){var b=document.getElementById('legalBtn'),d=document.getElementById('legalDlg'),w=document.getElementById('legalWho');
+if(LEGAL_ANBIETER){w.textContent='Anbieter: '+LEGAL_ANBIETER;w.hidden=false}
+if(location.protocol==='app:'){document.querySelectorAll('#legalDlg p').forEach(function(p){if(/GitHub Pages/.test(p.textContent))p.remove()})}
+b.addEventListener('click',function(){if(d.showModal)d.showModal();else d.setAttribute('open','')})})();
+</script>
+
+</body>
+</html>

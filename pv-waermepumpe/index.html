@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="PV und WP">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F6F0E8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16120D" media="(prefers-color-scheme: dark)">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" type="image/png" href="../shared/icons/icon-192.png">
+<title>PV und Wärmepumpe</title>
+<style>
+@font-face{font-family:'IBM Plex Mono';src:url(fonts/plexmono-400.woff) format('woff');font-weight:400 500;font-style:normal;font-display:swap}
+@font-face{font-family:'IBM Plex Mono';src:url(fonts/plexmono-600.woff) format('woff');font-weight:600 700;font-style:normal;font-display:swap}
+/* Layout: Ergebnis zuerst, danach je ein Reiter für Eingaben zu PV, Wärmepumpe, Mieter und Annahmen. Bernstein als Akzent (Sonne), Zahlen in Mono. */
+:root{
+  color-scheme:light;
+  --bg:#F6F0E8; --surface:#FFFFFF; --surface2:#F8F3EC; --ink:#241A10; --muted:#6B5C4B; --line:#E3D8C8;
+  --accent:#B45309; --accent-ink:#FFFFFF; --accent-soft:#FBE6CC;
+  --s2:#1F6F6B; --s3:#3C4B8A;
+  --good:#17804F; --good-soft:#DCF2E6; --mid:#8F5F00; --mid-soft:#FBEECB; --bad:#B3302F; --bad-soft:#F8DDDC;
+  --font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  padding-top:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme: dark){:root{
+  color-scheme:dark;
+  --bg:#16120D; --surface:#201A13; --surface2:#27201A; --ink:#F2E9DC; --muted:#B2A28E; --line:#3A3025;
+  --accent:#F2B35A; --accent-ink:#2A1A04; --accent-soft:#3A2810;
+  --s2:#6FD0C6; --s3:#9CB0F2;
+  --good:#47C48A; --good-soft:#12301F; --mid:#E3B341; --mid-soft:#352A0E; --bad:#F27F7D; --bad-soft:#3A1717;}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.45;padding-inline:16px;padding-block:0 110px}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+.wrap{max-width:680px;margin-inline:auto}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;margin-inline:-16px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar h1{font-size:20px;font-weight:600;margin:0}
+.bar .sub{display:block;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;min-height:42px;padding:0 14px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.small{min-height:34px;padding:0 10px;font-size:13px}
+main{padding-block:14px 0}
+h2{font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:22px 4px 8px}
+h2:first-child{margin-top:2px}
+.note{font-size:13px;color:var(--muted);margin:8px 4px}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.p-good{background:var(--good-soft);color:var(--good)} .p-mid{background:var(--mid-soft);color:var(--mid)} .p-bad{background:var(--bad-soft);color:var(--bad)} .p-none{background:var(--surface2);color:var(--muted)}
+.t-good{color:var(--good)} .t-mid{color:var(--mid)} .t-bad{color:var(--bad)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.card.pad{padding:14px}
+.warn{background:var(--mid-soft);border:1px solid var(--mid);border-radius:12px;padding:10px 12px;font-size:13.5px;margin:0 0 10px}
+.hero{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:14px;padding:14px}
+.hero .big{font-family:var(--font-mono);font-weight:600;font-size:28px;line-height:1.1;margin:4px 0 2px}
+.hero .lab{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 12px;min-width:0}
+.kpi .l{font-size:12px;color:var(--muted);line-height:1.3;overflow-wrap:anywhere}
+.kpi .v{font-family:var(--font-mono);font-weight:600;font-size:17px;margin-top:3px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.3}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:10px 14px;border-top:1px solid var(--line);align-items:baseline}
+.kv:first-child{border-top:0}
+.kv b{font-family:var(--font-mono);font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.kv small{display:block;color:var(--muted);font-size:12px;font-weight:400;font-family:var(--font-body)}
+.kv.tot{background:var(--surface2)}
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 10px;padding:14px}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:12.5px;color:var(--muted)}
+.fld.full{grid-column:1/-1}
+.fld input[type=text],.fld select{width:100%;min-width:0;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 11px;font-size:16px;color:var(--ink)}
+.fld input[inputmode]{font-family:var(--font-mono);text-align:right}
+.unit{position:relative;display:block}
+.unit input{padding-right:52px!important}
+.unit i{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-style:normal;color:var(--muted);font-size:13px;pointer-events:none}
+.chk{display:flex;gap:10px;align-items:center;padding:10px 14px;border-top:1px solid var(--line);font-size:14.5px;color:var(--ink)}
+.chk input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.derived{padding:11px 14px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted);background:var(--surface2)}
+.derived b{font-family:var(--font-mono);color:var(--ink);font-weight:600}
+.chart{padding:10px 8px 6px}
+.chart svg{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;padding:0 12px 10px;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.code{width:100%;min-height:120px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px;font-family:var(--font-mono);font-size:12px;line-height:1.5}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:10px;padding:10px 16px;font-size:14px;z-index:20;max-width:calc(100vw - 32px)}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;background:var(--surface);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabbar button{display:flex;flex-direction:column;align-items:center;justify-content:center;border:0;background:none;padding:7px 2px;border-radius:10px;color:var(--muted);font-size:12.5px;font-weight:500;min-height:50px;line-height:1.15}
+.tabbar button[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/*BRAND*/
+@font-face{font-family:'Bricolage Grotesque';src:url(fonts/bricolage-700.woff) format('woff');font-weight:500 800;font-style:normal;font-display:swap}
+.bar{padding-left:58px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 13%,var(--bg)),var(--bg))}
+.bar::before{content:'';position:absolute;left:16px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:8px;background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22 viewBox=%220 0 64 64%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22 stop-opacity=%22.16%22/%3E%3Cstop offset=%221%22 stop-color=%22%23000%22 stop-opacity=%22.14%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22%23B45309%22/%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22url%28%23g%29%22/%3E%3Ccircle cx=%2215%22 cy=%2215%22 r=%225.5%22 fill=%22%23fff%22/%3E%3Cg stroke=%22%23fff%22 stroke-width=%223.2%22 stroke-linecap=%22round%22%3E%3Cpath d=%22M15 5v2.5M5 15h2.5M8 8l1.8 1.8M22 8l-1.8 1.8%22/%3E%3C/g%3E%3Cpath d=%22M26 11h28l-5 20H21z%22 fill=%22%23fff%22/%3E%3Cg stroke=%22%23B45309%22 stroke-width=%222%22 stroke-linecap=%22round%22%3E%3Cpath d=%22M33.5 11l-4 20M43.5 11l-3.5 20M23.7 21h28.3%22/%3E%3C/g%3E%3Cg fill=%22none%22 stroke=%22%23fff%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M18 39c-3 3 3 5 0 8s3 5 0 8%22/%3E%3Cpath d=%22M32 39c-3 3 3 5 0 8s3 5 0 8%22/%3E%3Cpath d=%22M46 39c-3 3 3 5 0 8s3 5 0 8%22/%3E%3C/g%3E%3C/svg%3E") center/cover;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.bar h1,.empty b,.pcard .t,.mcard .t,.tile b,.hero .lab{font-family:'Bricolage Grotesque',var(--font-body)}
+.bar h1{letter-spacing:-.01em}
+.empty::before{content:'';display:block;width:60px;height:60px;margin:0 auto 12px;border-radius:15px;background:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22 viewBox=%220 0 64 64%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22 stop-opacity=%22.16%22/%3E%3Cstop offset=%221%22 stop-color=%22%23000%22 stop-opacity=%22.14%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22%23B45309%22/%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22url%28%23g%29%22/%3E%3Ccircle cx=%2215%22 cy=%2215%22 r=%225.5%22 fill=%22%23fff%22/%3E%3Cg stroke=%22%23fff%22 stroke-width=%223.2%22 stroke-linecap=%22round%22%3E%3Cpath d=%22M15 5v2.5M5 15h2.5M8 8l1.8 1.8M22 8l-1.8 1.8%22/%3E%3C/g%3E%3Cpath d=%22M26 11h28l-5 20H21z%22 fill=%22%23fff%22/%3E%3Cg stroke=%22%23B45309%22 stroke-width=%222%22 stroke-linecap=%22round%22%3E%3Cpath d=%22M33.5 11l-4 20M43.5 11l-3.5 20M23.7 21h28.3%22/%3E%3C/g%3E%3Cg fill=%22none%22 stroke=%22%23fff%22 stroke-width=%224%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M18 39c-3 3 3 5 0 8s3 5 0 8%22/%3E%3Cpath d=%22M32 39c-3 3 3 5 0 8s3 5 0 8%22/%3E%3Cpath d=%22M46 39c-3 3 3 5 0 8s3 5 0 8%22/%3E%3C/g%3E%3C/svg%3E") center/cover;box-shadow:0 4px 12px rgba(0,0,0,.18)}
+/*ENDBRAND*/
+/*VIZ*/
+:root{--c1:#2a78d6;--c2:#eb6834;--c3:#1baf7a;--c4:#eda100;--c5:#e87ba4;--c6:#008300;--c7:#6250d6;--c8:#e34948;--neutral:#8a857d}
+@media (prefers-color-scheme: dark){:root{--c1:#3987e5;--c2:#d95926;--c3:#199e70;--c4:#c98500;--c5:#d55181;--c6:#008300;--c7:#9085e9;--c8:#e66767;--neutral:#8f8a82}}
+.viz{padding:12px 12px 8px}
+.viz svg{display:block;width:100%;height:auto;overflow:visible}
+.viz text{font-family:var(--font-body);fill:var(--muted);font-size:11px}
+.viz .t-ink{fill:var(--ink)}
+.viz .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.vleg{display:flex;flex-direction:column}
+.vleg .r{display:grid;grid-template-columns:14px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:8px 14px;border-top:1px solid var(--line);font-size:13.5px}
+.vleg .r i{width:10px;height:10px;border-radius:3px;display:block}
+.vleg .r b{font-family:var(--font-mono);font-weight:600}
+.vleg .r span.p{font-family:var(--font-mono);color:var(--muted);font-size:12px;min-width:38px;text-align:right}
+.vtip{position:fixed;z-index:30;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:8px;padding:6px 9px;font-size:12px;line-height:1.35;max-width:220px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.vtip b{font-family:var(--font-mono)}
+details.vtab{margin:6px 14px 10px;font-size:12.5px;color:var(--muted)}
+details.vtab table{width:100%;border-collapse:collapse;margin-top:6px}
+details.vtab td,details.vtab th{padding:4px 2px;border-top:1px solid var(--line);text-align:right;font-family:var(--font-mono);font-size:12px}
+details.vtab td:first-child,details.vtab th:first-child{text-align:left;font-family:var(--font-body)}
+/*ENDVIZ*/
+.mchips{display:flex;gap:6px;overflow-x:auto;padding:10px 12px 0;-webkit-overflow-scrolling:touch}
+.mchips button{flex:0 0 auto;min-width:44px;min-height:36px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:10px;font:inherit;font-size:13px;padding:0 10px}
+.mchips button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.vinfo{min-height:38px;padding:4px 14px 0;font-size:12.5px;color:var(--muted)}
+.vinfo b{color:var(--ink);font-family:var(--font-mono);font-weight:600}
+</style>
+<link rel="stylesheet" href="../shared/ui.css">
+<script>window.IMMO_I18N=1;</script>
+<script src="../shared/i18n-en.js"></script>
+<script src="../shared/core.js"></script>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+'use strict';
+/* =====================  ENGINE  ===================== */
+/*ENGINE*/
+const MD=[31,28,31,30,31,30,31,31,30,31,30,31];
+const PVSH=[3,5.5,9.5,12.5,14,14.5,14.5,12.5,9.5,6,3,2.5];
+const HDD=[19,16,13,8,3.5,1,0.5,0.5,2.5,8,13.5,17];
+const HHF=[1.1,1.05,1.02,0.98,0.95,0.92,0.92,0.93,0.97,1.02,1.07,1.12];
+const nrm=a=>{ const t=a.reduce((x,y)=>x+y,0); return a.map(v=>v/t); };
+const SH_HH=nrm([2.2,1.8,1.6,1.5,1.5,1.8,3.2,4.6,4.0,3.5,3.4,3.8,4.6,4.2,3.5,3.4,3.8,5.2,6.6,6.8,6.2,5.4,4.2,3.0]);
+const SH_WP=nrm([3.5,3.5,3.8,4.2,4.6,5.0,5.2,4.8,4.2,3.8,3.6,3.6,3.6,3.6,3.7,3.9,4.3,4.8,5.0,4.8,4.4,4.0,3.7,3.5]);
+const LAT=48.5, YEARS=20;
+const num=v=>{ const x=+v; return isFinite(x)?x:0; };
+
+function solarShape(m){
+  const doy=MD.slice(0,m).reduce((a,b)=>a+b,0)+15;
+  const dec=23.44*Math.sin(2*Math.PI*(284+doy)/365)*Math.PI/180, la=LAT*Math.PI/180;
+  const c=-Math.tan(la)*Math.tan(dec), hl=Math.acos(Math.max(-1,Math.min(1,c)))*12/Math.PI;
+  const noon=(m>=3&&m<=8)?13.3:12.4, w=[];
+  for(let h=0;h<24;h++){ const dx=h+0.5-noon; w.push(Math.abs(dx)<hl?Math.pow(Math.cos(Math.PI/2*dx/hl),1.3):0); }
+  return nrm(w);
+}
+const SOLAR=[...Array(12).keys()].map(solarShape);
+
+/* Repräsentativer Tag je Monat, stundenweise, mit Speicher. */
+function simulate(s,withWp,withPv){
+  const kwp=withPv?num(s.kwp):0, prodY=kwp*num(s.ertrag);
+  const eta=Math.sqrt(Math.min(1,Math.max(0.5,num(s.etaBat)/100))), cap=withPv?Math.max(0,num(s.spK)):0, pb=Math.max(0.1,num(s.pBat));
+  const hhY=num(s.kwhHH), miY=num(s.kwhMi), wpM=withWp?wpMonthly(s):new Array(12).fill(0);
+  const sumH=HHF.reduce((a,f,i)=>a+f*MD[i],0), shP=nrm(PVSH);
+  const R={prod:0,direct:0,disch:0,charged:0,export:0,grid:0,self:{hh:0,mi:0,wp:0},load:{hh:0,mi:0,wp:0}};
+  let soc=0;
+  for(let m=0;m<12;m++){
+    const dP=prodY*shP[m]/MD[m], dHH=hhY*HHF[m]/sumH, dMI=miY*HHF[m]/sumH, dWP=wpM[m]/MD[m];
+    for(let pass=0;pass<2;pass++){
+      const A={direct:0,disch:0,charged:0,export:0,grid:0,self:{hh:0,mi:0,wp:0},load:{hh:0,mi:0,wp:0},hr:[]};
+      for(let h=0;h<24;h++){
+        const p=dP*SOLAR[m][h], l1=dHH*SH_HH[h], l2=dMI*SH_HH[h], l3=dWP*SH_WP[h], L=l1+l2+l3;
+        const dir=Math.min(p,L), sur=p-dir, def=L-dir;
+        const ch=Math.min(sur,pb,(cap-soc)/eta); soc+=ch*eta;
+        const ds=Math.min(def,pb,soc*eta); soc-=ds/eta;
+        const sup=dir+ds, k=L>0?sup/L:0;
+        A.hr.push([p,L,ch,ds]); A.direct+=dir; A.disch+=ds; A.charged+=ch; A.export+=sur-ch; A.grid+=def-ds;
+        A.self.hh+=l1*k; A.self.mi+=l2*k; A.self.wp+=l3*k; A.load.hh+=l1; A.load.mi+=l2; A.load.wp+=l3;
+      }
+      if(pass===1){ const d=MD[m]; (R.hr=R.hr||[])[m]=A.hr;
+        R.prod+=dP*d; R.direct+=A.direct*d; R.disch+=A.disch*d; R.charged+=A.charged*d; R.export+=A.export*d; R.grid+=A.grid*d;
+        ['hh','mi','wp'].forEach(g=>{ R.self[g]+=A.self[g]*d; R.load[g]+=A.load[g]*d; }); }
+    }
+  }
+  R.selfTot=R.direct+R.disch; R.loadTot=R.load.hh+R.load.mi+R.load.wp;
+  R.exportNet=R.export*(1-(s.begrenzung?Math.max(0,num(s.abregel))/100:0));
+  R.ev=R.prod>0?R.selfTot/R.prod:0; R.autarkie=R.loadTot>0?R.selfTot/R.loadTot:0;
+  return R;
+}
+function waermeNutz(s){ return s.wMode==='gas'?num(s.gasKwh)*num(s.kessel)/100:num(s.flaeche)*num(s.spez); }
+function wpMonthly(s){
+  const Q=waermeNutz(s), ww=Math.min(0.9,Math.max(0,num(s.wwAnt)/100)), j=Math.max(1,num(s.jaz)), hd=nrm(HDD);
+  return hd.map(h=>(Q*(1-ww)*h+Q*ww/12)/j);
+}
+function irr(cf){
+  const f=r=>cf.reduce((a,c,i)=>a+c/Math.pow(1+r,i),0);
+  let lo=-0.9,hi=1; if(f(lo)*f(hi)>0) return null;
+  for(let i=0;i<200;i++){ const mid=(lo+hi)/2; if(f(lo)*f(mid)<=0) hi=mid; else lo=mid; }
+  return (lo+hi)/2;
+}
+function npv(cf,r){ return cf.reduce((a,c,i)=>a+c/Math.pow(1+r,i),0); }
+function payback(cf){ let c=cf[0]; if(c>=0) return 0; for(let t=1;t<cf.length;t++){ const n=c+cf[t]; if(n>=0) return t-1+(-c)/cf[t]; c=n; } return null; }
+function vAvg(s){
+  const k=num(s.kwp); if(k<=0) return 0;
+  return (Math.min(k,10)*num(s.v10)+Math.max(0,Math.min(k,40)-10)*num(s.v40)+Math.max(0,k-40)*num(s.v100))/k;
+}
+function pvFlow(s,R){
+  const esc=num(s.stromG)/100, infl=num(s.infl)/100, deg=num(s.degr)/100, N=YEARS;
+  const inv=num(s.invPv)+num(s.invSp), cf=[-inv], rows=[]; let opexSum=0, prodSum=0;
+  const va=vAvg(s), hasMi=R.self.mi>1;
+  for(let t=1;t<=N;t++){
+    const d=Math.pow(1-deg,t-1), e=Math.pow(1+esc,t-1), i=Math.pow(1+infl,t-1);
+    const selfVesc=(R.self.hh*num(s.pHH)*e+R.self.mi*num(s.pMi)+R.self.wp*num(s.pWp)*e)/100*d;
+    const exp=R.exportNet*va/100*d;
+    const opex=num(s.betrieb)/100*num(s.invPv)*i+(hasMi?num(s.ggvK)*i:0);
+    const wr=(t===num(s.wrJahr))?num(s.wrInv):0;
+    let tax=0; if(!s.steuerfrei){ tax=num(s.grenz)/100*(selfVesc+exp-opex-inv/N); }
+    const c=selfVesc+exp-opex-wr-tax; cf.push(c); opexSum+=opex+wr; prodSum+=R.prod*d;
+    rows.push({t,self:selfVesc,exp,opex,wr,tax,c});
+  }
+  return {cf,rows,inv,lcoe:prodSum>0?(inv+opexSum)/prodSum*100:0,y1:rows[0]};
+}
+function foerderung(s){
+  const n=Math.max(1,Math.round(num(s.nWE))), capK=28000+15000*(Math.min(n,6)-1)+8000*Math.max(0,n-6);
+  const fk=Math.min(num(s.invWp),capK);
+  let q=30; if(s.selbst){ q+=num(s.klimaB)+num(s.einkB); }
+  q=Math.min(q,70);
+  if(!s.foerdAn) q=0;
+  return {capK,fk,q,betrag:fk*q/100};
+}
+function wpFlow(s){
+  const Q=waermeNutz(s), eta=Math.max(0.3,num(s.kessel)/100), gasK=Q/eta, el=Q/Math.max(1,num(s.jaz));
+  const gG=num(s.gasG)/100, eG=num(s.stromG)/100, infl=num(s.infl)/100, N=YEARS;
+  const F=foerderung(s), net=num(s.invWp)-F.betrag;
+  const cf=[-net], lcf=[-net], tcf=[0], rows=[];
+  const vmShare=Math.min(1,num(s.flaeche)>0?num(s.vmWfl)/num(s.flaeche):1);
+  const umlBase=Math.max(0,num(s.invWp)*(1-num(s.instAbz)/100)-F.betrag)*vmShare;
+  const uml=(s.umlage559e&&s.foerdAn)?Math.min(0.10*umlBase,0.50*num(s.vmWfl)*12):0;
+  for(let t=1;t<=N;t++){
+    const g=Math.pow(1+gG,t-1), e=Math.pow(1+eG,t-1), i=Math.pow(1+infl,t-1);
+    const gasC=gasK*num(s.pGas)/100*g+num(s.wartAlt)*i, wpC=el*num(s.pWp)/100*e+num(s.wartWp)*i;
+    const dT=gasC-wpC, co2=gasK*num(s.co2ct)/100*g*num(s.co2Ant)/100, rest=dT-co2;
+    const land=co2+num(s.eigenAnt)/100*rest+uml, ten=(1-num(s.eigenAnt)/100)*rest-uml;
+    cf.push(dT); lcf.push(land); tcf.push(ten); rows.push({t,gasC,wpC,dT,co2,land,ten});
+  }
+  return {Q,gasK,el,F,net,cf,lcf,tcf,rows,uml,umlCap:0.50*num(s.vmWfl)*12,y1:rows[0]};
+}
+function calc(s){
+  const A=simulate(s,false,true), C=simulate(s,true,true);
+  const pvA=pvFlow(s,A), pvC=pvFlow(s,C), wp=wpFlow(s);
+  const N=YEARS, both=[ -(pvC.inv+wp.net) ], solo=[ -(pvA.inv) ];
+  for(let t=1;t<=N;t++){ both.push(pvC.cf[t]+wp.cf[t]); }
+  const cum=cf=>{ let c=0; return cf.map(v=>c+=v); };
+  const z=num(s.zins)/100;
+  const m=cf=>({irr:irr(cf),npv:npv(cf,z),pb:payback(cf),sum:cf.reduce((a,b)=>a+b,0)-cf[0]*0});
+  // PV-Zusatznutzen: PV in Anwesenheit der WP gegenüber WP allein
+  return {A,C,pvA,pvC,wp,both,mPvA:m(pvA.cf),mPvC:m(pvC.cf),mWp:m(wp.cf),mBoth:m(both),mWpL:m(wp.lcf),
+    cumPvA:cum(pvA.cf),cumWp:cum(wp.cf),cumBoth:cum(both),cumPvC:cum(pvC.cf)};
+}
+/*END*/
+
+/* =====================  ZUSTAND  ===================== */
+const KEY='pvwp-v1';
+const DEF={
+  kwp:24, ertrag:950, degr:0.4, invPv:31200, spK:10.2, invSp:7500, pBat:5, etaBat:90, betrieb:1, wrInv:2200, wrJahr:12,
+  begrenzung:true, abregel:3, steuerfrei:true, grenz:42,
+  kwhHH:6000, kwhMi:14000, pHH:37, pMi:30, ggvK:500, v10:7.70, v40:6.66, v100:5.44,
+  wMode:'gas', gasKwh:30000, kessel:90, flaeche:280, spez:110, wwAnt:18, jaz:3.3, invWp:30000, wartWp:250, wartAlt:400,
+  pGas:12, co2ct:1.2, pWp:27, gasG:4, nWE:3, selbst:false, klimaB:16, einkB:0, foerdAn:true,
+  name:'', adresse:'', vmWfl:240, umlage559e:true, instAbz:0, eigenAnt:10, co2Ant:50,
+  stromG:2.5, infl:2, zins:3
+};
+let s=Object.assign({},DEF), storageOk=true;
+try{ const r=localStorage.getItem(KEY); if(r){ const j=JSON.parse(r); if(j&&typeof j==='object') s=Object.assign({},DEF,j); } }catch(e){ storageOk=false; }
+let saveT=null;
+function save(){ clearTimeout(saveT); saveT=setTimeout(flush,250); }
+function flush(){ try{ localStorage.setItem(KEY,JSON.stringify(s)); }catch(e){ storageOk=false; } try{ const R=calc(s); localStorage.setItem('pvwp-summary-v1',JSON.stringify({ts:Date.now(),irr:R.mBoth.irr,inv:-R.both[0]}));
+  const ok=R.mBoth.irr!==null&&R.mBoth.irr!==undefined&&isFinite(R.mBoth.irr); ImmoCore.pubSum('pv',s.hubId?{[s.hubId]:{v:ok?ImmoCore.nf(R.mBoth.irr*100,1)+' %':'–',s:ok?'Rendite p. a. · Einsatz '+ImmoCore.nf(Math.round(-R.both[0]),0)+' €':'Angaben fehlen',st:!ok?'none':(R.mBoth.irr>=0.05?'ok':(R.mBoth.irr>=0.02?'mid':'bad'))}}:{}); }catch(e){} }
+window.addEventListener('pagehide',flush);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) flush(); });
+
+
+/* =====================  GEMEINSAMES OBJEKT IM HUB  ===================== */
+const {hubRead,hubSave,hubMasters,hubAvail}=ImmoCore, HMAP=[['name','name'],['adresse','adresse']];
+const hEmpty=ImmoCore.hEmpty, hSame=ImmoCore.hSame;
+/* Leere Hub-Felder werden aus der App gefüllt, sonst gilt das Hub-Objekt. */
+/* Beim ersten Verknüpfen füllt die App leere Felder im Hub. Danach gilt der Hub, auch dort gelöschte Werte werden hier geleert. */
+function hubMergeS(st,m){ let chS=false, chM=false; const first=!st.hubSynced;
+  HMAP.forEach(([mk,sk])=>{ const mv=m[mk], sv=st[sk];
+    if(hEmpty(mv)&&!hEmpty(sv)){ if(first){ m[mk]=sv; chM=true; } else if(mk!=='name'){ st[sk]=''; chS=true; } }
+    else if(!hEmpty(mv)&&!hSame(mv,sv)){ st[sk]=(mk==='name'||mk==='adresse')?String(mv):+mv; chS=true; } });
+  if(first){ st.hubSynced=true; chS=true; }
+  return {chS,chM}; }
+function syncFromHub(){
+  if(!s.hubId) return; const h=hubRead(); if(!h) return; const m=(h.objs||[]).find(x=>x.id===s.hubId);
+  if(!m){ delete s.hubId; flush(); return; }
+  m.links=m.links||{}; let chH=false; if(!m.links.pv){ m.links.pv='1'; chH=true; }
+  const r=hubMergeS(s,m); if(r.chM||chH) hubSave(h); if(r.chS) flush();
+}
+/* Kontext für die Kopfzeile: zu welchem Hub-Objekt gehört die Ansicht? */
+window.immoCtx=()=>(s&&s.hubId)||'';
+/* Kachel im Hub beim Öffnen aktualisieren */
+window.addEventListener('load',()=>{ try{ flush(); }catch(e){} });
+function hubWrite(k){ const p=HMAP.find(x=>x[1]===k); if(!s.hubId||!p) return; const h=hubRead(); if(!h) return; const m=(h.objs||[]).find(x=>x.id===s.hubId); if(!m) return; m[p[0]]=s[k]; hubSave(h); }
+const pvSnap=()=>{ const o=JSON.parse(JSON.stringify(s)); delete o.snaps; return o; };
+function hubLoad(m){
+  const snaps=Object.assign({},s.snaps||{}); if(s.hubId) snaps[s.hubId]=pvSnap();
+  /* Die Wohnfläche des Hub-Objekts ist ein Vorschlag für die vermietete Fläche, nicht die beheizte Gebäudefläche. */
+  let base=snaps[m.id]; if(!base) base={name:m.name||'',adresse:m.adresse||'',vmWfl:+m.qm||DEF.vmWfl,hubSynced:true};
+  s=Object.assign({},DEF,base,{snaps}); s.hubId=m.id;
+  const h=hubRead(); if(h){ const mm=(h.objs||[]).find(x=>x.id===m.id); if(mm){ mm.links=mm.links||{}; mm.links.pv='1'; hubMergeS(s,mm); hubSave(h); } }
+  flush();
+}
+function hubCardP(){
+  if(!hubAvail()) return '';
+  const ms=hubMasters(), m=s.hubId?ms.find(x=>x.id===s.hubId):null;
+  const opts=ms.filter(x=>!m||x.id!==m.id).map(x=>`<option value="${esc(x.id)}">${esc(x.name||'Objekt')}${x.adresse?' · '+esc(x.adresse):''}</option>`).join('');
+  const pick=opts?`<label class="fld" style="margin-top:10px">${m?'Anderes Objekt laden':'Objekt aus dem Hub laden'}<select data-hubpick="1"><option value="">– auswählen –</option>${opts}</select></label>`:'';
+  const fl=`<label class="fld">Bezeichnung<input type="text" data-k="name" data-str="1" value="${esc(s.name||'')}" autocomplete="off"></label><label class="fld">Adresse<input type="text" data-k="adresse" data-str="1" value="${esc(s.adresse||'')}" autocomplete="off"></label>`;
+  if(m) return `<h2>Hub-Objekt</h2><div class="card pad"><b>${esc(m.name||'Objekt')}</b><p class="note" style="margin:4px 0 8px">Bezeichnung und Adresse sind mit dem Hub abgeglichen. Die Wohnfläche des Hub-Objekts dient als Vorschlag für die vermietete Fläche. Beim Wechsel merkt sich die App alle Eingaben des Objekts.</p>${fl}${pick}</div>`;
+  return `<h2>Hub-Objekt</h2><div class="card pad"><p style="margin:0 0 8px">Speichere dieses Objekt im Hub, dann nutzen es auch die anderen Apps.</p>${fl}<div class="row-actions" style="margin:0"><button class="btn small primary" data-act="hubmake">Im Hub speichern</button></div>${pick}</div>`;
+}
+
+/* =====================  HILFEN  ===================== */
+const $=q=>document.querySelector(q);
+const {esc,nf,parseDE,toast,kpi}=ImmoCore;
+const eur=v=>(v<0?'−':'')+nf(Math.abs(Math.round(v)),0)+' €';
+const pct=(v,d)=>v===null||v===undefined||!isFinite(v)?'–':nf(v*100,d===undefined?1:d)+' %';
+const yrs=v=>v===null?'über 20 Jahre':nf(v,1)+' Jahre';
+let tab='erg', toastT=null;
+function bar(sub,title){ return `<div class="bar"><span class="sub">${esc(sub)}</span><h1>${esc(title)}</h1></div>`; }
+function tabbar(){ const t=[['erg','Ergebnis'],['pv','PV'],['wp','Wärmepumpe'],['mi','Mieter'],['an','Annahmen']]; return `<nav class="tabbar" aria-label="Bereiche">${t.map(([i,l])=>`<button data-act="tab" data-v="${i}" ${tab===i?'aria-current="page"':''}>${l}</button>`).join('')}</nav>`; }
+function kv(l,v,sub,cls){ return `<div class="kv ${cls||''}"><div>${l}${sub?`<small>${sub}</small>`:''}</div><b>${v}</b></div>`; }
+function f(k,l,unit,opt){ opt=opt||{}; const v=s[k]; return `<label class="fld ${opt.full?'full':''}">${l}<span class="unit"><input type="text" inputmode="decimal" data-k="${k}" value="${esc(String(v).replace('.',ImmoCore.dc))}" autocomplete="off">${unit?`<i>${unit}</i>`:''}</span></label>`; }
+function cb(k,l){ return `<label class="chk"><input type="checkbox" data-k="${k}" ${s[k]?'checked':''}><span>${l}</span></label>`; }
+function irrCls(v){ return v===null?'t-bad':(v>=0.06?'t-good':(v>=0.03?'t-mid':'t-bad')); }
+
+/* =====================  ANSICHTEN  ===================== */
+function chart(R){
+  const ser=[['PV allein',R.cumPvA,'var(--accent)'],['Wärmepumpe allein',R.cumWp,'var(--s2)'],['Beides zusammen',R.cumBoth,'var(--s3)']];
+  const W=360,H=200,pl=44,pr=10,pt=10,pb=24; let mn=0,mx=0;
+  ser.forEach(x=>x[1].forEach(v=>{ mn=Math.min(mn,v); mx=Math.max(mx,v); }));
+  const pad=(mx-mn)*0.06||1000; mn-=pad; mx+=pad;
+  const X=t=>pl+(W-pl-pr)*t/YEARS, Y=v=>pt+(H-pt-pb)*(1-(v-mn)/(mx-mn));
+  const step=(()=>{ const raw=(mx-mn)/4, p=Math.pow(10,Math.floor(Math.log10(raw))), b=raw/p; return (b<1.5?1:b<3.5?2:b<7.5?5:10)*p; })();
+  let g=''; for(let v=Math.ceil(mn/step)*step; v<=mx; v+=step){ g+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="${Math.abs(v)<1e-6?1.5:0.7}"/><text x="${pl-5}" y="${Y(v)+3.5}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="var(--font-mono)">${nf(v/1000,0)}k</text>`; }
+  [0,5,10,15,20].forEach(t=>{ g+=`<text x="${X(t)}" y="${H-7}" text-anchor="middle" font-size="10" fill="var(--muted)" font-family="var(--font-mono)">${t}</text>`; });
+  const lines=ser.map(([n,d,c])=>`<polyline fill="none" stroke="${c}" stroke-width="2.4" stroke-linejoin="round" points="${d.map((v,t)=>X(t).toFixed(1)+','+Y(v).toFixed(1)).join(' ')}"/>`).join('');
+  return `<div class="card"><div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Kumulierter Überschuss über 20 Jahre. Beides zusammen am Ende ${eur(R.cumBoth[YEARS])}, PV allein ${eur(R.cumPvA[YEARS])}, Wärmepumpe allein ${eur(R.cumWp[YEARS])}.">${g}${lines}</svg></div>
+  <div class="legend">${ser.map(([n,d,c])=>`<span><i style="background:${c}"></i>${n} ${eur(d[YEARS])}</span>`).join('')}</div></div><p class="note">Kumulierter Überschuss in Tausend Euro über die Jahre, jeweils nach Abzug der Investition.</p>`;
+}
+
+/* ---------- Grafiken ---------- */
+const MON=ImmoCore.lang==='en'?['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']:['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+let vm=6;
+function dayChart(C){
+  const H=C.hr[vm]; if(!H) return '';
+  const W=360,Hh=190,pl=34,pr=8,pt=12,pb=40;
+  let mx=0; H.forEach(x=>{ mx=Math.max(mx,x[0],x[1],x[2],x[3]); }); mx=Math.max(0.5,Math.ceil(mx*1.15*2)/2);
+  const X=h=>pl+(W-pl-pr)*(h+0.5)/24, Y=v=>pt+(Hh-pt-pb)*(1-v/mx), bw=(W-pl-pr)/24*0.62;
+  let g='';
+  [0,0.5,1].forEach(f=>{ const v=mx*f; g+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="${f?0.7:1.3}"/><text x="${pl-5}" y="${Y(v)+3.5}" text-anchor="end" class="num" style="font-size:10px">${nf(v,1)}</text>`; });
+  g+=`<text x="${pl-5}" y="8" text-anchor="end" style="font-size:10px">kW</text>`;
+  [0,6,12,18,23].forEach(h=>g+=`<text x="${X(h)}" y="${Hh-24}" text-anchor="middle" class="num" style="font-size:10px">${h}</text>`);
+  let bars='',hits='';
+  H.forEach((x,h)=>{
+    const [p,L,ch,ds]=x; const top=Math.max(ch,ds)||0;
+    if(ch>0.005) bars+=`<rect x="${(X(h)-bw/2).toFixed(1)}" y="${Y(ch).toFixed(1)}" width="${bw.toFixed(1)}" height="${(Y(0)-Y(ch)).toFixed(1)}" rx="2" fill="var(--c3)" opacity=".9"/>`;
+    if(ds>0.005) bars+=`<rect x="${(X(h)-bw/2).toFixed(1)}" y="${Y(ds).toFixed(1)}" width="${bw.toFixed(1)}" height="${(Y(0)-Y(ds)).toFixed(1)}" rx="2" fill="var(--c3)" opacity=".45"/>`;
+    hits+=`<rect class="vh" x="${(X(h)-(W-pl-pr)/48).toFixed(1)}" y="${pt}" width="${((W-pl-pr)/24).toFixed(1)}" height="${Hh-pt-pb}" fill="transparent" data-tip="${h}:00 Uhr · Erzeugung <b>${nf(p,2)} kW</b> · Verbrauch <b>${nf(L,2)} kW</b> · Speicher laden <b>${nf(ch,2)}</b> / entladen <b>${nf(ds,2)} kW</b>"/>`;
+  });
+  const pts=i=>H.map((x,h)=>X(h).toFixed(1)+','+Y(x[i]).toFixed(1)).join(' ');
+  const lines=`<polyline fill="none" stroke="var(--c2)" stroke-width="2" stroke-linejoin="round" points="${pts(0)}"/><polyline fill="none" stroke="var(--c1)" stroke-width="2" stroke-linejoin="round" points="${pts(1)}"/>`;
+  const sum=i=>H.reduce((a,x)=>a+x[i],0);
+  const leg=`<div class="vleg"><div class="r"><i style="background:var(--c2)"></i><span>Erzeugung</span><b>${nf(sum(0),1)} kWh</b><span class="p"></span></div><div class="r"><i style="background:var(--c1)"></i><span>Verbrauch</span><b>${nf(sum(1),1)} kWh</b><span class="p"></span></div><div class="r"><i style="background:var(--c3)"></i><span>Speicher (kräftig laden, hell entladen)</span><b>${nf(sum(2),1)} / ${nf(sum(3),1)} kWh</b><span class="p"></span></div></div>`;
+  const tbl=`<details class="vtab"><summary>Tabelle</summary><table><tr><th>Uhr</th><th>Erz.</th><th>Verbr.</th><th>Akku laden</th><th>Akku entl.</th></tr>${H.map((x,h)=>`<tr><td>${h}</td><td>${nf(x[0],2)}</td><td>${nf(x[1],2)}</td><td>${nf(x[2],2)}</td><td>${nf(x[3],2)}</td></tr>`).join('')}</table></details>`;
+  return `<div class="card"><div class="mchips" role="group" aria-label="Monat">${MON.map((n,i)=>`<button data-act="vm" data-v="${i}" aria-pressed="${i===vm}">${n}</button>`).join('')}</div>
+  <div class="viz"><svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Typischer Tag im ${MON[vm]}: Erzeugung ${nf(sum(0),1)} kWh, Verbrauch ${nf(sum(1),1)} kWh, Speicher lädt ${nf(sum(2),1)} und entlädt ${nf(sum(3),1)} kWh">${g}${bars}${lines}${hits}</svg></div>
+  <div class="vinfo" id="vinfo">Tippe in die Grafik für Stundenwerte.</div>${leg}${tbl}</div><p class="note">Typischer Tag im gewählten Monat, mit WP und Speicher, in kW je Stunde.</p>`;
+}
+function flowBars(C){
+  const W=360, pl=8, bw=W-16;
+  const rows=[['Wohin geht der Solarstrom?',[['Direkt im Haus',C.direct,'var(--c1)'],['In den Speicher',C.charged,'var(--c3)'],['Ins Netz',C.export,'var(--neutral)']]],
+              ['Woher kommt der Strom im Haus?',[['Solar direkt',C.direct,'var(--c1)'],['Aus dem Speicher',C.disch,'var(--c3)'],['Aus dem Netz',C.grid,'var(--neutral)']]]];
+  let h='<div class="card"><div class="viz">'; let leg='';
+  rows.forEach(([t,parts],ri)=>{
+    const tot=parts.reduce((a,x)=>a+x[1],0)||1; let x=pl, svg='';
+    parts.forEach(([n,v,c],i)=>{ const w=v/tot*bw; if(w<=0) return; svg+=`<rect x="${x.toFixed(1)}" y="22" width="${Math.max(0,w-2).toFixed(1)}" height="26" rx="4" fill="${c}"><title>${n}: ${nf(v,0)} kWh (${nf(v/tot*100,0)} %)</title></rect>`; if(w>34) svg+=`<text x="${(x+(w-2)/2).toFixed(1)}" y="39" text-anchor="middle" class="num" style="font-size:11px;font-weight:600;fill:${c==='var(--neutral)'?'var(--ink)':'#fff'}">${nf(v/tot*100,0)} %</text>`; x+=w; });
+    h+=`<svg viewBox="0 0 ${W} 56" role="img" aria-label="${t} ${parts.map(p=>p[0]+' '+nf(p[1]/tot*100,0)+' Prozent').join(', ')}" style="margin-bottom:6px"><text x="${pl}" y="13" class="t-ink" style="font-size:12px;font-weight:600">${t}</text>${svg}</svg>`;
+    leg+=parts.map(([n,v,c])=>`<div class="r"><i style="background:${c}"></i><span>${n}</span><b>${nf(v,0)} kWh</b><span class="p">${nf(v/tot*100,0)} %</span></div>`).join('');
+  });
+  return h+`</div><div class="vleg">${leg}</div></div><p class="note">Jahreswerte mit PV, Speicher und Wärmepumpe.</p>`;
+}
+function viewErg(){
+  const R=calc(s); let h=bar(s.name||'Rechner','PV und Wärmepumpe')+'<main>';
+  const warns=[];
+  if(num(s.kwp)<=0) warns.push('Keine PV-Leistung eingetragen.');
+  if(waermeNutz(s)<=0) warns.push('Kein Wärmebedarf eingetragen, die Wärmepumpe wird nicht gerechnet.');
+  if(num(s.kwp)>30&&s.steuerfrei) warns.push('Die Steuerbefreiung gilt nur bis 30 kWp je Einheit. Prüfe deine Einstellung unter PV.');
+  warns.forEach(w=>h+=`<div class="warn">${esc(w)}</div>`);
+  const b=R.mBoth;
+  h+=`<div class="hero"><div class="lab">Beides zusammen, Sicht auf das ganze Gebäude</div><div class="big ${irrCls(b.irr)}">${b.irr===null?'–':pct(b.irr)}</div><div style="font-size:13.5px;color:var(--muted)">Rendite pro Jahr (interner Zins) über ${YEARS} Jahre. Einsatz ${eur(-R.both[0])}, Amortisation nach ${yrs(b.pb)}, Kapitalwert bei ${nf(num(s.zins),1)} % Zins ${eur(b.npv)}.</div></div>`;
+  h+='<h2>Die drei Varianten</h2><div class="card">';
+  const row=(t,m,inv,y1,note)=>kv(t,`<span class="${irrCls(m.irr)}">${m.irr===null?'–':pct(m.irr)}</span>`,`Einsatz ${eur(inv)} · Jahr 1: ${eur(y1)} · Amortisation ${yrs(m.pb)}${note?' · '+note:''}`);
+  h+=row('PV allein (ohne WP-Strom)',R.mPvA,R.pvA.inv,R.pvA.cf[1]);
+  h+=row('Wärmepumpe allein (ohne PV)',R.mWp,-R.wp.cf[0],R.wp.cf[1]);
+  h+=row('PV, wenn die WP mitläuft',R.mPvC,R.pvC.inv,R.pvC.cf[1],'WP-Strom wird solar gedeckt');
+  h+='</div>';
+  h+=chart(R);
+  const A=R.A,C=R.C;
+  h+='<h2>Ein typischer Tag</h2>'+dayChart(C)+'<h2>Energiefluss im Jahr</h2>'+flowBars(C);
+  h+='<h2>Solarstrom im Haus</h2><div class="kpis">'+
+    kpi('Ertrag im 1. Jahr',nf(A.prod,0)+' kWh',nf(num(s.kwp),1)+' kWp × '+nf(num(s.ertrag),0)+' kWh/kWp')+
+    kpi('Eigenverbrauch ohne WP',pct(A.ev,0),'Autarkie '+pct(A.autarkie,0))+
+    kpi('Eigenverbrauch mit WP',pct(C.ev,0),'Autarkie '+pct(C.autarkie,0))+
+    kpi('Einspeisung mit WP',nf(C.exportNet,0)+' kWh',nf(C.exportNet*vAvg(s)/100,0)+' € Vergütung im 1. Jahr')+
+    kpi('Solarer Anteil am WP-Strom',pct(R.C.load.wp>0?R.C.self.wp/R.C.load.wp:0,0),nf(R.C.self.wp,0)+' von '+nf(R.C.load.wp,0)+' kWh')+
+    kpi('Stromgestehungskosten PV',nf(R.pvC.lcoe,1)+' ct/kWh','über '+YEARS+' Jahre inkl. Betrieb')+'</div>';
+  h+='<h2>Wärmepumpe im Haus</h2><div class="kpis">'+
+    kpi('Nutzwärme',nf(R.wp.Q,0)+' kWh/Jahr','Heizung und Warmwasser')+
+    kpi('Strombedarf WP',nf(R.wp.el,0)+' kWh/Jahr','JAZ '+nf(num(s.jaz),1))+
+    kpi('Heizkosten alt, Jahr 1',eur(R.wp.y1.gasC),'Gas und Wartung')+
+    kpi('Heizkosten neu, Jahr 1',eur(R.wp.y1.wpC),'Netzstrom und Wartung ohne PV')+
+    kpi('Förderung',eur(R.wp.F.betrag),nf(R.wp.F.q,0)+' % auf '+eur(R.wp.F.fk)+' förderfähig')+
+    kpi('Investition netto',eur(R.wp.net),'nach Förderung')+'</div>';
+  h+=`<p class="note">Die Rechnung nutzt einen typischen Tag je Monat und ist eine Schätzung. Reale Wetter- und Lastprofile weichen ab. Förder- und Vergütungssätze, Preise und Rechtsregeln stehen unter Annahmen mit Stand. Keine Steuer-, Rechts- oder Anlageberatung.</p>`;
+  return h+'</main>'+tabbar();
+}
+function viewPv(){
+  const R=calc(s), A=R.A; let h=bar('Eingaben','Photovoltaik')+'<main><h2>Anlage</h2><div class="card"><div class="fields">'+
+    f('kwp','Leistung','kWp')+f('ertrag','Ertrag je kWp und Jahr','kWh')+f('degr','Leistungsverlust pro Jahr','%')+f('invPv','Kosten PV inkl. Montage','€')+
+    f('spK','Speicher nutzbar','kWh')+f('invSp','Kosten Speicher','€')+f('pBat','Lade-/Entladeleistung','kW')+f('etaBat','Wirkungsgrad Speicher','%')+
+    f('betrieb','Betrieb, Versicherung, Zähler','% der PV p. a.')+f('wrInv','Wechselrichter-Ersatz','€')+f('wrJahr','Ersatz im Jahr','')+'</div>'+
+    `<div class="derived">Ertrag im 1. Jahr: <b id="d-prod">${nf(A.prod,0)} kWh</b></div></div>`;
+  h+='<h2>Verbrauch im Haus</h2><div class="card"><div class="fields">'+f('kwhHH','Allgemeinstrom und eigener Verbrauch','kWh/Jahr')+f('kwhMi','Mieterstrom (nur wenn sie mitnehmen)','kWh/Jahr')+f('pHH','Strompreis, den du sparst','ct/kWh')+f('pMi','Erlös je kWh Mieterstrom','ct/kWh')+f('ggvK','Zusatzkosten Messung und Abrechnung','€/Jahr')+'</div></div>';
+  h+='<p class="note">Der Mieterstrom entspricht dem Modell der gemeinschaftlichen Gebäudeversorgung oder klassischem Mieterstrom. Lege 0 kWh an, wenn die Mieter nicht beliefert werden. Der Erlös muss unter dem Grundversorgungstarif liegen, die genauen Preisgrenzen hängen vom Modell ab.</p>';
+  h+='<h2>Einspeisung und Steuer</h2><div class="card"><div class="fields">'+f('v10','Vergütung bis 10 kWp','ct/kWh')+f('v40','Vergütung 10 bis 40 kWp','ct/kWh')+f('v100','Vergütung 40 bis 100 kWp','ct/kWh')+f('abregel','Verlust durch 60-%-Grenze','% der Einspeisung')+'</div>'+
+    cb('begrenzung','Einspeisebegrenzung auf 60 % ohne Smart Meter berücksichtigen')+cb('steuerfrei','Einkommensteuerfrei (bis 30 kWp je Einheit, § 3 Nr. 72 EStG)')+
+    `<div class="fields">${f('grenz','Grenzsteuersatz, falls nicht befreit','%')}</div>`+
+    `<div class="derived">Mittlere Vergütung: <b id="d-vg">${nf(vAvg(s),2)} ct/kWh</b></div></div>`;
+  h+='<p class="note">Die Vergütung gilt 20 Jahre ab Inbetriebnahme und hängt vom Datum der Inbetriebnahme ab. Trage den Satz ein, der für dich gilt (siehe Annahmen).</p></main>';
+  return h+tabbar();
+}
+function viewWp(){
+  const R=calc(s), F=R.wp.F; let h=bar('Eingaben','Wärmepumpe')+'<main><h2>Wärmebedarf</h2><div class="card"><div class="fields">'+
+    `<label class="fld full">Bedarf ermitteln aus<select data-k="wMode"><option value="gas" ${s.wMode==='gas'?'selected':''}>bisherigem Gasverbrauch</option><option value="fl" ${s.wMode==='fl'?'selected':''}>Fläche und Bedarf je m²</option></select></label>`+
+    (s.wMode==='gas'?f('gasKwh','Gasverbrauch bisher','kWh/Jahr')+f('kessel','Wirkungsgrad alte Heizung','%'):f('flaeche','Beheizte Fläche','m²')+f('spez','Nutzwärme je m² inkl. Warmwasser','kWh/m²'))+
+    f('wwAnt','Anteil Warmwasser','%')+f('jaz','Jahresarbeitszahl (JAZ)','')+'</div>'+
+    `<div class="derived">Nutzwärme: <b id="d-q">${nf(R.wp.Q,0)} kWh/Jahr</b> · Strombedarf WP: <b id="d-el">${nf(R.wp.el,0)} kWh/Jahr</b></div></div>`;
+  h+='<p class="note">JAZ als Anhaltspunkt: Fußbodenheizung etwa 3,8 bis 4,3, große Heizkörper etwa 3,2 bis 3,6, hohe Vorlauftemperatur etwa 2,6 bis 3,0. Lass dir den Wert vom Planer für dein Haus bestätigen.</p>';
+  h+='<h2>Kosten und Preise</h2><div class="card"><div class="fields">'+f('invWp','Kosten Wärmepumpe komplett','€')+f('wartWp','Wartung WP','€/Jahr')+f('wartAlt','Wartung und Schornsteinfeger alt','€/Jahr')+f('pGas','Gaspreis inkl. CO₂','ct/kWh')+f('co2ct','darin CO₂-Aufschlag','ct/kWh')+f('pWp','Strompreis Wärmepumpe','ct/kWh')+f('gasG','Gaspreissteigerung','% p. a.')+'</div></div>';
+  h+='<h2>Förderung (BEG, KfW 458)</h2><div class="card">'+cb('foerdAn','Förderung beantragen')+cb('selbst','Selbstnutzer (nicht Vermieter)')+'<div class="fields">'+f('nWE','Wohneinheiten im Gebäude','')+f('klimaB','Klimageschwindigkeitsbonus (nur Selbstnutzer)','%')+f('einkB','Einkommensbonus (nur Selbstnutzer)','%')+'</div>'+
+    `<div class="derived">Förderfähig bis <b id="d-fk">${eur(F.capK)}</b> · Satz <b id="d-fq">${nf(F.q,0)} %</b> · Zuschuss <b id="d-fb">${eur(F.betrag)}</b></div></div>`;
+  h+='<p class="note">Vermieter erhalten nur die Grundförderung. Der Antrag muss vor dem Vertragsschluss gestellt sein, sonst ist der Vertrag nur mit Förderklausel zulässig. Prüfe die Bedingungen im KfW-Merkblatt.</p></main>';
+  return h+tabbar();
+}
+function viewMi(){
+  const R=calc(s), W=R.wp, y=W.y1; let h=bar('Eingaben','Mieter und Vermieter')+'<main><h2>Annahmen zur Umlage</h2><div class="card"><div class="fields">'+
+    f('vmWfl','Vermietete Wohnfläche','m²')+f('instAbz','Abzug Instandhaltungsanteil','%')+f('eigenAnt','Heizkosten, die du selbst trägst','%')+f('co2Ant','CO₂-Kosten, die der Vermieter trägt','%')+'</div>'+
+    cb('umlage559e','Mieterhöhung nach § 559e BGB ansetzen')+'</div>';
+  h+='<p class="note">§ 559e BGB erlaubt bei einer geförderten Wärmepumpe 10 % der Kosten nach Abzug der Förderung als Mieterhöhung, höchstens 0,50 € je m² und Monat innerhalb von sechs Jahren. Voraussetzung ist die Inanspruchnahme der Förderung. Ob ein Instandhaltungsabzug nötig ist, hängt vom Einzelfall ab. Der CO₂-Anteil des Vermieters richtet sich nach dem Gebäude (Stufenmodell).</p>';
+  h+='<h2>Wem nützt die Wärmepumpe? Jahr 1</h2><div class="card">'+
+    kv('Gebäude gesamt',eur(y.dT),'Heizkosten alt minus neu')+
+    kv('Vermieter',eur(y.land),'CO₂-Anteil, Eigenanteil und Mieterhöhung')+
+    kv('Mieter, netto nach Umlage','<span class="'+(y.ten<0?'t-bad':'t-good')+'">'+eur(y.ten)+'</span>','Heizkostenersparnis minus Mieterhöhung')+
+    kv('Mieterhöhung § 559e',eur(W.uml)+' pro Jahr',s.umlage559e&&s.foerdAn?'Grenze '+eur(W.umlCap)+' pro Jahr':'nicht angesetzt','tot')+'</div>';
+  h+=`<div class="kpis" style="margin-top:10px">${kpi('Rendite Vermieter-Sicht',R.mWpL.irr===null?'–':pct(R.mWpL.irr),'nur deine Zahlungen',irrCls(R.mWpL.irr))}${kpi('Rendite Gebäude-Sicht',R.mWp.irr===null?'–':pct(R.mWp.irr),'alle Ersparnisse',irrCls(R.mWp.irr))}</div>`;
+  if(y.ten<0) h+='<div class="warn" style="margin-top:10px">Die Mieterhöhung ist im ersten Jahr höher als die Heizkostenersparnis der Mieter. Das kann Streit bringen. Prüfe JAZ und Gaspreis, oder setze die Umlage niedriger an.</div>';
+  h+='<p class="note">Die Heizkosten der Mieter sinken nur, wenn die Wärmepumpe wirklich weniger kostet als Gas. Der Solarstrom für die Wärmepumpe ist in dieser Aufteilung nicht enthalten, er steht nur im Gebäude-Ergebnis.</p></main>';
+  return h+tabbar();
+}
+function viewAn(){
+  let h=bar('Grundlagen','Annahmen')+'<main>'+hubCardP()+'<h2>Preise und Zeit</h2><div class="card"><div class="fields">'+f('stromG','Strompreissteigerung','% p. a.')+f('infl','Kostensteigerung allgemein','% p. a.')+f('zins','Kalkulationszins','%')+'</div></div>';
+  h+=`<h2>Stand der Werte (recherchiert am 17.10.2026)</h2><div class="card pad" style="font-size:13.5px;line-height:1.5">
+  <p style="margin:0 0 8px"><b>Einspeisevergütung</b> Teileinspeisung ab 1. August 2026: bis 10 kWp 7,70 ct, 10 bis 40 kWp 6,66 ct, 40 bis 100 kWp 5,44 ct je kWh. Sinkt halbjährlich um 1 %. Anlagen, die bis Ende 2026 ans Netz gehen, sollen die feste Vergütung 20 Jahre behalten. Für neue Anlagen ab 2027 ist eine Reform geplant, noch nicht beschlossen.</p>
+  <p style="margin:0 0 8px"><b>Neue Regeln</b> Keine Vergütung bei negativen Börsenpreisen. Ohne Smart Meter dürfen neue Anlagen bis 100 kWp nur 60 % der Leistung einspeisen.</p>
+  <p style="margin:0 0 8px"><b>BEG-Wärmepumpe</b> Seit 21. Juli 2026: Grundförderung 30 %. Klimageschwindigkeitsbonus 16 % und Einkommensbonus nur für Selbstnutzer. Maximal 70 %. Förderfähige Kosten 28.000 € für die 1. Wohneinheit, 15.000 € für die 2. bis 6., 8.000 € ab der 7.</p>
+  <p style="margin:0 0 8px"><b>Preise</b> Haushaltsstrom im Mittel 37 ct/kWh (BDEW, August 2026). Gas etwa 12 ct/kWh. CO₂-Aufschlag etwa 1,2 ct/kWh, für 2027 mit steigender Tendenz. Netzentgelte 2027 steigen voraussichtlich.</p>
+  <p style="margin:0">Diese Werte stammen aus Ratgeberseiten und Presseberichten und wurden nicht amtlich geprüft. Prüfe sie vor einer Entscheidung bei KfW, BAFA, Bundesnetzagentur und deinem Netzbetreiber.</p></div>`;
+  h+='<h2>Daten</h2><div class="card pad"><p style="margin:0 0 10px">Die Eingaben liegen nur auf diesem Gerät. Sichere sie als Text.</p><div class="row-actions" style="margin:0"><button class="btn" data-act="exp">Backup anzeigen</button><button class="btn" data-act="reset">Standardwerte</button></div>'+
+    '<textarea class="code" id="bk" placeholder="Backup-Text hier einfügen oder kopieren" style="margin-top:10px"></textarea><div class="row-actions"><button class="btn" data-act="cpy">Kopieren</button><button class="btn primary" data-act="imp">Einlesen</button></div></div>';
+  if(!storageOk) h+='<div class="warn" style="margin-top:10px">Speichern im Browser ist nicht möglich. Deine Eingaben gehen beim Schließen verloren.</div>';
+  return h+'</main>'+tabbar();
+}
+function render(keep){ const y=keep?window.scrollY:0; const v={erg:viewErg,pv:viewPv,wp:viewWp,mi:viewMi,an:viewAn}[tab]; $('#app').innerHTML=v(); window.scrollTo(0,y); }
+function liveUpdate(){
+  const R=calc(s), set=(id,t)=>{ const e=document.getElementById(id); if(e) e.textContent=t; };
+  set('d-prod',nf(R.A.prod,0)+' kWh'); set('d-vg',nf(vAvg(s),2)+' ct/kWh'); set('d-q',nf(R.wp.Q,0)+' kWh/Jahr'); set('d-el',nf(R.wp.el,0)+' kWh/Jahr');
+  set('d-fk',eur(R.wp.F.capK)); set('d-fq',nf(R.wp.F.q,0)+' %'); set('d-fb',eur(R.wp.F.betrag));
+}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]'); if(!b) return; const a=b.dataset.act;
+  if(a==='tab'){ tab=b.dataset.v; render(); return; }
+  if(a==='vm'){ vm=+b.dataset.v; render(true); return; }
+  if(a==='hubmake'){ const h=hubRead()||{v:1,urls:{},map:{},lastBackup:0,objs:[]}; if(!Array.isArray(h.objs)) h.objs=[]; const m={id:'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:s.name||'Neues Objekt',adresse:s.adresse||'',kp:0,qm:0,bj:0,zi:0,kalt:0,links:{pv:'1'}}; h.objs.push(m); hubSave(h); s.hubId=m.id; s.hubSynced=true; if(!s.name) s.name=m.name; flush(); render(true); toast('Im Hub gespeichert.'); return; }
+  if(a==='exp'){ $('#bk').value=JSON.stringify({src:'pvwp',v:1,s}); return; }
+  if(a==='cpy'){ const ta=$('#bk'); if(!ta.value){ toast('Zuerst Backup anzeigen.'); return; } const ok=()=>toast('Kopiert.'); if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(ok,()=>{ ta.select(); document.execCommand('copy'); ok(); }); else { ta.select(); document.execCommand('copy'); ok(); } return; }
+  if(a==='imp'){ try{ const j=JSON.parse($('#bk').value.trim()); if(!j||j.src!=='pvwp'||typeof j.s!=='object') throw 0; s=Object.assign({},DEF,j.s); flush(); render(); toast('Eingelesen.'); }catch(err){ toast('Das ist kein gültiges Backup.'); } return; }
+  if(a==='reset'){ if(!window.confirm(ImmoCore.t('Alle Eingaben auf Standardwerte setzen?'))) return; s=Object.assign({},DEF); flush(); render(); toast('Standardwerte gesetzt.'); return; }
+});
+
+document.addEventListener('pointerdown',e=>{ const t=e.target.closest&&e.target.closest('[data-tip]'); const i=document.getElementById('vinfo'); if(t&&i) i.innerHTML=t.dataset.tip; });
+document.addEventListener('pointerover',e=>{ if(e.pointerType==='touch') return; const t=e.target.closest&&e.target.closest('[data-tip]'); const i=document.getElementById('vinfo'); if(t&&i) i.innerHTML=t.dataset.tip; });
+document.addEventListener('input',e=>{
+  const t=e.target; if(!t.dataset||!t.dataset.k) return;
+  if(t.type==='checkbox') return;
+  if(t.tagName==='SELECT') return;
+  s[t.dataset.k]=t.dataset.str?t.value:parseDE(t.value); hubWrite(t.dataset.k); save(); if(!t.dataset.str) liveUpdate();
+});
+document.addEventListener('change',e=>{
+  const t=e.target; if(!t.dataset||!t.dataset.k) return;
+  if(t.type==='checkbox'){ s[t.dataset.k]=t.checked; save(); liveUpdate(); }
+  else if(t.tagName==='SELECT'){ s[t.dataset.k]=t.value; save(); render(true); }
+});
+document.addEventListener('change',e=>{ const t=e.target; if(t.dataset&&t.dataset.hubpick!==undefined&&t.value){ const m=hubMasters().find(x=>x.id===t.value); if(!m) return;
+  if(!s.hubId&&s.name&&!window.confirm(ImmoCore.t('Die aktuellen Eingaben werden durch das gewählte Objekt ersetzt. Sichere sie vorher im Hub, wenn du sie behalten willst. Fortfahren?'))){ t.value=''; return; }
+  hubLoad(m); render(true); toast('Objekt geladen.'); } });
+syncFromHub();
+render();
+</script>
+<footer class="legal-foot"><a id="hubLink" href="../immobilien-hub/index.html">‹ Zum Hub</a> <button type="button" id="legalBtn">Impressum, Haftung &amp; Datenschutz</button></footer>
+<script>(function(){try{var u=localStorage.getItem('immo-hub-url-v1');if(u)document.getElementById('hubLink').href=u;}catch(e){}})();</script>
+<dialog id="legalDlg"><form method="dialog"><h2>Impressum, Haftung &amp; Datenschutz</h2>
+<p id="legalWho" hidden></p>
+<h3>Haftung</h3><p>Diese App liefert Orientierungsrechnungen. Sie ersetzt keine Steuer-, Rechts-, Finanzierungs- oder Anlageberatung. Ergebnisse, Fristen und Rechtshinweise können unvollständig oder nicht mehr aktuell sein und hängen von deinen Eingaben und vom Einzelfall ab. Für Richtigkeit und Vollständigkeit wird keine Gewähr übernommen. Prüfe wichtige Entscheidungen mit Steuerberater, Rechtsanwalt oder Bank.</p>
+<h3>Datenschutz</h3><p>Es gibt kein Konto, keinen Server der App und keine Werbung. Deine Eingaben werden ausschließlich lokal im Speicher deines Browsers auf deinem Gerät abgelegt und nicht an mich oder Dritte übertragen. Es werden weder Tracking noch Cookies zu Analysezwecken eingesetzt, und alle Schriften liegen auf demselben Server, es werden keine Schriften bei Google geladen.</p>
+<p>Beim Aufruf der Seite verarbeitet der Hosting-Anbieter GitHub (GitHub Pages) technisch notwendig Verbindungsdaten wie die IP-Adresse. Darauf hat die App keinen Einfluss, siehe die Datenschutzerklärung von GitHub.</p>
+<p>Die Daten bleiben auf deinem Gerät, solange du sie nicht selbst exportierst oder weitergibst. Wenn du Browserdaten löschst oder die App entfernst, sind sie weg. Lege deshalb regelmäßig ein Backup an, soweit die App es anbietet. Besonders bei Mieterdaten bist du selbst für den datenschutzgerechten Umgang verantwortlich.</p>
+<button class="legal-ok" value="ok">Schließen</button></form></dialog>
+<style>
+.legal-foot{text-align:center;padding:18px 16px calc(100px + env(safe-area-inset-bottom));font:12px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+.legal-foot button{background:none;border:0;color:inherit;opacity:.6;text-decoration:underline;font:inherit;padding:8px;cursor:pointer}
+.legal-foot a{color:inherit;opacity:.6;text-decoration:underline;font:inherit;padding:8px;display:inline-block}
+#legalDlg{color-scheme:light dark;background:Canvas;color:CanvasText;border:1px solid color-mix(in srgb,CanvasText 25%,transparent);border-radius:14px;padding:18px;max-width:min(460px,calc(100vw - 32px));max-height:80vh;font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+#legalDlg::backdrop{background:rgba(0,0,0,.5)}
+#legalDlg h2{font-size:18px;margin:0 0 8px}#legalDlg h3{font-size:14px;margin:14px 0 4px}#legalDlg p{margin:0 0 8px}
+.legal-ok{margin-top:8px;width:100%;min-height:44px;border-radius:10px;border:1px solid color-mix(in srgb,CanvasText 30%,transparent);background:none;color:inherit;font:inherit;font-weight:600;cursor:pointer}
+</style>
+<script>
+/* Anbieter (optional, z. B. Name und E-Mail für öffentliche Weitergabe): */
+var LEGAL_ANBIETER='';
+(function(){var b=document.getElementById('legalBtn'),d=document.getElementById('legalDlg'),w=document.getElementById('legalWho');
+if(LEGAL_ANBIETER){w.textContent='Anbieter: '+LEGAL_ANBIETER;w.hidden=false}
+if(location.protocol==='app:'){document.querySelectorAll('#legalDlg p').forEach(function(p){if(/GitHub Pages/.test(p.textContent))p.remove()})}
+b.addEventListener('click',function(){if(d.showModal)d.showModal();else d.setAttribute('open','')})})();
+</script>
+
+</body>
+</html>

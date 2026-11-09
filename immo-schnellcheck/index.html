@@ -1,0 +1,1040 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Schnellcheck">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EEF1F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C1219" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<link rel="icon" type="image/png" href="../shared/icons/icon-192.png">
+<style>
+@font-face{font-family:'IBM Plex Mono';src:url(fonts/plexmono-400.woff) format('woff');font-weight:400 500;font-style:normal;font-display:swap}
+@font-face{font-family:'IBM Plex Mono';src:url(fonts/plexmono-600.woff) format('woff');font-weight:600 700;font-style:normal;font-display:swap}
+
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+/*BRAND*/
+@font-face{font-family:'Bricolage Grotesque';src:url(fonts/bricolage-700.woff) format('woff');font-weight:500 800;font-style:normal;font-display:swap}
+.brand{font-family:'Bricolage Grotesque',var(--font-body)}
+.top{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 12%,var(--bg)),var(--bg))}
+/*ENDBRAND*/
+/*VIZ*/
+.gauge{display:block;width:100%;max-width:340px;height:auto;margin:6px auto 0;overflow:visible}
+.gauge text{font-family:var(--font-body);fill:var(--muted);font-size:10.5px}
+.gauge .gz{font-weight:600}
+/*ENDVIZ*/
+</style>
+<title>Immobilien Schnellcheck</title>
+<style>
+/* Layout: klebende Kopfzeile mit Live-Ergebnis, drei Reiter unten (Objekt, Ergebnis, Prognose).
+   Eingaben als Zeilenliste wie in den iOS-Einstellungen, Zahlen in Mono wie auf einem Kontoauszug. */
+:root{
+  --bg:#EEF1F5; --surface:#FFFFFF; --surface2:#F4F6F9; --ink:#121C2B; --muted:#5A6778; --line:#DCE2EA;
+  --accent:#2B4C9B; --accent-ink:#FFFFFF; --accent-soft:#E2E9F8;
+  --good:#17804F; --good-soft:#DCF2E6; --mid:#8F5F00; --mid-soft:#FBEECB; --bad:#B3302F; --bad-soft:#F8DDDC;
+  --font-body:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C1219; --surface:#151E29; --surface2:#1B2633; --ink:#E7EDF4; --muted:#9AA8B8; --line:#273445;
+  --accent:#86A6F2; --accent-ink:#0C1219; --accent-soft:#1D2A47;
+  --good:#47C48A; --good-soft:#12301F; --mid:#E3B341; --mid-soft:#352A0E; --bad:#F27F7D; --bad-soft:#3A1717;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0C1219; --surface:#151E29; --surface2:#1B2633; --ink:#E7EDF4; --muted:#9AA8B8; --line:#273445;
+  --accent:#86A6F2; --accent-ink:#0C1219; --accent-soft:#1D2A47;
+  --good:#47C48A; --good-soft:#12301F; --mid:#E3B341; --mid-soft:#352A0E; --bad:#F27F7D; --bad-soft:#3A1717;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.45;
+  padding-inline:16px;padding-block:0 96px;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit}
+.num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+
+/* Kopfzeile */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;margin-inline:-16px;padding:10px 16px 10px;
+  background:var(--bg);border-bottom:1px solid var(--line)}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-size:15px;font-weight:600;letter-spacing:.01em}
+.brand small{display:block;font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.live{display:flex;gap:6px 14px;flex-wrap:wrap;margin-top:8px;font-size:12.5px;color:var(--muted)}
+.live b{font-family:var(--font-mono);font-weight:600;font-size:13.5px}
+.t-good{color:var(--good)} .t-mid{color:var(--mid)} .t-bad{color:var(--bad)}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.p-good{background:var(--good-soft);color:var(--good)}
+.p-mid{background:var(--mid-soft);color:var(--mid)}
+.p-bad{background:var(--bad-soft);color:var(--bad)}
+.p-none{background:var(--surface2);color:var(--muted)}
+
+main{padding-block:14px 0;max-width:640px;margin-inline:auto}
+.tab[hidden]{display:none}
+h2{font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:22px 4px 8px}
+h2:first-child{margin-top:4px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.note{font-size:13px;color:var(--muted);margin:8px 4px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 4px}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 12px;min-height:42px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+.btn:focus-visible,.seg button:focus-visible,.tabbar button:focus-visible,.sum:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn-link{border:0;background:none;color:var(--accent);padding:0;font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.card.pad{padding:12px 14px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.small{padding:6px 10px;font-size:13px}
+.ok{background:var(--good-soft);color:var(--good);border-radius:10px;padding:8px 12px;font-size:13.5px}
+
+/* Eingabe-Abschnitte */
+details.sec{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+details.sec>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:14px 14px;font-weight:600;font-size:15px}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary .chev{width:18px;height:18px;color:var(--muted);transition:transform .15s}
+details.sec[open]>summary .chev{transform:rotate(90deg)}
+details.sec>summary .sumval{margin-left:auto;font-weight:500;font-size:13px;color:var(--muted)}
+.rows{border-top:1px solid var(--line)}
+.row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,148px);gap:10px;align-items:center;padding:9px 14px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.lab{min-width:0;font-size:14.5px}
+.lab small{display:block;color:var(--muted);font-size:12px;line-height:1.3;margin-top:1px}
+.inp{display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--line);border-radius:9px;padding:0 10px;min-width:0}
+.inp input{width:100%;min-width:0;border:0;background:none;color:var(--ink);font-family:var(--font-mono);font-size:16px;
+  text-align:right;padding:9px 0;outline-offset:6px}
+.inp i{font-style:normal;color:var(--muted);font-size:13px;min-width:1ch}
+.row.calc{background:var(--surface2)}
+.row.calc .val{justify-self:end;text-align:right;font-family:var(--font-mono);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.row.full{grid-template-columns:minmax(0,1fr)}
+.seg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;border-radius:7px;padding:8px 2px;font-size:14px;font-weight:500;cursor:pointer;color:var(--muted)}
+.seg button[aria-checked="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+
+/* Ergebnis */
+.verdict{padding:16px 16px 14px}
+.verdict .vl{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.verdict .vh{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:4px}
+.verdict .vt{font-size:26px;font-weight:600;letter-spacing:-.01em}
+.score{display:flex;gap:3px;margin-top:10px}
+.score span{flex:1;height:8px;border-radius:3px;background:var(--line)}
+.score.s-good span.on{background:var(--good)} .score.s-mid span.on{background:var(--mid)} .score.s-bad span.on{background:var(--bad)}
+.verdict p{margin:10px 0 0;font-size:14px;color:var(--muted)}
+.metric{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:13px 14px;border-bottom:1px solid var(--line)}
+.metric:last-child{border-bottom:0}
+.m-lab{font-weight:500}
+.m-sub{font-size:12px;color:var(--muted);line-height:1.35;margin-top:2px}
+.m-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.m-val{font-family:var(--font-mono);font-weight:600;font-size:20px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.tbl{width:100%}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) 84px 88px;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line);align-items:baseline;font-size:14px}
+.tr:last-child{border-bottom:0}
+.tr.head{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);background:var(--surface2);font-weight:600}
+.tr .n{text-align:right;font-family:var(--font-mono);font-size:13px;font-variant-numeric:tabular-nums}
+.tr.total{background:var(--surface2);font-weight:600}
+.tr small{display:block;color:var(--muted);font-size:11.5px;font-weight:400}
+.tr.tax{grid-template-columns:minmax(0,1fr) 96px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 12px;min-width:0}
+.tile .tl{font-size:12px;color:var(--muted);line-height:1.3}
+.tile .tv{font-family:var(--font-mono);font-weight:600;font-size:16.5px;margin-top:3px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.tile .ts{font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.3}
+.hint{display:flex;gap:10px;padding:11px 12px;border-radius:12px;font-size:13.5px;line-height:1.4;margin-bottom:8px;border:1px solid var(--line);background:var(--surface)}
+.hint.h-bad{background:var(--bad-soft);border-color:transparent} .hint.h-good{background:var(--good-soft);border-color:transparent} .hint.h-mid{background:var(--mid-soft);border-color:transparent}
+.empty{padding:28px 18px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:6px}
+
+/* Prognose */
+.chartwrap{padding:12px 10px 10px}
+.chartwrap svg{display:block;width:100%;height:auto;max-width:100%}
+.chartwrap text{font-family:var(--font-mono);font-size:10px;fill:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:0 6px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:18px;height:0;border-top:3px solid currentColor}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.proj{border-collapse:collapse;width:100%;min-width:560px;font-size:12.5px}
+table.proj th,table.proj td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+table.proj th{font-family:var(--font-body);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--surface2);font-weight:600}
+table.proj th:first-child,table.proj td:first-child{text-align:left;position:sticky;left:0;background:var(--surface2)}
+table.proj tr:last-child td{border-bottom:0}
+
+.foot{font-size:12px;color:var(--muted);margin:22px 4px 0;line-height:1.5}
+
+/* Tab-Leiste */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:6;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;
+  background:var(--surface);border-top:1px solid var(--line);padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabbar button{border:0;background:none;border-radius:10px;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-size:11.5px;font-weight:500;color:var(--muted);cursor:pointer}
+.tabbar button svg{width:22px;height:22px}
+.tabbar button[aria-selected="true"]{color:var(--accent);background:var(--accent-soft);font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/*FOLD2*/
+.req{color:var(--bad);font-weight:700;margin-left:3px}
+.row.miss .inp{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad)}
+.misspill{margin-left:auto;font-size:11.5px;font-weight:600;color:var(--bad);background:var(--bad-soft);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.misspill:not([hidden])+.sumval{margin-left:8px}
+details.more{border-top:1px solid var(--line)}
+details.more>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;font-size:13px;font-weight:600;color:var(--accent)}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::after{content:'';width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin:-3px 0 0 auto;transition:transform .15s}
+details.more[open]>summary::after{transform:rotate(-135deg);margin-top:3px}
+details.more>summary small{font-weight:400;color:var(--muted)}
+details.more>.row:first-of-type{border-top:1px solid var(--line)}
+details.fold{margin:12px 0 0}
+details.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:44px;padding:0 4px;-webkit-tap-highlight-color:transparent}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary h2{margin:0;flex:1}
+details.fold>summary::after{content:'';width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s;margin:-4px 4px 0 0}
+details.fold[open]>summary::after{transform:rotate(-135deg);margin-top:4px}
+.fold-tools{display:flex;gap:4px;justify-content:flex-end;margin:6px 0 8px}
+.fold-tools button{border:0;background:none;color:var(--accent);font-size:12.5px;padding:6px;text-decoration:underline;min-height:32px}
+.reqnote{font-size:12.5px;color:var(--muted);margin:2px 4px 8px}
+/*ENDFOLD2*/
+/*CMP*/
+.tabbar{grid-template-columns:repeat(4,1fr)}
+.cmp-in{display:flex;gap:8px;padding:12px 14px}
+.cmp-in input{flex:1;min-width:0;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 11px;font-size:16px;color:var(--ink)}
+.offer{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:11px 14px;border-top:1px solid var(--line);align-items:center}
+.offer .n{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.offer .sb{font-size:12.5px;color:var(--muted)}
+.offer .ac{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.cmp-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:14px}
+table.cmp{border-collapse:separate;border-spacing:0;width:100%;font-size:13px}
+table.cmp th,table.cmp td{padding:9px 10px;text-align:right;border-top:1px solid var(--line);white-space:nowrap;min-width:96px;background:var(--surface)}
+table.cmp thead th{border-top:0;font-weight:600;vertical-align:bottom;white-space:normal;line-height:1.25;max-width:130px;overflow-wrap:anywhere}
+table.cmp th:first-child,table.cmp td:first-child{position:sticky;left:0;z-index:1;text-align:left;min-width:112px;max-width:112px;white-space:normal;font-weight:500;color:var(--muted);box-shadow:1px 0 0 var(--line)}
+table.cmp tr.grp td{background:var(--surface2);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:6px 10px}
+table.cmp td.best{background:var(--good-soft);color:var(--good);font-weight:700}
+table.cmp td.na{color:var(--muted)}
+.cmp-best{margin:10px 4px 0;font-size:13.5px}
+/*ENDCMP*/
+</style>
+
+<link rel="stylesheet" href="../shared/ui.css">
+<script>window.IMMO_I18N=1;</script>
+<script src="../shared/i18n-en.js"></script>
+<script src="../shared/core.js"></script>
+</head>
+<body>
+<header class="top">
+  <div class="top-row">
+    <div class="brand" data-brand style="display:flex;align-items:center;gap:10px"><img src="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22 viewBox=%220 0 64 64%22%3E%3Cdefs%3E%3ClinearGradient id=%22g%22 x1=%220%22 y1=%220%22 x2=%220%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22 stop-opacity=%22.16%22/%3E%3Cstop offset=%221%22 stop-color=%22%23000%22 stop-opacity=%22.14%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22%232B4C9B%22/%3E%3Crect width=%2264%22 height=%2264%22 rx=%2215%22 fill=%22url%28%23g%29%22/%3E%3Cpath d=%22M13 43a19 19 0 0 1 38 0%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%225%22 stroke-linecap=%22round%22/%3E%3Cpath d=%22M32 43L42 29%22 stroke=%22%23fff%22 stroke-width=%225%22 stroke-linecap=%22round%22/%3E%3Ccircle cx=%2232%22 cy=%2243%22 r=%224%22 fill=%22%23fff%22/%3E%3C/svg%3E" width="36" height="36" alt="" style="border-radius:9px;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.25)"><div><small>Rendite und Cashflow</small>Immobilien Schnellcheck</div></div>
+    <span id="liveVerdict" class="pill p-none">Eingaben ergänzen</span>
+  </div>
+  <div class="live" id="live"></div>
+</header>
+
+<main>
+  <section class="tab" id="tab-eingabe" aria-label="Eingaben">
+    <div class="tools">
+      <button class="btn" id="btnNew" type="button">Neues Objekt</button>
+      <button class="btn" id="btnDemo" type="button">Beispiel laden</button>
+    </div>
+    <div id="hubCard" style="margin:0 0 14px"></div>
+    <div class="fold-tools"><button type="button" id="foldAll">Alle aufklappen</button><button type="button" id="foldNone">Alle zuklappen</button></div>
+    <p class="reqnote"><span class="req">*</span> Pflichtfelder für die Bewertung: Kaufpreis, Wohnfläche, Kaltmiete. Selten gebrauchte Felder liegen unter „Weitere Angaben“.</p>
+    <p class="note">Die Felder enthalten ein Beispielobjekt. Überschreibe es mit deinen Werten, Ergebnisse siehst du oben und im Reiter „Ergebnis“.</p>
+    <details id="impBox" style="border:1px solid rgba(128,128,128,.45);border-radius:12px;padding:10px 14px;margin:0 0 14px">
+<summary style="cursor:pointer;font-weight:600;min-height:28px">Aus Besichtigung übernehmen</summary>
+<p style="margin:8px 0;font-size:13px;opacity:.8">Füge den Übergabecode aus der Besichtigungs-App ein. Wenn du über den Link aus der Besichtigung kommst, sind die Werte schon eingetragen.</p>
+<textarea id="impText" aria-label="Übergabecode" style="width:100%;min-height:70px;font:inherit;font-size:16px;color:inherit;background:rgba(128,128,128,.1);border:1px solid rgba(128,128,128,.4);border-radius:8px;padding:8px" placeholder="BESICHTIGUNG:..."></textarea>
+<button id="impBtn" type="button" style="margin-top:8px;min-height:42px;padding:0 16px;font:inherit;font-weight:600;border:1px solid currentColor;border-radius:10px;background:transparent;color:inherit">Übernehmen</button>
+<div id="impMsg" role="status" style="margin-top:8px;font-size:13px"></div>
+</details>
+    <div id="form"></div>
+  </section>
+  <section class="tab" id="tab-ergebnis" aria-label="Ergebnis" hidden></section>
+  <section class="tab" id="tab-prognose" aria-label="Prognose" hidden></section>
+  <section class="tab" id="tab-vergleich" aria-label="Angebote vergleichen" hidden>
+    <h2>Angebot speichern</h2>
+    <div class="card"><div class="cmp-in"><input id="offName" type="text" maxlength="40" placeholder="Name, z. B. Musterstraße 5" aria-label="Name des Angebots" autocomplete="off"><button class="btn primary" id="offSave" type="button">Speichern</button></div>
+      <div class="offer" style="border-top:1px solid var(--line)"><span class="sb" style="grid-column:1/-1">Speichert alle aktuellen Eingaben als Angebot. Du kannst bis zu 6 Angebote nebeneinander vergleichen. Das Objekt im Reiter „Objekt“ erscheint immer als erste Spalte.</span></div></div>
+    <div id="cmpHost"></div>
+  </section>
+  <p class="foot">Orientierungsrechnung, keine Steuer- oder Anlageberatung. Die Steuer wird vereinfacht über deinen persönlichen Grenzsteuersatz berechnet (Soli und Kirchensteuer gehören in den Satz). Verlustverrechnung, Verkaufskosten und Spekulationsfrist sind nicht berücksichtigt.</p>
+</main>
+
+<nav class="tabbar" role="tablist" aria-label="Bereiche">
+  <button role="tab" data-tab="ergebnis" aria-selected="true" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V10M10 19V5M16 19v-7M21 19H3"/></svg>Ergebnis</button>
+  <button role="tab" data-tab="eingabe" aria-selected="false" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Objekt</button>
+  <button role="tab" data-tab="prognose" aria-selected="false" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>Prognose</button>
+  <button role="tab" data-tab="vergleich" aria-selected="false" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4" width="7" height="16" rx="1.5"/><rect x="13.5" y="4" width="7" height="16" rx="1.5"/><path d="M6 9h2M6 13h2M16 9h2M16 13h2"/></svg>Vergleich</button>
+</nav>
+
+<script>
+/*CALC_START*/
+const clamp=(v,a,b)=>Math.min(Math.max(v,a),b);
+const div=(a,b)=>b?a/b:0;
+function suggestAfa(bj){ if(!bj) return 2; if(bj<1925) return 2.5; if(bj>=2023) return 3; return 2; }
+function rating(v,good,ok){ if(v===null||!isFinite(v)) return 1; return v>=good?2:(v>=ok?1:0); }
+
+/* Disagio als Werbungskosten: sofort im ersten Jahr nur, wenn es marktüblich ist (höchstens 5 % bei mindestens 5 Jahren Bindung), sonst verteilt über die Bindung. */
+function disDed(dis,bind,t,pct){ if(!(dis>0)) return 0; const b=Math.round(bind); if(b>=5&&!(pct>5)) return t===1?dis:0; const n=Math.max(1,b); return t<=n?dis/n:0; }
+/* Effektiver Jahreszins über die Zinsbindung: Auszahlung = Darlehen minus Disagio. */
+function effDis(D,dis,rateM,bind,rest){
+  const n=Math.round(bind)*12; if(!(D>0)||n<1) return null;
+  const f=i=>{ let v=rest/Math.pow(1+i,n); for(let k=1;k<=n;k++) v+=rateM/Math.pow(1+i,k); return v-(D-dis); };
+  let lo=0,hi=0.05; if(f(lo)<0) return null; while(f(hi)>0&&hi<1) hi*=2;
+  for(let j=0;j<60;j++){ const m=(lo+hi)/2; if(f(m)>0) lo=m; else hi=m; }
+  return (Math.pow(1+(lo+hi)/2,12)-1)*100;
+}
+/* Neues Darlehen ab dem Folgemonat über die gemeinsame Rechnung (ImmoCore.project): nach der Zinsbindung gilt der Anschlusszins bei gleicher Rate. */
+function amortize(D,z1,z2,tilgPct,bindJ,years){
+  const P=ImmoCore.project({loan:D,zins:z1,tilg:tilgPct,fix:bindJ},{fresh:true,months:years*12,dZins:z2-z1});
+  const rows=[]; let last=D;
+  for(let y=0;y<years;y++){ let zi=0,ti=0; for(let m=y*12;m<y*12+12;m++){ const r=P.rows[m]; if(!r) continue; zi+=r.it; ti+=r.pr; last=r.bal; } rows.push({zins:zi,tilg:ti,rest:P.rows.length?last:0}); }
+  return {rows,payoffM:P.payoffM,rate:D*(z1+tilgPct)/1200};
+}
+
+function calc(s){
+  /* Zinsbindung immer in ganzen Jahren, mindestens 1 Jahr. */
+  s=Object.assign({},s,{bindung:Math.max(1,Math.round(+s.bindung||0))});
+  const r={};
+  r.nkPct=s.grest+s.notar+s.makler;
+  r.nk=s.kp*r.nkPct/100;
+  r.kosten=s.kueche+s.renov;
+  r.gesamt=s.kp+r.nk+r.kosten;
+  r.darlehen=clamp(s.darlehen,0,r.gesamt);
+  r.dis=r.darlehen*clamp(s.dis||0,0,20)/100;
+  r.ek=r.gesamt-r.darlehen+r.dis;
+  r.quoteEff=div(r.darlehen,s.kp)*100;
+  const am=amortize(r.darlehen,s.zins,s.anschluss,s.tilg,s.bindung,50);
+  r.am=am; r.rateM=am.rate;
+  r.restBindung=s.bindung>0?am.rows[Math.min(Math.round(s.bindung),50)-1].rest:r.darlehen;
+  r.tilgungsjahre=am.payoffM?am.payoffM/12:null;
+
+  r.nettoKaltM=s.kalt+s.stell+s.sonst;
+  r.nkUmlM=s.hgUml+s.grundst/12;
+  r.warmM=r.nettoKaltM+r.nkUmlM;
+  r.hausgeldM=s.hgUml+s.hgNicht;
+  r.bewM=s.hgUml+s.hgNicht+s.grundst/12;          // Bewirtschaftung ohne eigene Rücklage
+  r.ausfallM=r.warmM*s.ausfall/100;
+  r.ruecklJ=s.ruecklage*s.qm; r.ruecklM=r.ruecklJ/12;
+  r.noiM=r.warmM-r.ausfallM-r.bewM-r.ruecklM;
+  r.cfVorM=r.noiM-r.rateM;
+
+  r.gebWert=s.kp*s.geb/100; r.nkGeb=r.nk*s.geb/100;
+  /* 15-%-Grenze (§ 6 Abs. 1 Nr. 1a EStG): Gebäudeanteil inklusive anteiliger Kaufnebenkosten. Verglichen wird netto, die Renovierung wird brutto eingegeben. */
+  r.grenze15=(r.gebWert+r.nkGeb)*0.15;
+  r.renovNetto=s.renov/1.19;
+  r.regelUeber=r.renovNetto>r.grenze15;
+  r.renovSofort=r.regelUeber?0:s.renov;
+  r.renovAktiv=r.regelUeber?s.renov:0;
+  r.afaBasis=r.gebWert+r.nkGeb+r.renovAktiv;
+  r.afaJ=r.afaBasis*s.afa/100;
+
+  r.zins1M=am.rows[0].zins/12; r.tilg1J=am.rows[0].tilg;
+  r.disJ=disDed(r.dis,s.bindung,1,s.dis);
+  r.zveM=r.warmM-r.bewM-r.zins1M-r.afaJ/12-r.disJ/12;
+  r.effD=r.dis>0?effDis(r.darlehen,r.dis,am.rate,s.bindung,r.restBindung):null;
+  r.steuerM=r.zveM*s.grenz/100;
+  r.cfNachM=r.cfVorM-r.steuerM;
+  r.sofortSteuer=r.regelUeber?0:s.renov*s.grenz/100;
+
+  r.ready=s.kp>0&&r.nettoKaltM>0&&s.qm>0;
+  r.brutto=div(r.nettoKaltM*12,s.kp)*100;
+  r.netto=div(r.noiM*12,r.gesamt)*100;
+  r.ekValid=r.ek>0.5;
+  r.ekCf=r.ekValid?div(r.cfNachM*12,r.ek)*100:null;
+  r.ekTilg=r.ekValid?div(r.cfNachM*12+r.tilg1J,r.ek)*100:null;
+  r.wertZ1=s.kp*s.wert/100;
+  r.vermZ=r.cfNachM*12+r.tilg1J+r.wertZ1;
+  r.ekGesamt=r.ekValid?div(r.vermZ,r.ek)*100:null;
+  r.faktor=div(s.kp,r.nettoKaltM*12);
+  r.dscr=r.rateM>0?r.noiM/r.rateM:null;
+  const warmBE=(r.bewM+r.ruecklM+r.rateM)/(1-s.ausfall/100);
+  r.beNettoKaltM=warmBE-r.nkUmlM;
+  r.beKaltQm=div(r.beNettoKaltM,s.qm);
+
+  r.rt={
+    brutto:rating(r.brutto,s.tBrG,s.tBrO),
+    netto:rating(r.netto,s.tNeG,s.tNeO),
+    cfVor:rating(r.cfVorM,s.tCfG,s.tCfO),
+    cfNach:rating(r.cfNachM,s.tCfG,s.tCfO),
+    ek:rating(r.ekTilg,s.tEkG,s.tEkO)
+  };
+  r.score=r.rt.brutto+r.rt.netto+r.rt.cfVor+r.rt.cfNach+r.rt.ek;
+  r.level=r.score>=8?'stark':(r.score>=6?'solide':(r.score>=4?'mittel':'schwach'));
+  return r;
+}
+
+function project(s,r,N){
+  const rows=[]; let kum=0,afaCum=0,wPrev=s.kp;
+  const series={t:[0],wert:[s.kp],rest:[r.darlehen],gewinn:[s.kp-r.darlehen-r.ek]};
+  for(let t=1;t<=N;t++){
+    const g=Math.pow(1+s.miete/100,t-1), c=Math.pow(1+s.kost/100,t-1);
+    const warm=r.nettoKaltM*12*g+r.nkUmlM*12*c;
+    const bew=r.bewM*12*c;
+    const ruecklage=r.ruecklJ*c;
+    const ausfall=warm*s.ausfall/100;
+    const a=r.am.rows[t-1];
+    const afa=Math.min(r.afaJ,Math.max(r.afaBasis-afaCum,0)); afaCum+=afa;
+    const noi=warm-ausfall-bew-ruecklage;
+    const cfVor=noi-(a.zins+a.tilg);
+    const steuer=(warm-bew-a.zins-afa-disDed(r.dis,s.bindung,t,s.dis)-(t===1?r.renovSofort:0))*s.grenz/100;
+    const cfNach=cfVor-steuer; kum+=cfNach;
+    const wert=s.kp*Math.pow(1+s.wert/100,t);
+    const verm=(wert-wPrev)+a.tilg+cfNach; wPrev=wert;
+    const gewinn=wert-a.rest-r.ek+kum;
+    rows.push({t,warm,zins:a.zins,tilg:a.tilg,cfNach,wert,rest:a.rest,gewinn,verm,kum});
+    series.t.push(t); series.wert.push(wert); series.rest.push(a.rest); series.gewinn.push(gewinn);
+  }
+  return {rows,series};
+}
+/*CALC_END*/
+
+/* ---------- Zustand ---------- */
+const DEFAULTS={kp:190000,bj:1998,qm:62,zi:2,grest:5,notar:2,makler:3.57,quote:90,darlehen:171000,zins:3.7,dis:0,tilg:2,bindung:10,anschluss:4,
+  kueche:4000,renov:8000,geb:80,afa:2,afaAuto:true,grenz:42,kalt:760,mqm:0,mieteMode:'abs',stell:35,sonst:0,hgUml:150,hgNicht:70,grundst:300,
+  ausfall:3,ruecklage:12,kost:2,miete:2,wert:2,horizont:10,alt:3,altSt:26.375,
+  tBrG:5,tBrO:3.5,tNeG:3.5,tNeO:2.5,tCfG:50,tCfO:-50,tEkG:6,tEkO:3};
+const OBJEKT_KEYS=['kp','bj','qm','zi','kueche','renov','darlehen','kalt','mqm','stell','sonst','hgUml','hgNicht','grundst'];
+const STORE='immobilien-schnellcheck-v1';
+let s=Object.assign({},DEFAULTS);
+try{ const raw=localStorage.getItem(STORE); if(raw) s=Object.assign({},DEFAULTS,JSON.parse(raw)); }catch(e){}
+if(!s.mqm) s.mqm=s.qm>0?s.kalt/s.qm:0;
+if(!Array.isArray(s.offers)) s.offers=[];
+function save(){ try{ localStorage.setItem(STORE,JSON.stringify(s)); }catch(e){} try{ pubSc(); }catch(e){} }
+/* Ergebnis für die Kachel im Hub: aktuelles Objekt und gespeicherte Angebote mit Hub-Bezug */
+function pubSc(){ const L={stark:['Stark','ok'],solide:['Solide','ok'],mittel:['Mittel','mid'],schwach:['Schwach','bad']}, map={};
+  const one=st=>{ if(!st||!st.hubId||map[st.hubId]) return; const r=calc(Object.assign({},DEFAULTS,st));
+    if(!r.ready){ map[st.hubId]={v:'–',s:'Angaben fehlen',st:'none'}; return; }
+    const l=L[r.level]||['','none']; map[st.hubId]={v:r.score+' / 10',s:l[0]+' · Brutto '+pct(r.brutto),st:l[1]}; };
+  one(s); (s.offers||[]).forEach(o=>one(o.s)); ImmoCore.pubSum('sc',map); }
+
+/* ---------- Formatierung ---------- */
+const nf=(d)=>new Intl.NumberFormat(ImmoCore.loc,{minimumFractionDigits:0,maximumFractionDigits:d});
+const fmtNum=(v,d)=>nf(d).format(v);
+const eur=(v,d=0,sign=false)=>{ if(v===null||!isFinite(v)) return '–';
+  return new Intl.NumberFormat(ImmoCore.loc,{style:'currency',currency:'EUR',minimumFractionDigits:d,maximumFractionDigits:d,signDisplay:sign?'exceptZero':'auto'}).format(v); };
+const pct=(v,d=2,sign=false)=>{ if(v===null||!isFinite(v)) return '–';
+  return new Intl.NumberFormat(ImmoCore.loc,{minimumFractionDigits:d,maximumFractionDigits:d,signDisplay:sign?'exceptZero':'auto'}).format(v)+' %'; };
+const dec=(v,d=2)=>(v===null||!isFinite(v))?'–':new Intl.NumberFormat(ImmoCore.loc,{minimumFractionDigits:d,maximumFractionDigits:d}).format(v);
+const tone=(n)=>n===2?'good':(n===1?'mid':'bad');
+const toneWord=(n)=>n===2?'Gut':(n===1?'Mittel':'Schwach');
+const sgnTone=(v)=>v>=0.5?'good':(v>-0.5?'mid':'bad');
+
+/* ---------- Formular ---------- */
+const SECTIONS=[
+ {id:'objekt',t:'Objekt',open:true,rows:[
+  {k:'kp',l:'Kaufpreis',u:'€',d:0},
+  {k:'bj',l:'Baujahr',u:'',d:0,plain:true},
+  {k:'qm',l:'Wohnfläche',u:'m²',d:2},
+  {k:'zi',l:'Zimmer',u:'',d:1,more:1},
+  {c:'objInfo',l:'Auf einen Blick'}]},
+ {id:'nk',t:'Kaufnebenkosten',sum:'nkSum',rows:[
+  {k:'grest',l:'Grunderwerbsteuer',h:'Baden-Württemberg: 5,0 %',u:'%',d:2},
+  {k:'notar',l:'Notar und Grundbuch',u:'%',d:2},
+  {k:'makler',l:'Makler',h:'0 bei Provisionsfreiheit',u:'%',d:2},
+  {c:'nkSum',l:'Summe'}]},
+ {id:'fin',t:'Finanzierung',open:true,rows:[
+  {seg:true,l:'Darlehen in % vom Kaufpreis',h:'Nebenkosten und Kosten vor Vermietung zahlt das Eigenkapital.'},
+  {k:'darlehen',l:'Darlehenshöhe',u:'€',d:0},
+  {c:'ekC',l:'Eigenkapital'},
+  {k:'zins',l:'Sollzins',u:'%',d:2},
+  {k:'dis',more:1,l:'Disagio (optional)',h:'Trage den niedrigeren Sollzins oben ein. Kommt zum Eigenkapital, mindert die Steuer im 1. Jahr.',u:'%',d:2},
+  {k:'tilg',l:'Anfängliche Tilgung',u:'%',d:2},
+  {k:'bindung',l:'Zinsbindung',u:'Jahre',d:0},
+  {k:'anschluss',more:1,l:'Zins danach',h:'Annahme für die Prognose, Rate bleibt gleich',u:'%',d:2},
+  {c:'rateC',l:'Rate an die Bank (Annuität)'},
+  {c:'effC',more:1,l:'Effektivzins mit Disagio'},
+  {c:'restC',l:'Restschuld nach Zinsbindung'}]},
+ {id:'vor',t:'Kosten vor Vermietung',sum:'vorSum',rows:[
+  {k:'kueche',l:'Küche und Einrichtung',h:'Zählt nicht zur 15-%-Regel',u:'€',d:0},
+  {k:'renov',l:'Renovierung und Sanierung',h:'Brutto, innerhalb von 3 Jahren nach Kauf',u:'€',d:0},
+  {c:'regC',l:'15-%-Regel'}]},
+ {id:'afa',t:'Abschreibung und Steuer',rows:[
+  {k:'geb',l:'Anteil Gebäude am Kaufpreis',u:'%',d:1},
+  {k:'afa',l:'AfA',u:'%',d:2},
+  {afaHint:true},
+  {c:'afaBasis',l:'Basis für die Abschreibung'},
+  {c:'afaJ',l:'Abschreibung pro Jahr'},
+  {k:'grenz',l:'Persönlicher Grenzsteuersatz',h:'inkl. Soli und Kirchensteuer, falls zutreffend',u:'%',d:1}]},
+ {id:'miete',t:'Miete',open:true,rows:[
+  {k:'mqm',l:'Miete pro m²',h:'Kaltmiete = Miete pro m² × Wohnfläche. Du kannst auch die Kaltmiete eintragen.',u:'€/m²',d:2},
+  {k:'kalt',l:'Kaltmiete',h:'pro Monat',u:'€',d:2},
+  {k:'stell',l:'Stellplatz / Garage',h:'pro Monat',u:'€',d:2},
+  {k:'sonst',more:1,l:'Sonstiges',h:'pro Monat',u:'€',d:2},
+  {c:'nettoKalt',l:'Nettokaltmiete'},
+  {c:'warm',l:'Warmmiete',h:'inkl. umlagefähiger Kosten'}]},
+ {id:'bew',t:'Laufende Kosten',rows:[
+  {k:'hgUml',l:'Hausgeld, umlagefähig',h:'pro Monat',u:'€',d:2},
+  {k:'hgNicht',l:'Hausgeld, nicht umlagefähig',h:'pro Monat, inkl. WEG-Rücklage',u:'€',d:2},
+  {c:'hgSum',l:'Hausgeld gesamt'},
+  {k:'grundst',l:'Grundsteuer, umlagefähig',h:'pro Jahr',u:'€',d:0},
+  {k:'ausfall',more:1,l:'Mietausfall, kalkulatorisch',u:'%',d:2},
+  {k:'ruecklage',more:1,l:'Eigene Instandhaltungsrücklage',h:'pro m² und Jahr',u:'€',d:2},
+  {c:'ruecklC',more:1,l:'Rücklage pro Jahr'}]},
+ {id:'prog',t:'Prognose-Annahmen',rows:[
+  {k:'kost',l:'Kostensteigerung p. a.',u:'%',d:2},
+  {k:'miete',l:'Mietsteigerung p. a.',u:'%',d:2},
+  {k:'wert',l:'Wertsteigerung p. a.',u:'%',d:2},
+  {k:'horizont',l:'Betrachtungszeitraum',u:'Jahre',d:0},
+  {k:'alt',more:1,l:'Alternative Anlage, Rendite p. a.',h:'Festgeld oder Fonds, vor Steuern',u:'%',d:2},
+  {k:'altSt',more:1,l:'Steuer auf die Erträge der Alternative',h:'Abgeltungsteuer inkl. Soli: 26,375 %',u:'%',d:3}]},
+ {id:'thr',t:'Bewertungsschwellen',rows:[
+  {k:'tBrG',l:'Bruttorendite gut ab',u:'%',d:2},{k:'tBrO',l:'Bruttorendite mittel ab',u:'%',d:2},
+  {k:'tNeG',l:'Nettorendite gut ab',u:'%',d:2},{k:'tNeO',l:'Nettorendite mittel ab',u:'%',d:2},
+  {k:'tCfG',l:'Cashflow gut ab',h:'pro Monat',u:'€',d:0},{k:'tCfO',l:'Cashflow mittel ab',h:'pro Monat',u:'€',d:0},
+  {k:'tEkG',l:'EK-Rentabilität gut ab',u:'%',d:2},{k:'tEkO',l:'EK-Rentabilität mittel ab',u:'%',d:2}]}
+];
+const INT_KEYS=new Set(['bindung','horizont']);
+const REQ={kp:'Kaufpreis',qm:'Wohnfläche',kalt:'Kaltmiete'};
+const MORE_LAB={objekt:'Zimmerzahl',fin:'Disagio, Anschlusszins',miete:'Sonstige Einnahmen',bew:'Mietausfall, Rücklage',prog:'Alternative Anlage'};
+const UIKEY='immobilien-schnellcheck-ui-v1'; let ui={}; try{ ui=JSON.parse(localStorage.getItem(UIKEY)||'{}')||{}; }catch(e){ ui={}; }
+const isOpen=(id,def)=>id in ui?!!ui[id]:!!def;
+function saveUi(){ try{ localStorage.setItem(UIKEY,JSON.stringify(ui)); }catch(e){} }
+const inputs={};
+const chevron='<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+
+function rowHtml(row){
+  if(row.k){ const rq=REQ[row.k]?'<span class="req" aria-hidden="true">*</span>':'';
+    return `<label class="row" for="f-${row.k}" data-rk="${row.k}"><span class="lab">${row.l}${rq}${row.h?`<small>${row.h}</small>`:''}</span>`+
+    `<span class="inp"><input id="f-${row.k}" data-k="${row.k}" inputmode="${INT_KEYS.has(row.k)||row.plain?'numeric':'decimal'}" autocomplete="off" enterkeyhint="done"${REQ[row.k]?' aria-required="true"':''}><i>${row.u}</i></span></label>`;
+  }else if(row.c){
+    return `<div class="row calc"><span class="lab">${row.l}${row.h?`<small>${row.h}</small>`:''}</span><span class="val" id="c-${row.c}"></span></div>`;
+  }else if(row.seg){
+    return `<div class="row full"><span class="lab">${row.l}<small>${row.h}</small></span>`+
+    `<div class="seg" role="radiogroup" aria-label="${row.l}" id="seg">`+
+    [[100,'100 %'],[90,'90 %'],[80,'80 %'],[0,'Manuell']].map(q=>`<button type="button" role="radio" data-q="${q[0]}" aria-checked="false">${q[1]}</button>`).join('')+`</div></div>`;
+  }else if(row.afaHint){
+    return `<div class="row full calc"><span class="lab" id="afaHint"></span></div>`;
+  }
+  return '';
+}
+function buildForm(){
+  const host=document.getElementById('form'); let html='';
+  for(const sec of SECTIONS){
+    const main=sec.rows.filter(r=>!r.more), more=sec.rows.filter(r=>r.more);
+    html+=`<details class="sec" data-sec="${sec.id}" ${isOpen('s:'+sec.id,sec.open)?'open':''}><summary>${sec.t}<span class="misspill" id="miss-${sec.id}" hidden></span><span class="sumval num" id="c-sum-${sec.id}"></span>${chevron}</summary><div class="rows">`;
+    html+=main.map(rowHtml).join('');
+    if(more.length) html+=`<details class="more" data-more="${sec.id}" ${isOpen('m:'+sec.id,false)?'open':''}><summary>Weitere Angaben <small>${MORE_LAB[sec.id]||''}</small></summary>${more.map(rowHtml).join('')}</details>`;
+    html+='</div></details>';
+  }
+  host.innerHTML=html;
+  host.querySelectorAll('input[data-k]').forEach(el=>{ inputs[el.dataset.k]=el; });
+  host.querySelectorAll('details[data-sec]').forEach(d=>d.addEventListener('toggle',()=>{ ui['s:'+d.dataset.sec]=d.open; saveUi(); }));
+  host.querySelectorAll('details[data-more]').forEach(d=>d.addEventListener('toggle',()=>{ ui['m:'+d.dataset.more]=d.open; saveUi(); }));
+}
+function foldify(el,tabId){
+  const hs=[...el.children].filter(n=>n.tagName==='H2'); if(!hs.length) return;
+  hs.forEach(h=>{ const id='r:'+tabId+':'+h.textContent.trim(); const d=document.createElement('details'); d.className='fold'; d.dataset.fold=id; d.open=isOpen(id,true);
+    const sm=document.createElement('summary'), body=document.createElement('div'); let n=h.nextSibling;
+    while(n&&n.tagName!=='H2'){ const nx=n.nextSibling; body.appendChild(n); n=nx; }
+    h.replaceWith(d); sm.appendChild(h); d.append(sm,body); d.addEventListener('toggle',()=>{ ui[id]=d.open; saveUi(); }); });
+}
+function setAllFolds(open){ document.querySelectorAll('#form details.sec').forEach(d=>{ d.open=open; }); }
+
+const FIELD={}; SECTIONS.forEach(sec=>sec.rows.forEach(r=>{ if(r.k) FIELD[r.k]=r; }));
+function refreshField(k){
+  const f=FIELD[k], el=inputs[k]; if(!f||!el) return;
+  el.value=f.plain?String(Math.round(s[k]||0)||''):fmtNum(s[k],f.d);
+}
+function refreshAll(){ Object.keys(inputs).forEach(refreshField); }
+
+function wire(){
+  Object.keys(inputs).forEach(k=>{
+    const el=inputs[k], f=FIELD[k];
+    el.addEventListener('focus',()=>setTimeout(()=>{ try{ el.select(); }catch(e){} },0));
+    el.addEventListener('input',()=>{
+      s[k]=parseDE(el.value); if(INT_KEYS.has(k)) s[k]=Math.max(k==='bindung'?1:0,Math.round(s[k])); onChange(k); if(s.hubId&&(HSH.includes(k)||k==='mqm')) hubPushAll(); schedule();
+    });
+    el.addEventListener('blur',()=>{ refreshField(k); });
+  });
+  document.getElementById('seg').addEventListener('click',e=>{
+    const b=e.target.closest('button[data-q]'); if(!b) return;
+    const q=+b.dataset.q; s.quote=q;
+    if(q>0){ s.darlehen=Math.round(s.kp*q/100); refreshField('darlehen'); }
+    else inputs.darlehen.focus();
+    schedule();
+  });
+  document.getElementById('afaHint').addEventListener('click',e=>{
+    if(e.target.closest('button')){ s.afaAuto=true; s.afa=suggestAfa(s.bj); refreshField('afa'); schedule(); }
+  });
+  document.getElementById('foldAll').addEventListener('click',()=>setAllFolds(true));
+  document.getElementById('foldNone').addEventListener('click',()=>setAllFolds(false));
+  document.getElementById('btnNew').addEventListener('click',()=>{
+    if(!replaceOk()) return;
+    OBJEKT_KEYS.forEach(k=>{ s[k]=0; }); scDropLink(); delete s.hubId; delete s.hubSynced; s.mieteMode='abs'; s.quote=90; s.afa=2; s.afaAuto=true; renderHubCard(); refreshAll(); schedule(); inputs.kp.focus();
+  });
+  document.getElementById('btnDemo').addEventListener('click',()=>{
+    if(!replaceOk()) return;
+    scDropLink(); delete s.hubId; delete s.hubSynced; s=Object.assign({},s,{kp:DEFAULTS.kp,bj:DEFAULTS.bj,qm:DEFAULTS.qm,zi:DEFAULTS.zi,kueche:DEFAULTS.kueche,renov:DEFAULTS.renov,darlehen:DEFAULTS.darlehen,quote:DEFAULTS.quote,
+      kalt:DEFAULTS.kalt,mqm:DEFAULTS.kalt/DEFAULTS.qm,mieteMode:'abs',stell:DEFAULTS.stell,sonst:0,hgUml:DEFAULTS.hgUml,hgNicht:DEFAULTS.hgNicht,grundst:DEFAULTS.grundst,afaAuto:true,afa:suggestAfa(DEFAULTS.bj)});
+    renderHubCard(); refreshAll(); schedule();
+  });
+  document.querySelectorAll('.tabbar button').forEach(b=>b.addEventListener('click',()=>showTab(b.dataset.tab)));
+  document.getElementById('live').addEventListener('click',()=>showTab('ergebnis'));
+}
+function onChange(k){
+  if(k==='kp'&&s.quote>0){ s.darlehen=Math.round(s.kp*s.quote/100); if(document.activeElement!==inputs.darlehen) refreshField('darlehen'); }
+  if(k==='darlehen') s.quote=0;
+  if(k==='bj'&&s.afaAuto){ s.afa=suggestAfa(s.bj); refreshField('afa'); }
+  if(k==='afa') s.afaAuto=false;
+  const idle=(f)=>document.activeElement!==inputs[f];
+  if(k==='mqm'){ s.mieteMode='qm'; s.kalt=Math.round(s.mqm*s.qm*100)/100; if(idle('kalt')) refreshField('kalt'); }
+  if(k==='kalt'){ s.mieteMode='abs'; s.mqm=s.qm>0?s.kalt/s.qm:0; if(idle('mqm')) refreshField('mqm'); }
+  if(k==='qm'){
+    if(s.mieteMode==='qm'){ s.kalt=Math.round(s.mqm*s.qm*100)/100; if(idle('kalt')) refreshField('kalt'); }
+    else { s.mqm=s.qm>0?s.kalt/s.qm:0; if(idle('mqm')) refreshField('mqm'); }
+  }
+  if(k==='horizont') s.horizont=clamp(Math.round(s.horizont)||1,1,40);
+}
+function showTab(id){
+  if(id==='vergleich') setTimeout(renderCompare,0);
+  document.querySelectorAll('.tab').forEach(t=>{ t.hidden=t.id!=='tab-'+id; });
+  document.querySelectorAll('.tabbar button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===id)));
+  window.scrollTo(0,0);
+}
+
+/* ---------- Rendering ---------- */
+let pending=false;
+function schedule(){ if(pending) return; pending=true; requestAnimationFrame(()=>{ pending=false; update(); }); }
+const $=(id)=>document.getElementById(id);
+const {esc,parseDE}=ImmoCore;
+const setC=(id,txt)=>{ const el=$('c-'+id); if(el) el.textContent=txt; };
+
+function update(){
+  const N=clamp(Math.round(s.horizont)||10,1,40);
+  const r=calc(s);
+  renderLive(r); renderComputed(r);
+  renderResult(r); renderForecast(r,N); if($('tab-vergleich')&&!$('tab-vergleich').hidden) renderCompare();
+  document.querySelectorAll('#seg button').forEach(b=>{
+    const q=+b.dataset.q; const on=s.quote>0?q===s.quote:q===0; b.setAttribute('aria-checked',String(on));
+  });
+  save(); const hs=document.getElementById('hubScore'); if(hs) hs.textContent=hubScoreText();
+}
+
+function missingReq(){ const m=[]; if(!(s.kp>0)) m.push('kp'); if(!(s.qm>0)) m.push('qm'); if(!(s.kalt>0)&&!(s.mqm>0)) m.push('kalt'); return m; }
+function renderReq(miss){
+  Object.keys(REQ).forEach(k=>{ const row=document.querySelector('[data-rk="'+k+'"]'); if(row) row.classList.toggle('miss',miss.includes(k)); });
+  const bySec={objekt:['kp','qm'],miete:['kalt']};
+  Object.keys(bySec).forEach(id=>{ const n=bySec[id].filter(k=>miss.includes(k)).length; const e=document.getElementById('miss-'+id); if(!e) return; e.hidden=!n; e.textContent=n?(n===1?'1 Pflichtfeld fehlt':n+' Pflichtfelder fehlen'):''; });
+}
+function renderLive(r){
+  const v=$('liveVerdict'), l=$('live');
+  const miss=missingReq(); renderReq(miss);
+  if(!r.ready){ v.className='pill p-none'; v.textContent='Eingaben ergänzen'; l.innerHTML=miss.length?`<span>Es fehlen: <b>${miss.map(m=>REQ[m]).join(', ')}</b></span>`:''; return; }
+  const lv=r.level, c=lv==='stark'||lv==='solide'?'good':(lv==='mittel'?'mid':'bad');
+  v.className='pill p-'+c; v.textContent=lv.charAt(0).toUpperCase()+lv.slice(1);
+  l.innerHTML=`<span>Brutto <b class="t-${tone(r.rt.brutto)}">${pct(r.brutto)}</b></span><span>Netto <b class="t-${tone(r.rt.netto)}">${pct(r.netto)}</b></span><span>Cashflow n. St. <b class="t-${tone(r.rt.cfNach)}">${eur(r.cfNachM,0,true)}</b> / Mo.</span>`;
+}
+
+function renderComputed(r){
+  const alter=s.bj>1800?new Date().getFullYear()-s.bj:null;
+  setC('objInfo',[alter!==null?`${alter} Jahre alt`:null, s.qm>0?`${eur(div(s.kp,s.qm))}/m²`:null, s.zi>0&&s.qm>0?`${dec(div(s.qm,s.zi),1)} m²/Zimmer`:null].filter(Boolean).join(' · ')||'–');
+  setC('nkSum',`${pct(r.nkPct)} · ${eur(r.nk)}`); setC('sum-nk',pct(r.nkPct));
+  setC('ekC',`${eur(r.ek)}`);
+  setC('rateC',`${eur(r.rateM,2)} / Monat`);
+  setC('effC',r.effD!==null?`${dec(r.effD,2)} % (Disagio ${eur(r.dis)})`:'kein Disagio');
+  setC('restC',s.bindung>0?`${eur(r.restBindung)} nach ${fmtNum(s.bindung,0)} J.`:'–');
+  setC('sum-vor',eur(r.kosten));
+  setC('sum-objekt',s.kp>0?eur(s.kp):''); setC('sum-fin',s.darlehen>0?eur(s.darlehen)+' · '+pct(s.zins,2):'kein Darlehen');
+  setC('sum-miete',r.nettoKaltM>0?eur(r.nettoKaltM,0)+' / Mo.':''); setC('sum-afa',pct(s.afa,1)+' AfA'); setC('sum-bew',eur(r.hausgeldM,0)+' / Mo.');
+  setC('sum-prog',fmtNum(s.horizont,0)+' Jahre');
+  const reg=$('c-regC'); if(reg){ reg.innerHTML=r.regelUeber
+    ?`<span class="pill p-bad">Überschritten</span><br><small>Grenze ${eur(r.grenze15)} netto</small>`:`<span class="pill p-good">Eingehalten</span><br><small>Grenze ${eur(r.grenze15)} netto</small>`; }
+  setC('afaBasis',eur(r.afaBasis)); setC('afaJ',eur(r.afaJ));
+  const sug=suggestAfa(s.bj);
+  $('afaHint').innerHTML=`Vorschlag nach Baujahr: <b class="num">${pct(sug,1)}</b> `+(s.afaAuto&&s.afa===sug?'(übernommen)':'<button class="btn-link" type="button">übernehmen</button>')+
+    `<small>Vor 1925: 2,5 %. 1925 bis 2022: 2 %. Fertigstellung ab 2023: 3 %.</small>`;
+  setC('nettoKalt',eur(r.nettoKaltM,2)); setC('warm',eur(r.warmM,2));
+  setC('hgSum',eur(r.hausgeldM,2)); setC('ruecklC',eur(r.ruecklJ));
+  const dq=r.quoteEff; const q=$('c-ekC'); if(q) q.title=`Darlehen entspricht ${dec(dq,1)} % des Kaufpreises`;
+}
+
+function metric(label,sub,val,rt){
+  return `<div class="metric"><div><div class="m-lab">${label}</div><div class="m-sub">${sub}</div></div><div class="m-right"><span class="m-val t-${tone(rt)}">${val}</span><span class="pill p-${tone(rt)}">${toneWord(rt)}</span></div></div>`;
+}
+function tr(label,m,sign,total,sub){
+  const cls=total?'tr total':'tr';
+  const t=total?` t-${sgnTone(m)}`:'';
+  return `<div class="${cls}"><span>${label}${sub?`<small>${sub}</small>`:''}</span><span class="n${t}">${eur(m,0,sign)}</span><span class="n${t}">${eur(m*12,0,sign)}</span></div>`;
+}
+function tile(l,v,sub,t){ return `<div class="tile"><div class="tl">${l}</div><div class="tv ${t?'t-'+t:''}">${v}</div>${sub?`<div class="ts">${sub}</div>`:''}</div>`; }
+
+function gauge(score,tone){
+  const cx=150,cy=130,r=100,pt=v=>{ const a=Math.PI*(1-v/10); return [cx+r*Math.cos(a),cy-r*Math.sin(a)]; };
+  const seg=(a,b,c)=>{ const [x0,y0]=pt(a),[x1,y1]=pt(b); return `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)}A${r} ${r} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}" fill="none" stroke="var(--${c})" stroke-width="16" opacity=".35"/>`; };
+  const fill=(a,b,c)=>{ if(b<=a) return ''; const [x0,y0]=pt(a),[x1,y1]=pt(b); return `<path d="M${x0.toFixed(1)} ${y0.toFixed(1)}A${r} ${r} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}" fill="none" stroke="var(--${c})" stroke-width="16"/>`; };
+  const zones=[[0,4,'bad'],[4,6,'mid'],[6,10,'good']];
+  let g=zones.map(z=>seg(z[0]+0.04,z[1]-0.04,z[2])).join('');
+  zones.forEach(z=>{ g+=fill(z[0]+0.04,Math.min(score,z[1])-0.04,z[2]); });
+  const [nx,ny]=pt(score);
+  const lab=[[2,'Schwach'],[5,'Mittel'],[8,'Solide bis stark']].map(([v,t])=>{ const a=Math.PI*(1-v/10), x=cx+(r+30)*Math.cos(a), y=cy-(r+30)*Math.sin(a); return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" class="gz">${t}</text>`; }).join('');
+  return `<svg class="gauge" viewBox="-40 -10 380 150" role="img" aria-label="${score} von 10 Punkten, Bereich ${tone==='good'?'solide bis stark':tone==='mid'?'mittel':'schwach'}">${g}<circle cx="${nx.toFixed(1)}" cy="${ny.toFixed(1)}" r="11" fill="var(--surface)" stroke="var(--ink)" stroke-width="3"/>${lab}<text x="${cx}" y="${cy-4}" text-anchor="middle" style="font-family:var(--font-mono);font-size:34px;font-weight:600;fill:var(--ink)">${score}</text><text x="${cx}" y="${cy+14}" text-anchor="middle">von 10 Punkten</text></svg>`;
+}
+function renderResult(r){
+  const el=$('tab-ergebnis');
+  if(!r.ready){ el.innerHTML=`<div class="card empty"><b>Noch zu wenig Angaben</b>Trage mindestens Kaufpreis, Wohnfläche und Kaltmiete im Reiter „Objekt“ ein.</div>`; return; }
+  const names={brutto:'Bruttomietrendite',netto:'Nettomietrendite',cfVor:'Cashflow vor Steuern',cfNach:'Cashflow nach Steuern',ek:'EK-Rentabilität'};
+  const weak=Object.keys(names).filter(k=>r.rt[k]===0).map(k=>names[k]), strong=Object.keys(names).filter(k=>r.rt[k]===2).map(k=>names[k]);
+  const lvTone=r.level==='stark'||r.level==='solide'?'good':(r.level==='mittel'?'mid':'bad');
+  const lvText={stark:'Stark',solide:'Solide',mittel:'Mittel',schwach:'Schwach'}[r.level];
+  let summary=[]; if(strong.length) summary.push(`Stark: ${strong.join(', ')}.`); if(weak.length) summary.push(`Schwach: ${weak.join(', ')}.`);
+  if(!summary.length) summary.push('Alle Kennzahlen liegen im mittleren Bereich.');
+  const bar=Array.from({length:10},(_,i)=>`<span class="${i<r.score?'on':''}"></span>`).join('');
+  let h=`<div class="card verdict"><div class="vl">Gesamteinschätzung</div>
+    <div class="vh"><span class="vt">${lvText}</span><span class="num t-${lvTone}" style="font-weight:600;font-size:15px">${r.score} von 10 Punkten</span></div>
+    ${gauge(r.score,lvTone)}<p>${summary.join(' ')}</p></div>`;
+
+  h+=`<h2>Kennzahlen</h2><div class="card">`+
+    metric('Bruttomietrendite',`Jahreskaltmiete ÷ Kaufpreis. Gut ab ${pct(s.tBrG,1)}, mittel ab ${pct(s.tBrO,1)}.`,pct(r.brutto),r.rt.brutto)+
+    metric('Nettomietrendite',`Reinertrag nach Mietausfall, Kosten und Rücklage ÷ Gesamtinvestition. Gut ab ${pct(s.tNeG,1)}, mittel ab ${pct(s.tNeO,1)}.`,pct(r.netto),r.rt.netto)+
+    metric('Cashflow vor Steuern',`Pro Monat, nach Rate. Gut ab ${eur(s.tCfG,0,true)}, mittel ab ${eur(s.tCfO,0,true)}.`,eur(r.cfVorM,0,true),r.rt.cfVor)+
+    metric('Cashflow nach Steuern',`Pro Monat, inkl. Steuereffekt (Jahr 1).`,eur(r.cfNachM,0,true),r.rt.cfNach)+
+    metric('EK-Rentabilität',`(Cashflow n. St. + Tilgung) ÷ Eigenkapital, Jahr 1. Gut ab ${pct(s.tEkG,1)}, mittel ab ${pct(s.tEkO,1)}.`,pct(r.ekTilg,2),r.rt.ek)+`</div>`;
+
+  h+=`<h2>Cashflow</h2><div class="card tbl"><div class="tr head"><span></span><span class="n">pro Monat</span><span class="n">pro Jahr</span></div>`+
+    tr('Warmmiete',r.warmM,true)+
+    tr('Mietausfall',-r.ausfallM,true,false,`kalkulatorisch ${pct(s.ausfall,1)}`)+
+    tr('Hausgeld und Grundsteuer',-r.bewM,true)+
+    tr('Eigene Rücklage',-r.ruecklM,true,false,`${eur(s.ruecklage,2)}/m² und Jahr`)+
+    tr('Ergebnis vor Finanzierung',r.noiM,true,true)+
+    tr('Rate an die Bank',-r.rateM,true,false,`Zinsen ${eur(r.zins1M,0)} · Tilgung ${eur(r.tilg1J/12,0)} (Jahr 1)`)+
+    tr('Cashflow vor Steuern',r.cfVorM,true,true)+
+    tr(r.steuerM>=0?'Steuer':'Steuererstattung',-r.steuerM,true)+
+    tr('Cashflow nach Steuern',r.cfNachM,true,true)+`</div>`;
+
+  h+=`<h2>Steuer pro Monat</h2><div class="card tbl">`+
+    [['Warmmiete',r.warmM],['Bewirtschaftungskosten ohne eigene Rücklage',-r.bewM],['Zinsen (Jahr 1)',-r.zins1M],['Abschreibung (AfA)',-r.afaJ/12]].map(x=>`<div class="tr tax"><span>${x[0]}</span><span class="n">${eur(x[1],0,true)}</span></div>`).join('')+
+    `<div class="tr tax total"><span>Zu versteuerndes Ergebnis</span><span class="n">${eur(r.zveM,0,true)}</span></div>`+
+    `<div class="tr tax"><span>Grenzsteuersatz</span><span class="n">${pct(s.grenz,1)}</span></div>`+
+    `<div class="tr tax total"><span>${r.steuerM>=0?'Steuer (zu zahlen)':'Steuer (Erstattung)'}</span><span class="n t-${r.steuerM>0?'bad':'good'}">${eur(r.steuerM,0,true)}</span></div></div>`;
+  if(r.zveM<0) h+=`<p class="note">Der steuerliche Verlust wird mit anderem Einkommen verrechnet. Das senkt deine Steuer, setzt aber ein entsprechendes Einkommen voraus.</p>`;
+
+  h+=`<h2>Weitere Kennzahlen</h2><div class="grid2">`+
+    tile('Gesamtinvestition',eur(r.gesamt),`Kauf ${eur(s.kp)} + Nebenkosten ${eur(r.nk)} + vor Vermietung ${eur(r.kosten)}`)+
+    tile('Eigenkapital',eur(r.ek),`Darlehen ${eur(r.darlehen)} (${dec(r.quoteEff,0)} % vom Kaufpreis)`)+
+    tile('Kaufpreis pro m²',eur(div(s.kp,s.qm)),`Gesamt ${eur(div(r.gesamt,s.qm))}/m²`)+
+    tile('Kaltmiete pro m²',eur(div(s.kalt,s.qm),2),s.zi>0?`${eur(div(r.nettoKaltM,s.zi))} je Zimmer inkl. Stellplatz`:'')+
+    tile('Kaufpreisfaktor',dec(r.faktor,1)+'×','Kaufpreis ÷ Jahreskaltmiete')+
+    tile('Schuldendienstdeckung',r.dscr===null?'–':dec(r.dscr,2),'Reinertrag ÷ Rate. Ab 1,2 komfortabel.',r.dscr===null?'':(r.dscr>=1.2?'good':(r.dscr>=1?'mid':'bad')))+
+    tile('Break-even Kaltmiete',eur(r.beNettoKaltM),`${eur(r.beKaltQm,2)}/m². Dann ist der Cashflow vor Steuern null.`)+
+    tile('Restschuld nach Zinsbindung',s.bindung>0?eur(r.restBindung):'–',s.bindung>0?`${dec(div(r.restBindung,r.darlehen)*100,0)} % des Darlehens nach ${fmtNum(s.bindung,0)} J.`:'')+
+    tile('Volltilgung',r.tilgungsjahre?`ca. ${dec(r.tilgungsjahre,1)} J.`:'über 50 J.','Bei gleichbleibender Rate')+
+    tile('Abschreibung pro Jahr',eur(r.afaJ),`${pct(s.afa,1)} von ${eur(r.afaBasis)}`)+`</div>`;
+
+  h+=`<h2>Hinweise</h2>`;
+  if(s.renov>0){
+    h+=r.regelUeber
+      ?`<div class="hint h-bad"><span><b>15-%-Regel überschritten.</b> Die Renovierung (${eur(r.renovNetto)} netto) liegt über der Grenze von ${eur(r.grenze15)}. Sie gilt dann als anschaffungsnah, wird zur Abschreibungsbasis addiert und ist nicht sofort absetzbar.</span></div>`
+      :`<div class="hint h-good"><span><b>15-%-Regel eingehalten.</b> Die Renovierung (${eur(r.renovNetto)} netto) liegt unter der Grenze von ${eur(r.grenze15)}. Sie ist als Werbungskosten absetzbar, bei ${pct(s.grenz,0)} etwa ${eur(r.sofortSteuer)} Steuerersparnis, einmalig und nicht im Cashflow oben.</span></div>`;
+  }
+  if(r.dscr!==null&&r.dscr<1) h+=`<div class="hint h-bad"><span><b>Rate nicht gedeckt.</b> Die Mieteinnahmen decken die Bankrate nicht. Du schießt jeden Monat ${eur(-r.cfVorM)} zu (vor Steuern).</span></div>`;
+  if(s.bindung>0&&r.restBindung>0&&s.anschluss>s.zins) h+=`<div class="hint h-mid"><span><b>Anschlusszins.</b> Nach ${fmtNum(s.bindung,0)} Jahren rechnet die Prognose mit ${pct(s.anschluss,2)}. Bei höheren Zinsen sinkt der Cashflow weiter.</span></div>`;
+  h+=`<div class="hint"><span>Die Nettomietrendite bezieht sich auf die Gesamtinvestition. Mietausfall und eigene Rücklage mindern den Ertrag, werden aber nicht steuerlich angesetzt.</span></div>`;
+  el.innerHTML=h; foldify(el,'erg');
+}
+
+function niceTicks(min,max,n){
+  const span=(max-min)||1, raw=span/n, p=Math.pow(10,Math.floor(Math.log10(raw))), f=raw/p;
+  const step=(f<=1?1:f<=2?2:f<=5?5:10)*p;
+  const lo=Math.floor(min/step)*step, hi=Math.ceil(max/step)*step, out=[];
+  for(let v=lo;v<=hi+step/2;v+=step) out.push(v);
+  return out;
+}
+const kf=(v)=>(Math.abs(v)>=1000?fmtNum(v/1000,0)+(ImmoCore.lang==='en'?' k€':' T€'):fmtNum(v,0)+' €');
+
+function chart(series,N){
+  const W=360,H=210,L=52,R=12,T=12,B=26;
+  const all=series.wert.concat(series.rest,series.gewinn,[0]);
+  const ticks=niceTicks(Math.min(...all),Math.max(...all),4);
+  const y0=ticks[0], y1=ticks[ticks.length-1];
+  const X=(t)=>L+(W-L-R)*(t/N), Y=(v)=>T+(H-T-B)*(1-(v-y0)/((y1-y0)||1));
+  const path=(arr)=>arr.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');
+  const xs=Math.max(1,Math.ceil(N/6)); let g='';
+  ticks.forEach(v=>{ g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="var(--line)" stroke-width="${v===0?1.5:1}"${v===0?'':' stroke-dasharray="2 3"'}/><text x="${L-6}" y="${(Y(v)+3).toFixed(1)}" text-anchor="end">${kf(v)}</text>`; });
+  for(let t=0;t<=N;t+=xs) g+=`<text x="${X(t).toFixed(1)}" y="${H-8}" text-anchor="middle">${t===0?'Kauf':(ImmoCore.lang==='en'?'Y':'J')+t}</text>`;
+  const end=(arr,col)=>`<circle cx="${X(N).toFixed(1)}" cy="${Y(arr[N]).toFixed(1)}" r="3.5" fill="${col}"/>`;
+  const scp=[]; for(let t=0;t<=N;t++) scp.push({x:+X(t).toFixed(1),l:t===0?'Kauf':'Jahr '+t,r:[['Immobilienwert',eur(series.wert[t]),'var(--accent)',+Y(series.wert[t]).toFixed(1)],['Restschuld',eur(series.rest[t]),'var(--muted)',+Y(series.rest[t]).toFixed(1)],['Gewinn kumuliert',eur(series.gewinn[t],0,true),'var(--good)',+Y(series.gewinn[t]).toFixed(1)]]});
+  const scj=esc(JSON.stringify({t:T,b:H-B,p:scp}));
+  return `<svg data-sc="${scj}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Verlauf von Immobilienwert, Restschuld und kumuliertem Gewinn über ${N} Jahre">${g}`+
+   `<path d="${path(series.rest)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 4"/>`+
+   `<path d="${path(series.wert)}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`+
+   `<path d="${path(series.gewinn)}" fill="none" stroke="var(--good)" stroke-width="2.5"/>`+
+   end(series.wert,'var(--accent)')+end(series.rest,'var(--muted)')+end(series.gewinn,'var(--good)')+`</svg>`;
+}
+
+
+function altVergleich(r,p,N){
+  if(!(r.ek>0)) return '';
+  const eff=Math.max(0,s.alt)*(1-Math.min(100,Math.max(0,s.altSt))/100)/100;
+  const altEnd=r.ek*Math.pow(1+eff,N), altGew=altEnd-r.ek, immGew=p.rows[N-1].gewinn, d=immGew-altGew, alt1=r.ek*eff;
+  const mx=Math.max(Math.abs(immGew),Math.abs(altGew),1);
+  const bar=(l,v,c,sub)=>`<div class="tr" style="grid-template-columns:92px minmax(0,1fr) auto;gap:8px;align-items:center"><span>${l}</span><span style="display:block;background:var(--surface2);border-radius:4px;height:16px"><span style="display:block;height:16px;border-radius:4px;background:${c};width:${Math.max(1,Math.abs(v)/mx*100).toFixed(1)}%"></span></span><span class="n">${eur(v,0,true)}</span></div>`;
+  const win=d>=0;
+  return `<h2>Vergleich mit einer Alternative</h2><div class="card tbl">`+
+    bar('Immobilie',immGew,'var(--accent)')+bar('Alternative',altGew,'var(--muted)')+
+    `<div class="tr tax total"><span>${win?'Vorsprung Immobilie':'Rückstand Immobilie'}<small>nach ${N} Jahren</small></span><span class="n t-${win?'good':'bad'}">${win?'▲':'▼'} ${eur(d,0,true)}</span></div>`+
+    `<div class="tr tax"><span>Jahr 1<small>Immobilie ${eur(r.vermZ,0,true)} · Alternative ${eur(alt1,0,true)}</small></span><span class="n t-${r.vermZ>=alt1?'good':'bad'}">${eur(r.vermZ-alt1,0,true)}</span></div></div>`+
+    `<p class="note">Die Alternative legt dein Eigenkapital von ${eur(r.ek)} mit ${pct(s.alt,2)} an, abzüglich ${pct(s.altSt,3)} Steuer, und lässt Erträge im Depot. Bei der Immobilie zählen Wertzuwachs, Tilgung und Cashflow nach Steuern, ohne Verkaufskosten. Sie bindet Aufwand und trägt Klumpenrisiko, die Alternative nicht. Das ist ein Rechenvergleich, keine Anlageberatung.</p>`;
+}
+function renderForecast(r,N){
+  const el=$('tab-prognose');
+  if(!r.ready){ el.innerHTML=`<div class="card empty"><b>Noch zu wenig Angaben</b>Trage mindestens Kaufpreis, Wohnfläche und Kaltmiete im Reiter „Objekt“ ein.</div>`; return; }
+  const p=project(s,r,N), last=p.rows[N-1];
+  let h=`<h2>Vermögenszuwachs im 1. Jahr</h2><div class="card tbl">`+
+    `<div class="tr tax"><span>Tilgung<small>baut Restschuld ab</small></span><span class="n">${eur(r.tilg1J,0,true)}</span></div>`+
+    `<div class="tr tax"><span>Wertsteigerung<small>${pct(s.wert,1)} auf ${eur(s.kp)}</small></span><span class="n">${eur(r.wertZ1,0,true)}</span></div>`+
+    `<div class="tr tax"><span>Cashflow nach Steuern<small>12 Monate</small></span><span class="n">${eur(r.cfNachM*12,0,true)}</span></div>`+
+    `<div class="tr tax total"><span>Vermögenszuwachs p. a.<small>${r.ekGesamt===null?'':pct(r.ekGesamt,1)+' auf das Eigenkapital'}</small></span><span class="n t-${sgnTone(r.vermZ)}">${eur(r.vermZ,0,true)}</span></div></div>`;
+  h+=`<h2>Entwicklung über ${N} Jahre</h2><div class="card"><div class="chartwrap">${chart(p.series,N)}</div>`+
+    `<div class="legend" style="padding-bottom:12px"><span style="color:var(--accent)"><i></i>Immobilienwert</span><span style="color:var(--muted)"><i style="border-top-style:dashed"></i>Restschuld</span><span style="color:var(--good)"><i></i>Gewinn kumuliert</span></div></div>`;
+  h+=`<div class="grid2" style="margin-top:8px">`+
+    tile(`Wert nach ${N} J.`,eur(last.wert),`${pct(s.wert,1)} p. a.`)+
+    tile('Restschuld',eur(last.rest),last.rest<=0?'Voll getilgt':'')+
+    tile('Cashflow kumuliert',eur(last.kum,0,true),'nach Steuern, ohne Tilgung',sgnTone(last.kum))+
+    tile('Gewinn kumuliert',eur(last.gewinn,0,true),`Wert − Restschuld − Eigenkapital ${eur(r.ek)} + Cashflow`,sgnTone(last.gewinn))+`</div>`;
+  h+=altVergleich(r,p,N);
+  h+=`<h2>Jahre im Detail</h2><div class="card scroll"><table class="proj"><thead><tr><th>Jahr</th><th>Warmmiete</th><th>Zinsen</th><th>Tilgung</th><th>CF n. St.</th><th>Wert</th><th>Restschuld</th><th>Gewinn</th></tr></thead><tbody>`+
+    p.rows.map(x=>`<tr><td>${x.t}</td><td>${eur(x.warm)}</td><td>${eur(x.zins)}</td><td>${eur(x.tilg)}</td><td class="t-${sgnTone(x.cfNach/12)}">${eur(x.cfNach,0,true)}</td><td>${eur(x.wert)}</td><td>${eur(x.rest)}</td><td class="t-${sgnTone(x.gewinn)}">${eur(x.gewinn,0,true)}</td></tr>`).join('')+`</tbody></table></div>`;
+  h+=`<p class="note">Mieten wachsen mit der Mietsteigerung, Kosten und Rücklage mit der Kostensteigerung. Nach der Zinsbindung gilt der Anschlusszins bei gleicher Rate. Die Abschreibung läuft bis zur vollen Basis.</p>`;
+  el.innerHTML=h; foldify(el,'prog');
+}
+
+
+
+/* ---------- Gemeinsames Objekt im Hub ---------- */
+const {hubRead,hubSave,hubMasters,hubAvail}=ImmoCore, HUBKEY=ImmoCore.HUBKEY, HSH=['kp','qm','bj','zi','kalt'];
+const hEmpty=ImmoCore.hEmpty;
+const hSame=(a,b)=>Math.abs((+a||0)-(+b||0))<0.005;
+/* Leere Master-Felder werden aus dem Check gefüllt, sonst gilt das Hub-Objekt. */
+/* Verknüpfung im Hub lösen, wenn das aktuelle Objekt verworfen wird (außer ein gespeichertes Angebot hängt noch daran). */
+/* Kontext für die Kopfzeile: zu welchem Hub-Objekt gehört die Ansicht? */
+window.immoCtx=()=>(s&&s.hubId)||'';
+/* Kachel im Hub beim Öffnen aktualisieren */
+window.addEventListener('load',()=>{ try{ pubSc(); }catch(e){} });
+function scDropLink(){ if(!s||!s.hubId) return; const h=hubRead(); if(!h) return; const m=(h.objs||[]).find(x=>x.id===s.hubId); if(m&&m.links&&!(s.offers||[]).some(o=>o.s&&o.s.hubId===s.hubId)){ delete m.links.sc; hubSave(h); } }
+/* Beim ersten Verknüpfen füllt die App leere Felder im Hub. Danach gilt der Hub, auch dort gelöschte Werte werden hier geleert. */
+function hubAdopt(st,m){
+  let chS=false, chM=false, kpC=false, rentC=false, bjC=false; const first=!st.hubSynced;
+  HSH.forEach(k=>{ const mv=m[k], sv=st[k];
+    if(hEmpty(mv)&&!hEmpty(sv)){ if(first){ m[k]=sv; chM=true; } else { st[k]=0; chS=true; } }
+    else if(!hEmpty(mv)&&!hSame(mv,sv)){ st[k]=+mv; chS=true; if(k==='kp') kpC=true; if(k==='kalt'||k==='qm') rentC=true; if(k==='bj') bjC=true; } });
+  if(first){ st.hubSynced=true; chS=true; }
+  if(kpC&&st.quote>0) st.darlehen=Math.round(st.kp*st.quote/100);
+  if(rentC){ st.mieteMode='abs'; st.mqm=st.qm>0?st.kalt/st.qm:0; }
+  if(bjC&&st.afaAuto) st.afa=suggestAfa(st.bj);
+  return {chS,chM};
+}
+function syncFromHub(){
+  const h=hubRead(); if(!h) return; let chS=false, chH=false;
+  const one=st=>{ if(!st||!st.hubId) return; const m=(h.objs||[]).find(x=>x.id===st.hubId);
+    if(!m){ delete st.hubId; chS=true; return; }
+    m.links=m.links||{}; if(!m.links.sc){ m.links.sc='1'; chH=true; }
+    const r=hubAdopt(st,m); if(r.chS) chS=true; if(r.chM) chH=true; };
+  one(s); s.offers.forEach(o=>one(o.s));
+  if(chH) hubSave(h); if(chS) save();
+}
+function hubPushAll(){
+  if(!s.hubId) return; const h=hubRead(); if(!h) return; const m=(h.objs||[]).find(x=>x.id===s.hubId); if(!m) return;
+  HSH.forEach(k=>{ m[k]=s[k]; }); hubSave(h);
+}
+function hubBesObj(m){ try{ const b=JSON.parse(localStorage.getItem('besichtigung-v1')||'null'); return b&&Array.isArray(b.objs)?b.objs.find(o=>String(o.hubId||'')===m.id)||b.objs.find(o=>String(o.id)===String((m.links||{}).bes)):null; }catch(e){ return null; } }
+function hubMakeBes(m){
+  let b=null, raw=null; try{ raw=localStorage.getItem('besichtigung-v1'); b=JSON.parse(raw||'null'); }catch(e){ if(raw) return null; }
+  if(raw&&(!b||!Array.isArray(b.objs))) return null; /* unlesbare Daten nie überschreiben */
+  if(!b) b={v:1,nextId:1,objs:[]};
+  const id=Math.max(b.nextId||1,...b.objs.map(o=>(+o.id||0)+1),1); b.nextId=id+1;
+  b.objs.push({id,created:Date.now(),titel:m.name||'',adresse:m.adresse||'',termin:'',kontakt:'',tel:'',link:'',kp:+m.kp||0,bj:+m.bj||0,qm:+m.qm||0,zi:+m.zi||0,etage:'',kalt:+m.kalt||0,stell:0,hgUml:0,hgNicht:0,grundst:0,items:{},custom:[],fragen:{},docs:{},notizen:'',extra:0,gebot:0,fazit:'',fazitNotiz:'',hubId:m.id});
+  try{ localStorage.setItem('besichtigung-v1',JSON.stringify(b)); }catch(e){ return null; }
+  m.links=m.links||{}; m.links.bes=String(id); return id;
+}
+function hubScoreText(){ try{ const r=calc(Object.assign({},DEFAULTS,s)); if(!r.ready) return 'Für eine Bewertung fehlen Kaufpreis, Wohnfläche oder Kaltmiete.'; return 'Bewertung: '+r.score+' von 10 Punkten ('+{stark:'stark',solide:'solide',mittel:'mittel',schwach:'schwach'}[r.level]+'), Netto-Rendite '+pct(r.netto)+', Cashflow '+eur(r.cfNachM,0,true)+' im Monat nach Steuern.'; }catch(e){ return ''; } }
+function renderHubCard(){
+  const host=$('hubCard'); if(!host) return; if(!hubAvail()){ host.innerHTML=''; return; }
+  const ms=hubMasters(), m=s.hubId?ms.find(x=>x.id===s.hubId):null; let h='';
+  if(m){ const b=hubBesObj(m);
+    h=`<div class="card pad"><div style="font-weight:600">Hub-Objekt: ${esc(m.name||'Objekt')}</div><p class="note" style="margin:4px 0">Kaufpreis, Fläche, Baujahr, Zimmer und Kaltmiete sind mit dem Hub abgeglichen.</p><p class="note" id="hubScore" style="margin:4px 0 10px">${esc(hubScoreText())}</p>
+      <div class="tools" style="margin:0">${b?`<a class="btn" href="../besichtigung/index.html#/o/${esc(b.id)}/daten">Besichtigung öffnen</a>`:`<button class="btn" id="hubBes" type="button">Besichtigung anlegen</button>`}<button class="btn" id="hubUnlink" type="button">Lösen</button></div><p class="note" id="hubMsg" aria-live="polite" style="margin:6px 0 0"></p></div>`;
+    const others=ms.filter(x=>x.id!==m.id);
+    if(others.length) h=h.replace(/<\/div>$/,`<label style="display:block;margin-top:10px;font-size:13px">Anderes Objekt laden<select id="hubPick" style="width:100%;min-height:44px;font:inherit;font-size:16px;color:inherit;background:rgba(128,128,128,.1);border:1px solid rgba(128,128,128,.4);border-radius:8px;padding:6px 8px;margin-top:4px"><option value="">– auswählen –</option>${others.map(x=>`<option value="${esc(x.id)}">${esc(x.name||'Objekt')}${x.adresse?' · '+esc(x.adresse):''}</option>`).join('')}</select></label></div>`);
+  } else {
+    const opts=ms.map(x=>`<option value="${esc(x.id)}">${esc(x.name||'Objekt')}${x.adresse?' · '+esc(x.adresse):''}</option>`).join('');
+    h=`<div class="card pad"><div style="font-weight:600">Objekt im Hub speichern</div><p class="note" style="margin:4px 0 8px">Dann übernehmen Besichtigung, Cockpit und weitere Apps die Eckdaten, ohne dass du sie neu eintippst.</p>
+      <div class="cmp-in"><input id="hubName" type="text" maxlength="60" placeholder="Name, z. B. Musterstraße 5" aria-label="Name des Objekts" autocomplete="off"><button class="btn" id="hubMake" type="button">Speichern</button></div><div id="hubMsg" class="note" role="status" style="margin:6px 0 0"></div>
+      ${ms.length?`<label style="display:block;margin-top:10px;font-size:13px">Oder ein vorhandenes Objekt laden<select id="hubPick" style="width:100%;min-height:44px;font:inherit;font-size:16px;color:inherit;background:rgba(128,128,128,.1);border:1px solid rgba(128,128,128,.4);border-radius:8px;padding:6px 8px;margin-top:4px"><option value="">– auswählen –</option>${opts}</select></label>`:''}</div>`;
+  }
+  host.innerHTML=h;
+}
+function hubActions(){
+  const host=$('hubCard');
+  host.addEventListener('click',e=>{
+    const b=e.target.closest('button'); if(!b) return;
+    if(b.id==='hubMake'){ const nm=$('hubName').value.trim(); if(!nm){ $('hubMsg').textContent='Gib dem Objekt einen Namen.'; $('hubName').focus(); return; }
+      const h=hubRead()||{v:1,urls:{},map:{},lastBackup:0,objs:[]}; if(!Array.isArray(h.objs)) h.objs=[];
+      const m={id:'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:nm,adresse:'',kp:s.kp||0,qm:s.qm||0,bj:s.bj||0,zi:s.zi||0,kalt:s.kalt||0,links:{sc:'1'}};
+      h.objs.push(m); hubSave(h); s.hubId=m.id; s.hubSynced=true; save(); renderHubCard(); return; }
+    if(b.id==='hubBes'){ const h=hubRead(); const m=h&&(h.objs||[]).find(x=>x.id===s.hubId); if(!m) return; hubPushAll(); const h2=hubRead(); const m2=h2.objs.find(x=>x.id===s.hubId); const id=hubMakeBes(m2); if(id){ hubSave(h2); renderHubCard(); } else { const hm=$('hubMsg'); if(hm) hm.textContent='Die Daten der Besichtigung ließen sich nicht lesen. Nichts wurde geändert.'; } return; }
+    if(b.id==='hubUnlink'){ const h=hubRead(); if(h){ const m=(h.objs||[]).find(x=>x.id===s.hubId); if(m&&m.links&&!s.offers.some(o=>o.s&&o.s.hubId===s.hubId)){ delete m.links.sc; hubSave(h); } } delete s.hubId; delete s.hubSynced; save(); renderHubCard(); return; }
+  });
+  host.addEventListener('change',e=>{
+    if(e.target.id!=='hubPick'||!e.target.value) return;
+    const h=hubRead(); const m=h&&(h.objs||[]).find(x=>x.id===e.target.value); if(!m) return;
+    const off=s.offers.find(o=>o.s&&o.s.hubId===m.id);
+    let kept=false;
+    if(s.hubId){ const ex=s.offers.find(o=>o.s&&o.s.hubId===s.hubId), cur=hubMasters().find(x=>x.id===s.hubId);
+      if(ex){ ex.s=snapshot(); kept=true; } else if(s.offers.length<MAX_OFF){ s.offers.push({id:'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name:(cur&&cur.name)||'Objekt',ts:Date.now(),s:snapshot()}); kept=true; } save(); }
+    if(!kept&&(+s.kp>0)&&!confirm(ImmoCore.t('Die aktuellen Eingaben werden durch dieses Objekt ersetzt. Speichere sie vorher als Angebot, wenn du sie behalten willst. Fortfahren?'))){ e.target.value=''; return; }
+    if(off){ const keep=s.offers; s=Object.assign({},DEFAULTS,off.s); s.offers=keep; }
+    else { const keep=s.offers; s=Object.assign({},DEFAULTS,{kp:0,qm:0,bj:0,zi:0,kalt:0,kueche:0,renov:0,darlehen:0,mqm:0,stell:0,sonst:0,hgUml:0,hgNicht:0,grundst:0,quote:90,mieteMode:'abs',afaAuto:true,afa:2}); s.offers=keep; s.hubId=m.id; }
+    m.links=m.links||{}; m.links.sc='1';
+    const r=hubAdopt(s,m); hubSave(h); refreshAll(); renderHubCard(); schedule(); showTab('eingabe');
+  });
+}
+
+/* ---------- Angebote vergleichen ---------- */
+const MAX_OFF=6; let offPend=null, offMsg='';
+function snapshot(){ const o=JSON.parse(JSON.stringify(s)); delete o.offers; return o; }
+/* Rückfrage, bevor nicht gespeicherte Eingaben ersetzt werden. Gespeichert heißt: identisch mit einem Angebot. */
+function replaceOk(){ if(!(+s.kp>0)) return true; const cur=JSON.stringify(snapshot()); if(s.offers.some(o=>JSON.stringify(o.s)===cur)) return true;
+  return confirm(ImmoCore.t('Die aktuellen Eingaben werden durch dieses Objekt ersetzt. Speichere sie vorher als Angebot, wenn du sie behalten willst. Fortfahren?')); }
+function offerRes(st,N){ const full=Object.assign({},DEFAULTS,st); const r=calc(full); let pj=null; if(r.ready){ try{ pj=project(full,r,N); }catch(e){} } return {full,r,pj}; }
+function renderCompare(){
+  const host=$('cmpHost'); if(!host) return;
+  const N=clamp(Math.round(s.horizont)||10,1,40);
+  const cols=[{name:'Aktuell',cur:true,st:snapshot()}].concat(s.offers.map(o=>({name:o.name,id:o.id,st:o.s}))).map(c=>Object.assign(c,offerRes(c.st,N)));
+  let h='';
+  if(offMsg) h+=`<div class="ok" role="status" style="margin:10px 0 0">${esc(offMsg)}</div>`;
+  h+=`<h2>Gespeicherte Angebote</h2><div class="card">`;
+  if(!s.offers.length) h+=`<div class="offer" style="border-top:0"><span class="sb" style="grid-column:1/-1">Noch kein Angebot gespeichert. Trage ein Objekt ein, gib oben einen Namen ein und tippe „Speichern“. Danach änderst du die Eingaben für das nächste Objekt.</span></div>`;
+  s.offers.forEach((o,i)=>{ const c=cols[i+1], r=c.r;
+    h+=`<div class="offer" style="${i?'':'border-top:0'}"><div><div class="n">${esc(o.name)}</div><div class="sb">${r.ready?`${eur(c.full.kp)} · Netto ${pct(r.netto)} · CF ${eur(r.cfNachM,0,true)}/Mo.`:'Angaben unvollständig'}</div></div>${r.ready?`<span class="pill p-${r.level==='stark'||r.level==='solide'?'good':r.level==='mittel'?'mid':'bad'}">${r.score}/10</span>`:'<span class="pill p-none">–</span>'}
+      <div class="ac"><button class="btn small" data-oact="load" data-id="${o.id}" type="button">Laden</button><button class="btn small" data-oact="upd" data-id="${o.id}" type="button">Mit Aktuell überschreiben</button><button class="btn small" data-oact="del" data-id="${o.id}" type="button" style="color:var(--bad)">${offPend===o.id?'Wirklich löschen?':'Löschen'}</button></div></div>`; });
+  h+='</div>';
+  const ready=cols.filter(c=>c.r.ready);
+  if(ready.length<2){ h+=`<div class="card empty" style="margin-top:14px"><b>Noch nichts zu vergleichen</b>Speichere mindestens ein Angebot mit Kaufpreis, Wohnfläche und Kaltmiete. Dann siehst du es hier neben dem aktuellen Objekt.</div>`; host.innerHTML=h; return; }
+  const ROWS=[
+   ['Preis und Miete'],
+   ['Kaufpreis',c=>eur(c.full.kp),c=>c.full.kp,-1],
+   ['Preis pro m²',c=>c.full.qm>0?eur(c.full.kp/c.full.qm):'–',c=>c.full.qm>0?c.full.kp/c.full.qm:null,-1],
+   ['Wohnfläche',c=>c.full.qm>0?fmtNum(c.full.qm,1)+' m²':'–',null],
+   ['Kaltmiete netto / Mo.',c=>eur(c.r.nettoKaltM,0),c=>c.r.nettoKaltM,1],
+   ['Rendite'],
+   ['Bruttorendite',c=>pct(c.r.brutto),c=>c.r.brutto,1],
+   ['Nettorendite',c=>pct(c.r.netto),c=>c.r.netto,1],
+   ['EK-Rentabilität',c=>pct(c.r.ekTilg),c=>c.r.ekTilg,1],
+   ['Cashflow'],
+   ['vor Steuern / Mo.',c=>eur(c.r.cfVorM,0,true),c=>c.r.cfVorM,1],
+   ['nach Steuern / Mo.',c=>eur(c.r.cfNachM,0,true),c=>c.r.cfNachM,1],
+   ['Finanzierung'],
+   ['Eigenkapital',c=>eur(c.r.ek),c=>c.r.ek,-1],
+   ['Rate / Mo.',c=>eur(c.r.rateM,0),c=>c.r.rateM,-1],
+   ['Prognose nach '+N+' J.'],
+   ['Gewinn kumuliert',c=>c.pj?eur(c.pj.rows[N-1].gewinn,0,true):'–',c=>c.pj?c.pj.rows[N-1].gewinn:null,1],
+   ['Cashflow kumuliert',c=>c.pj?eur(c.pj.rows[N-1].kum,0,true):'–',c=>c.pj?c.pj.rows[N-1].kum:null,1],
+   ['Bewertung'],
+   ['Punkte',c=>c.r.score+' von 10',c=>c.r.score,1]
+  ];
+  let t=`<div class="cmp-wrap card"><table class="cmp"><thead><tr><th scope="col"></th>${cols.map(c=>`<th scope="col">${esc(c.name)}${c.cur?'<br><span class="sb" style="font-weight:400;color:var(--muted)">im Reiter Objekt</span>':''}</th>`).join('')}</tr></thead><tbody>`;
+  ROWS.forEach(rw=>{
+    if(rw.length===1){ t+=`<tr class="grp"><td colspan="${cols.length+1}">${rw[0]}</td></tr>`; return; }
+    const [lab,fmt,val,dir]=rw; let best=null;
+    if(val&&dir){ const vs=cols.map(c=>c.r.ready?val(c):null); const ok=vs.filter(v=>v!==null&&isFinite(v)); if(ok.length>1){ best=dir>0?Math.max(...ok):Math.min(...ok); if(ok.every(v=>Math.abs(v-best)<1e-9)) best=null; } }
+    t+=`<tr><td>${lab}</td>${cols.map(c=>{ if(!c.r.ready) return '<td class="na">–</td>'; const v=val?val(c):null; const isBest=best!==null&&v!==null&&Math.abs(v-best)<1e-9; return `<td class="${isBest?'best':''}">${fmt(c)}${isBest?' ▲':''}</td>`; }).join('')}</tr>`;
+  });
+  t+='</tbody></table></div>';
+  h+=`<h2>Vergleich</h2>`+t+`<p class="note">Grün mit ▲ markiert den besten Wert je Zeile. Bei Kaufpreis, Preis pro m², Eigenkapital und Rate ist der niedrigste Wert der beste. Tippe die Kennzahlen im Reiter „Ergebnis“ an, um die Bewertung zu verstehen.</p>`;
+  const top=ready.slice().sort((a,b)=>b.r.score-a.r.score||b.r.netto-a.r.netto)[0], tied=ready.filter(c=>c.r.score===top.r.score).length>1;
+  h+=`<p class="cmp-best"><b>Beste Gesamtbewertung:</b> ${esc(top.name)} mit ${top.r.score} von 10 Punkten${tied?' (gleichauf mit mindestens einem weiteren Angebot, entscheide nach Netto-Rendite und Cashflow)':''}.</p>`;
+  host.innerHTML=h;
+  offMsg='';
+}
+function cmpActions(){
+  $('offSave').addEventListener('click',()=>{
+    const nm=$('offName'); let name=nm.value.trim(); const hm=s.hubId?hubMasters().find(x=>x.id===s.hubId):null; if(!name) name=(hm&&hm.name)||'Angebot '+(s.offers.length+1);
+    const ex=s.hubId&&s.offers.find(x=>x.s&&x.s.hubId===s.hubId); if(ex){ ex.s=snapshot(); nm.value=''; offMsg='„'+ex.name+'“ mit den aktuellen Eingaben aktualisiert.'; save(); renderCompare(); return; }
+    if(s.offers.length>=MAX_OFF){ offMsg='Es sind höchstens '+MAX_OFF+' Angebote möglich. Lösche ein Angebot oder überschreibe eines.'; renderCompare(); return; }
+    s.offers.push({id:'o'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),name,ts:Date.now(),s:snapshot()}); nm.value='';
+    offMsg='„'+name+'“ gespeichert.'; save(); renderCompare();
+  });
+  $('cmpHost').addEventListener('click',e=>{
+    const b=e.target.closest('[data-oact]'); if(!b) return; const o=s.offers.find(x=>x.id===b.dataset.id); if(!o) return; const a=b.dataset.oact;
+    if(a==='load'){ if(!replaceOk()) return; const keep=s.offers; s=Object.assign({},DEFAULTS,o.s); s.offers=keep; renderHubCard(); refreshAll(); schedule(); showTab('eingabe'); return; }
+    if(a==='upd'){ o.s=snapshot(); offMsg='„'+o.name+'“ mit den aktuellen Eingaben überschrieben.'; save(); renderCompare(); return; }
+    if(a==='del'){ if(offPend!==o.id){ offPend=o.id; renderCompare(); setTimeout(()=>{ if(offPend===o.id){ offPend=null; renderCompare(); } },3500); return; }
+      offPend=null; s.offers=s.offers.filter(x=>x.id!==o.id); offMsg='Angebot gelöscht.'; save(); renderCompare(); }
+  });
+}
+syncFromHub(); buildForm(); wire(); cmpActions(); hubActions(); renderHubCard(); refreshAll();
+/* Ergebnis zuerst, sobald gerechnet werden kann */
+(function(){ let ok=false; try{ ok=calc(Object.assign({},DEFAULTS,s)).ready; }catch(e){} showTab(ok?'ergebnis':'eingabe'); })(); update();
+
+function applyTransfer(p){
+  const n=v=>isFinite(+v)?+v:0;
+  /* Hub-Verknüpfung an das Objekt der Besichtigung anpassen, damit kein fremdes Hub-Objekt überschrieben wird */
+  if((p.hubId||'')!==(s.hubId||'')){ scDropLink(); delete s.hubId; delete s.hubSynced;
+    if(p.hubId){ const h=hubRead(), m=h&&(h.objs||[]).find(x=>x.id===p.hubId); if(m){ s.hubId=m.id; s.hubSynced=true; m.links=m.links||{}; m.links.sc='1'; hubSave(h); } } }
+  ['kp','bj','qm','zi','kalt','stell','hgUml','hgNicht','grundst'].forEach(k=>{ if(p[k]!==undefined) s[k]=n(p[k]); });
+  if(n(p.kpAnzeige)>0) s.kp=n(p.kpAnzeige);
+  s.renov=n(p.kosten); s.kueche=n(p.extra);
+  s.mieteMode='abs'; s.mqm=s.qm>0?s.kalt/s.qm:0;
+  if(s.quote>0) s.darlehen=Math.round(s.kp*s.quote/100);
+  if(s.afaAuto) s.afa=suggestAfa(s.bj);
+  refreshAll(); schedule(); showTab('eingabe');
+  renderHubCard&&renderHubCard();
+  return 'Übernommen: Kaufpreis '+eur(s.kp)+', Fläche '+fmtNum(s.qm,2)+' m², Kosten vor Vermietung '+eur(s.renov)+'. Prüfe Darlehen, Zins und Nebenkosten.'+(n(p.gebot)>0?' Dein Gebot: '+eur(n(p.gebot))+'. Trage es als Kaufpreis ein, wenn du damit rechnen willst.':'');
+}
+
+/* ---- Übernahme aus der Besichtigungs-App ---- */
+function parseTransfer(text){
+  try{
+    let t=String(text||'').trim().replace(/^BESICHTIGUNG:/,'');
+    let j=t.charAt(0)==='{'?t:decodeURIComponent(escape(atob(t.replace(/\s+/g,''))));
+    const p=JSON.parse(j); return p&&p.src==='besichtigung'?p:null;
+  }catch(e){ return null; }
+}
+function impMessage(txt,ok){
+  const m=document.getElementById('impMsg'); if(!m) return;
+  m.innerHTML=(ok?'':'')+txt+(ok?' <a href="../besichtigung/index.html">Zurück zur Besichtigung</a>':'');
+  const b=document.getElementById('impBox'); if(b) b.open=true;
+}
+function impRun(text){
+  const p=parseTransfer(text);
+  if(!p){ impMessage('Das ist kein gültiger Übergabecode. Kopiere ihn in der Besichtigungs-App erneut.',false); return false; }
+  if(!replaceOk()){ impMessage('Nicht übernommen. Deine Eingaben sind unverändert.',false); return false; }
+  const msg=applyTransfer(p); impMessage(msg,true); return true;
+}
+document.getElementById('impBtn').addEventListener('click',()=>{ impRun(document.getElementById('impText').value); });
+(function(){
+  const m=location.hash.match(/^#import=(.+)$/);
+  if(!m) return;
+  let ok=false; try{ ok=impRun(decodeURIComponent(m[1])); }catch(e){}
+  try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){}
+})();
+
+</script>
+<footer class="legal-foot"><a id="hubLink" href="../immobilien-hub/index.html">‹ Zum Hub</a> <button type="button" id="legalBtn">Impressum, Haftung &amp; Datenschutz</button></footer>
+<script>(function(){try{var u=localStorage.getItem('immo-hub-url-v1');if(u)document.getElementById('hubLink').href=u;}catch(e){}})();</script>
+<dialog id="legalDlg"><form method="dialog"><h2>Impressum, Haftung &amp; Datenschutz</h2>
+<p id="legalWho" hidden></p>
+<h3>Haftung</h3><p>Diese App liefert Orientierungsrechnungen. Sie ersetzt keine Steuer-, Rechts-, Finanzierungs- oder Anlageberatung. Ergebnisse, Fristen und Rechtshinweise können unvollständig oder nicht mehr aktuell sein und hängen von deinen Eingaben und vom Einzelfall ab. Für Richtigkeit und Vollständigkeit wird keine Gewähr übernommen. Prüfe wichtige Entscheidungen mit Steuerberater, Rechtsanwalt oder Bank.</p>
+<h3>Datenschutz</h3><p>Es gibt kein Konto, keinen Server der App und keine Werbung. Deine Eingaben werden ausschließlich lokal im Speicher deines Browsers auf deinem Gerät abgelegt und nicht an mich oder Dritte übertragen. Es werden weder Tracking noch Cookies zu Analysezwecken eingesetzt, und alle Schriften liegen auf demselben Server, es werden keine Schriften bei Google geladen.</p>
+<p>Beim Aufruf der Seite verarbeitet der Hosting-Anbieter GitHub (GitHub Pages) technisch notwendig Verbindungsdaten wie die IP-Adresse. Darauf hat die App keinen Einfluss, siehe die Datenschutzerklärung von GitHub.</p>
+<p>Die Daten bleiben auf deinem Gerät, solange du sie nicht selbst exportierst oder weitergibst. Wenn du Browserdaten löschst oder die App entfernst, sind sie weg. Lege deshalb regelmäßig ein Backup an, soweit die App es anbietet. Besonders bei Mieterdaten bist du selbst für den datenschutzgerechten Umgang verantwortlich.</p>
+<button class="legal-ok" value="ok">Schließen</button></form></dialog>
+<style>
+.legal-foot{text-align:center;padding:18px 16px calc(100px + env(safe-area-inset-bottom));font:12px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+.legal-foot button{background:none;border:0;color:inherit;opacity:.6;text-decoration:underline;font:inherit;padding:8px;cursor:pointer}
+.legal-foot a{color:inherit;opacity:.6;text-decoration:underline;font:inherit;padding:8px;display:inline-block}
+#legalDlg{color-scheme:light dark;background:Canvas;color:CanvasText;border:1px solid color-mix(in srgb,CanvasText 25%,transparent);border-radius:14px;padding:18px;max-width:min(460px,calc(100vw - 32px));max-height:80vh;font:14px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}
+#legalDlg::backdrop{background:rgba(0,0,0,.5)}
+#legalDlg h2{font-size:18px;margin:0 0 8px}#legalDlg h3{font-size:14px;margin:14px 0 4px}#legalDlg p{margin:0 0 8px}
+.legal-ok{margin-top:8px;width:100%;min-height:44px;border-radius:10px;border:1px solid color-mix(in srgb,CanvasText 30%,transparent);background:none;color:inherit;font:inherit;font-weight:600;cursor:pointer}
+</style>
+<script>
+/* Anbieter (optional, z. B. Name und E-Mail für öffentliche Weitergabe): */
+var LEGAL_ANBIETER='';
+(function(){var b=document.getElementById('legalBtn'),d=document.getElementById('legalDlg'),w=document.getElementById('legalWho');
+if(LEGAL_ANBIETER){w.textContent='Anbieter: '+LEGAL_ANBIETER;w.hidden=false}
+if(location.protocol==='app:'){document.querySelectorAll('#legalDlg p').forEach(function(p){if(/GitHub Pages/.test(p.textContent))p.remove()})}
+b.addEventListener('click',function(){if(d.showModal)d.showModal();else d.setAttribute('open','')})})();
+</script>
+</body>
+</html>
