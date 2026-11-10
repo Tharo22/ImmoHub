@@ -995,10 +995,42 @@ function viewObj(){
   /* Zeitleiste */
   const cr=resolve(m,'cp'), D=data();
   if(objTab==='verl'){
-  if(cr&&D.cp){ const cpAll=curCp(); if(cpAll&&!cpAll.example){ const o0=cpAll.objs.find(o=>String(o.id)===cr.id); if(o0) h+=viewZeit(cpAll,o0,D,D.ver,m.links.bes); } }
-  else h+='<h2>Zeitleiste</h2><div class="empty"><b>Noch keine Zeitleiste</b>Verknüpfe das Objekt mit dem Bestands-Cockpit. Dann zeigt der Hub Mieterhöhungen, Cashflow und Gesamtergebnis ab dem Kauf.</div>'; }
+  /* Mit Bestands-Cockpit: volle Zeitleiste. Sonst (oder wenn das Cockpit-Objekt fehlt): Verlauf aus Hub, Vermietung und Darlehen. */
+  let zt=''; if(cr&&D.cp){ const cpAll=curCp(); if(cpAll&&!cpAll.example){ const o0=cpAll.objs.find(o=>String(o.id)===cr.id); if(o0) zt=viewZeit(cpAll,o0,D,D.ver,m.links.bes); } }
+  h+=zt||objVerlauf(m,D,!!cr); }
   if(objTab==='daten') h+='<div class="row-actions"><button class="btn danger" data-act="objDel">Objekt aus der Liste entfernen</button></div><p class="note">Entfernt nur das Objekt im Hub. Die Daten in den Apps bleiben bestehen.</p></main>';
   return h+tabbar();
+}
+
+
+/* ---------- Objekt-Verlauf ohne Bestands-Cockpit ---------- */
+function objVerlauf(m,D,linked){
+  const V=D.ver, ids=verIds(m), T=(V&&Array.isArray(V.tens))?V.tens.filter(t=>ids.includes(String(t.objId))):[];
+  const pl=planOf(m), kd=kaufDate(m), cur=ymOf(todayS());
+  const starts=[kd&&ymOf(kd), pl&&pl.rows&&pl.rows[0]&&pl.rows[0].ym, ...T.map(t=>validD(t.start)?ymOf(t.start):'')].filter(Boolean).sort();
+  if(!starts.length) return '<h2>Verlauf</h2><div class="empty"><b>Noch kein Verlauf</b>Trage Kaufdatum oder Darlehen ein oder ordne Mieter aus der Vermietung zu. Dann zeigt der Hub hier Miete, Restschuld, Eigenkapital und alle Ereignisse.</div>';
+  let k0=starts[0]; if(diffM(k0,cur)>120) k0=addM(cur,-120); if(diffM(k0,cur)<6) k0=addM(cur,-6);
+  const total=diffM(k0,cur); let h='<h2>Verlauf</h2>';
+  /* Miete je Monat (kalt plus Stellplatz) */
+  if(T.length){ const ist=[]; let last=null;
+    for(let k=0;k<=total;k++){ const ym=addM(k0,k); const v=r2(T.reduce((a,t)=>{ const so=soll(t,ym); return a+(so?so.kalt+so.stell:0); },0)); if(v!==last||k===total){ ist.push([k,v]); last=v; } }
+    const mk=[]; T.forEach(t=>(t.changes||[]).forEach(c=>{ if(c.ab&&c.kalt!=null){ const k=diffM(k0,c.ab); if(k>=0&&k<=total){ const p=ist.filter(q=>q[0]<=k).pop(); mk.push({x:k,y:p?p[1]:0,c:'var(--good)'}); } } }));
+    h+='<div class="card pad"><div style="font-size:12.5px;color:var(--muted);margin:0 0 4px">Miete im Monat (kalt plus Stellplatz, laut Vermietung)</div><div class="chart">'+lineChart({series:[{name:'Monatsmiete',color:'var(--accent)',w:2.4,ist,prog:[]}],total,nowX:-1,k0,step:true,zero:true,marks:mk,label:'Monatsmiete von '+fmtYm(k0)+' bis heute, Mietänderungen als Punkte'})+'</div></div>'; }
+  /* Restschuld und Eigenkapital */
+  if(pl) h+='<div class="card pad" style="margin-top:10px"><div style="font-size:12.5px;color:var(--muted);margin:0 0 4px">Restschuld (durchgezogen bisher, gestrichelt geplant)</div><div class="chart">'+finChart(pl,'bal')+'</div></div>';
+  if(+m.mw||+m.kp){ const ist=[]; const step=Math.max(1,Math.round(total/24)); for(let k=0;k<=total;k+=step) ist.push([k,Math.round(equityOf([m],addM(k0,k)))]); if(ist[ist.length-1][0]!==total) ist.push([total,Math.round(equityOf([m],cur))]);
+    h+='<div class="card pad" style="margin-top:10px"><div style="font-size:12.5px;color:var(--muted);margin:0 0 4px">Eigenkapital im Objekt (Marktwert oder Kaufpreis minus Restschuld)</div><div class="chart">'+lineChart({series:[{name:'Eigenkapital',color:'var(--good)',w:2.4,ist,prog:[]}],total,nowX:-1,k0,zero:true,label:'Eigenkapital von '+fmtYm(k0)+' bis heute'})+'</div></div>'; }
+  /* Ereignisse */
+  const ev=[]; if(kd) ev.push([kd,'Kauf']);
+  if(pl&&pl.rows&&pl.rows[0]) ev.push([pl.rows[0].ym+'-01','Erste Darlehensrate']);
+  T.forEach(t=>{ const who=t.mieter||'Mieter'; if(validD(t.start)) ev.push([t.start,'Mietbeginn: '+who]); if(validD(t.ende)) ev.push([t.ende,'Mietende: '+who]);
+    (t.changes||[]).forEach(c=>{ if(c.ab&&c.kalt!=null) ev.push([c.ab+'-01','Mietänderung '+who+': Kaltmiete '+eur(c.kalt)]); }); });
+  (DOCS||[]).filter(d=>d.obj===m.id&&ImmoCore.isDate(d.date)).forEach(d=>ev.push([d.date,'Unterlage: '+(d.name||d.kind||'Dokument')]));
+  hItems().filter(i=>i.obj===m.id&&i.done).forEach(i=>{ const d=typeof i.done==='number'?ImmoCore.localIso(new Date(i.done)).slice(0,10):(ImmoCore.isDate(i.date)?i.date:''); if(d) ev.push([d,(i.kind==='termin'?'Termin: ':'Erledigt: ')+(i.text||'Aufgabe')]); });
+  ev.sort((a,b)=>a[0]<b[0]?1:-1);
+  if(ev.length) h+='<h2>Ereignisse</h2><div class="card">'+ev.slice(0,25).map(e=>`<div class="kv"><div>${esc(e[1])}</div><span class="mono" style="white-space:nowrap">${fmtD(e[0])}</span></div>`).join('')+'</div>';
+  if(!linked) h+='<p class="note">Mit dem Bestands-Cockpit verknüpft zeigt der Verlauf zusätzlich Cashflow, Wirkung von Mieterhöhungen und das Gesamtergebnis ab dem Kauf.</p>';
+  return h;
 }
 
 /* ---------- Schnell erfassen: Miete eingegangen ---------- */
