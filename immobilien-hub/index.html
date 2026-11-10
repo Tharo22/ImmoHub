@@ -307,21 +307,24 @@ function icsItems(){
     ImmoCore.finItems(lone,td,eur).forEach(i=>items.push(i)); }
   return items.sort((a,b)=>a.date<b.date?-1:(a.date>b.date?1:0));
 }
-function portfolioCard(){
+/* Gemeinsame Grundlage für Kernzahlen-Karte und Portfolio: Bestand = „Halten“ oder „Verbessern“, Miete laut Vermietung */
+function bestandRows(S){ return hObjs().filter(m=>owned(m,S)).map(m=>{ const cb=ImmoCore.currentBalance(m), ph=phaseOf(m,S).i, g=verAgg(m), inB=ph>=3, held=inB&&g&&g.n>0;
+  return {m,cb,inB,held,r:held?g.k:0,p:cb?cb.pay:0,debt:cb?cb.now:0,val:+m.mw||+m.kp||0,bk:!!(cb&&cb.fromBank)}; }); }
+function portfolioCard(S){
   const O=hObjs(); if(!O.length) return '';
-  const rows=O.map(m=>{ const cb=ImmoCore.currentBalance(m), kp=+m.kp||0, mi=+m.kalt||0; return {m,rest:cb?cb.now:null,pay:cb?cb.pay:null,bk:!!(cb&&cb.fromBank),nodate:!!(cb&&cb.mode==='none'),kp,mi,rend:kp>0&&mi>0?mi*12/kp:null}; });
-  if(!rows.some(r=>r.rest!=null||r.kp>0||r.mi>0)) return '';
-  const sum=(k,f)=>rows.filter(f||(r=>r[k]!=null)).reduce((a,r)=>a+(r[k]||0),0);
-  const fin=rows.filter(r=>r.rest!=null), rest=sum('rest'), pay=sum('pay'), kpF=fin.reduce((a,r)=>a+r.kp,0), miF=fin.reduce((a,r)=>a+r.mi,0);
+  const B=bestandRows(S), inB=B.filter(x=>x.inB), held=B.filter(x=>x.held), kauf=B.filter(x=>!x.inB);
+  const rest=inB.reduce((a,x)=>a+x.debt,0), val=inB.reduce((a,x)=>a+x.val,0), pay=held.reduce((a,x)=>a+x.p,0), rent=held.reduce((a,x)=>a+x.r,0), nT=held.length;
+  const rows=O.map(m=>{ const x=B.find(y=>y.m===m), cb=ImmoCore.currentBalance(m), kp=+m.kp||0, mi=x&&x.held?x.r:(+m.kalt||0); return {m,x,rest:cb?cb.now:null,pay:cb?cb.pay:null,nodate:!!(cb&&cb.mode==='none'),kp,rend:kp>0&&mi>0?mi*12/kp:null}; });
+  if(!rows.some(r=>r.rest!=null||r.kp>0)) return '';
   let h='<h2>Portfolio</h2><div class="kpis">';
-  h+=kpi('Restschuld gesamt',fin.length?eur(rest):'–',fin.length?(kpF>0?'Beleihung '+nf(rest/kpF*100,0)+' %':fin.length+' Objekte'):'Finanzierung eintragen');
-  h+=kpi('Raten pro Monat',fin.length?eur(pay):'–',fin.length?eur(pay*12)+' pro Jahr':'');
-  if(fin.length&&miF>0) h+=kpi('Miete minus Rate',(miF-pay>=0?'+':'')+eur(miF-pay),'vor Kosten'+(fin.every(r=>r.bk)?'':', Rate teils berechnet'),miF-pay>=0?'t-good':'t-bad');
-  h+=kpi('Kaufpreise gesamt',eur(sum('kp')),rows.length+' Objekt'+(rows.length===1?'':'e'));
+  h+=kpi('Restschuld im Bestand',inB.length?eur(rest):'–',inB.length?(val>0?'Beleihung '+nf(rest/val*100,0)+' %':inB.length+' Objekte'):'Noch kein Objekt im Bestand');
+  h+=kpi('Raten pro Monat',held.length?eur(pay):'–',held.length?eur(pay*12)+' pro Jahr'+(held.every(x=>x.bk||!x.cb)?'':', teils berechnet'):'');
+  h+=kpi('Kaltmiete pro Monat',held.length?eur(rent):'–',held.length?'laut Vermietung, mit Stellplatz':'Noch keine Mieter');
+  h+=kpi('Kaufpreise gesamt',eur(rows.reduce((a,r)=>a+r.kp,0)),O.length+' Objekt'+(O.length===1?'':'e'));
   h+='</div>';
-  if(fin.length){ h+='<details class="fold" style="margin:10px 0 0"><summary><span>Zusammensetzung Miete minus Rate</span></summary><div class="fb"><div class="card">'+fin.map(r=>{ const d=r.mi-r.pay; return `<div class="kv"><div>${esc(r.m.name||'Objekt')}<small>Miete ${eur2(r.mi)} − Rate ${eur2(r.pay)} (${r.bk?'laut Bank':'berechnet aus Zins und Tilgung'})</small></div><b class="${d>=0?'t-good':'t-bad'}">${d>=0?'+':''}${eur2(d)}</b></div>`; }).join('')+`<div class="kv"><div><b>Summe</b></div><b class="${miF-pay>=0?'t-good':'t-bad'}">${miF-pay>=0?'+':''}${eur2(miF-pay)}</b></div></div><p class="note">Kaltmiete minus Darlehensrate, ohne Nebenkosten, Instandhaltung, Leerstand und Steuern. Trage im Reiter Finanzen unter „Konditionen ändern“ die „Rate laut Bank“ ein, damit die Rate stimmt.</p></div></details>`; }
+  if(kauf.length) h+=`<p class="note" style="margin:8px 4px 0">Noch nicht eingerechnet, weil im Kauf: ${kauf.map(x=>esc(x.m.name||'Objekt')+(x.p?' (Rate '+eur(x.p)+')':'')).join(', ')}.</p>`;
   const rk=rows.slice().sort((a,b)=>(b.rend==null?-1:b.rend)-(a.rend==null?-1:a.rend));
-  h+='<div class="card">'+rk.map((r,i)=>`<div class="kv"><div>${i+1}. ${esc(r.m.name||'Objekt')}<small>${r.rend!=null?'Rendite '+nf(r.rend*100,1)+' %':'Rendite offen'}${r.pay!=null?' · Rate '+eur(r.pay):''}${r.nodate?' · Datum der ersten Rate fehlt':''}</small></div><b>${r.rest!=null?eur(r.rest):'–'}</b></div>`).join('')+'</div><p class="note">Nach Bruttorendite sortiert, rechts die Restschuld heute.'+(fin.length<rows.length?' '+(rows.length-fin.length)+' Objekt'+(rows.length-fin.length===1?'':'e')+' ohne Finanzierung.':'')+'</p>';
+  h+='<div class="card" style="margin-top:10px">'+rk.map((r,i)=>`<div class="kv"><div>${i+1}. ${esc(r.m.name||'Objekt')}<small>${r.rend!=null?'Rendite '+nf(r.rend*100,1)+' %':'Rendite offen'}${r.pay!=null?' · Rate '+eur(r.pay):''}${r.x&&!r.x.inB?' · im Kauf':''}${r.nodate?' · Datum der ersten Rate fehlt':''}</small></div><b>${r.rest!=null?eur(r.rest):'–'}</b></div>`).join('')+'</div><p class="note">Nach Bruttorendite sortiert (vermietete Objekte mit der Ist-Miete), rechts die Restschuld heute. „Miete − Rate“ und ihre Aufschlüsselung stehen oben in der Kernzahlen-Karte.</p>';
   return h;
 }
 /* Ankauf-Stand und anstehende Besichtigungen (Layout Phase 4) */
@@ -343,7 +346,7 @@ function viewHome(){
   { const n=icsItems().length; if(n) h+=`<div class="row-actions">${NATIVE_N()&&!ntf().on?'<button class="btn" data-act="tab" data-v="set">Erinnerungen einschalten</button>':''}<button class="btn" data-act="ics">Fristen in den Kalender (${n})</button></div>`; }
   h+=carousel(S);
   h+=ankaufCard(D,true);
-  h+=portfolioCard();
+  h+=portfolioCard(S);
   const s0=D.sum; let kpS='';
   if(s0){ const kalt=s0.mieten.reduce((a,m)=>a+m.kalt+m.stell,0);
     kpS+=kpi('Kaltmiete im Monat (Ist)',eur(kalt),s0.mieten.length+' vermietete Wohnung'+(s0.mieten.length===1?'':'en'));
@@ -519,10 +522,11 @@ function objModel(o0,A,V){
   /* Darlehen aus der gemeinsamen Rechnung (ImmoCore.plan) statt aus der Jahresrechnung; ohne Datum der ersten Rate beginnt es im Monat nach dem Kauf. */
   const loanPlan=k0=>{ const lo=Object.assign({},o0); if(!ImmoCore.isDate(lo.rate1)&&!(+lo.rest>0&&ImmoCore.isDate(lo.restDate))) lo.rate1=addM(k0,1)+'-01'; const P=ImmoCore.plan(lo); const byYm={}; if(P) P.rows.forEach(r=>{ byYm[r.ym]=r; }); return {P,byYm,lo}; };
   const g=A.rentG/100, cg=A.costG/100, vg=A.valueG/100, tx=(A.grenz||0)/100;
-  const oids=Object.keys(hub.map).filter(k=>hub.map[k]===String(o0.id));
+  const hm=hObjs().find(x=>x.links&&String(x.links.cp)===String(o0.id));
+  const oids=[...new Set(Object.keys(hub.map||{}).filter(k=>hub.map[k]===String(o0.id)).concat(hm?verIds(hm):[]))];
   const tens=V&&Array.isArray(V.tens)?V.tens.filter(t=>oids.includes(String(t.objId))):[];
   const meta=reMeta()[String(o0.id)]||{};
-  let kauf=validD(meta.kauf)?meta.kauf:'', fallback=false;
+  let kauf=validD(meta.kauf)?meta.kauf:(hm&&validD(kaufDate(hm))?kaufDate(hm):''), fallback=false;
   if(!kauf){ const st=tens.map(t=>t.start).filter(validD).sort(); if(st.length){ kauf=st[0]; fallback=true; } }
   const base={o,A,H,rows,tens,oids,meta,kauf,fallback};
   if(!kauf) return Object.assign(base,{need:true});
@@ -630,7 +634,7 @@ function viewZeit(cp,o0,D,V,besId){ let h='';
   M.meta=Object.assign({},M.meta,{bes:besId||''});
   /* Daten zum Objekt */
   const units=M.oids.map(id=>{ const x=V&&(V.objs||[]).find(u=>String(u.id)===id); return x?(x.name||'Wohnung').replace(/^Beispiel:\s*/,''):''; }).filter(Boolean);
-    let basis=`<div class="pad"><label class="fld">Kaufdatum<input type="date" data-meta="kauf" data-cid="${esc(o0.id)}" value="${esc(meta.kauf||'')}"></label>`;
+    let basis=`<div class="pad"><label class="fld">Kaufdatum<input type="date" data-meta="kauf" data-cid="${esc(o0.id)}" value="${esc(meta.kauf||(!M.fallback&&M.kauf)||'')}"></label>`;
   basis+=`<p class="note" style="margin:2px 0 0">${units.length?'Zugeordnete Mieteinheiten: '+units.map(esc).join(', ')+'.':'Noch keine Mieteinheit zugeordnet. Das geht im Reiter Mieten. Bis dahin rechnet die Zeitleiste mit der Planmiete aus dem Cockpit.'}</p></div>`;
   h+='<h2>Daten zum Objekt</h2><div class="card">'+basis+'</div>';
   if(M.need) return h+`<div class="warn" style="margin-top:12px">Trage das Kaufdatum ein, dann berechnet der Hub Zeitleiste, Cashflow und Gesamtergebnis ab dem Kauf.</div>`;
@@ -997,7 +1001,7 @@ function viewObj(){
   if(objTab==='verl'){
   /* Mit Bestands-Cockpit: volle Zeitleiste. Sonst (oder wenn das Cockpit-Objekt fehlt): Verlauf aus Hub, Vermietung und Darlehen. */
   let zt=''; if(cr&&D.cp){ const cpAll=curCp(); if(cpAll&&!cpAll.example){ const o0=cpAll.objs.find(o=>String(o.id)===cr.id); if(o0) zt=viewZeit(cpAll,o0,D,D.ver,m.links.bes); } }
-  h+=zt||objVerlauf(m,D,!!cr); }
+  h+=zt; if(!zt||zt.indexOf('class="chart"')<0) h+=objVerlauf(m,D,!!cr); }
   if(objTab==='daten') h+='<div class="row-actions"><button class="btn danger" data-act="objDel">Objekt aus der Liste entfernen</button></div><p class="note">Entfernt nur das Objekt im Hub. Die Daten in den Apps bleiben bestehen.</p></main>';
   return h+tabbar();
 }
@@ -1018,7 +1022,7 @@ function objVerlauf(m,D,linked){
     h+='<div class="card pad"><div style="font-size:12.5px;color:var(--muted);margin:0 0 4px">Miete im Monat (kalt plus Stellplatz, laut Vermietung)</div><div class="chart">'+lineChart({series:[{name:'Monatsmiete',color:'var(--accent)',w:2.4,ist,prog:[]}],total,nowX:-1,k0,step:true,zero:true,marks:mk,label:'Monatsmiete von '+fmtYm(k0)+' bis heute, Mietänderungen als Punkte'})+'</div></div>'; }
   /* Restschuld und Eigenkapital */
   if(pl) h+='<div class="card pad" style="margin-top:10px"><div style="font-size:12.5px;color:var(--muted);margin:0 0 4px">Restschuld (durchgezogen bisher, gestrichelt geplant)</div><div class="chart">'+finChart(pl,'bal')+'</div></div>';
-  if(+m.mw||+m.kp){ const ist=[]; const step=Math.max(1,Math.round(total/24)); for(let k=0;k<=total;k+=step) ist.push([k,Math.round(equityOf([m],addM(k0,k)))]); if(ist[ist.length-1][0]!==total) ist.push([total,Math.round(equityOf([m],cur))]);
+  if(+m.mw||+m.kp){ const ist=[]; const step=Math.max(1,Math.round(total/24)); for(let k=0;k<=total;k+=step) ist.push([k,Math.round(eqOfObjs([m],addM(k0,k)))]); if(ist[ist.length-1][0]!==total) ist.push([total,Math.round(eqOfObjs([m],cur))]);
     h+='<div class="card pad" style="margin-top:10px"><div style="font-size:12.5px;color:var(--muted);margin:0 0 4px">Eigenkapital im Objekt (Marktwert oder Kaufpreis minus Restschuld)</div><div class="chart">'+lineChart({series:[{name:'Eigenkapital',color:'var(--good)',w:2.4,ist,prog:[]}],total,nowX:-1,k0,zero:true,label:'Eigenkapital von '+fmtYm(k0)+' bis heute'})+'</div></div>'; }
   /* Ereignisse */
   const ev=[]; if(kd) ev.push([kd,'Kauf']);
@@ -1286,8 +1290,8 @@ function undoHub(){ const snap=ImmoCore.snap(); return msg=>{ ImmoCore.haptic('l
 /* ---- Vermögensverlauf (Paket E) ---- */
 function owned(m,S){ return !m.archived&&phaseOf(m,S).i>=2; }
 function balAt(pl,ym){ if(!pl||!pl.rows||!pl.rows.length) return 0; if(ym<pl.rows[0].ym) return pl.start; const r=pl.rows.find(x=>x.ym===ym); return r?r.bal:0; }
-function equityOf(objs,ym){ return objs.reduce((a,m)=>{ const v=+m.mw||+m.kp||0, pl=planOf(m); let d=0; if(pl) d=balAt(pl,ym); else { const cb=ImmoCore.currentBalance(m); d=cb?cb.now:0; } return a+v-d; },0); }
-function equitySeries(objs){ const cur=ymOf(todayS()), out=[]; for(let i=12;i>=0;i--){ const ym=addM(cur,-i), st=hub.vh&&hub.vh[ym]; out.push(st&&st.h&&ym<cur&&isFinite(st.e)?st.e:equityOf(objs,ym)); } return out; }
+function eqOfObjs(objs,ym){ return objs.reduce((a,m)=>{ const v=+m.mw||+m.kp||0, pl=planOf(m); let d=0; if(pl) d=balAt(pl,ym); else { const cb=ImmoCore.currentBalance(m); d=cb?cb.now:0; } return a+v-d; },0); }
+function equitySeries(objs){ const cur=ymOf(todayS()), out=[]; for(let i=12;i>=0;i--){ const ym=addM(cur,-i), st=hub.vh&&hub.vh[ym]; out.push(st&&st.h&&ym<cur&&isFinite(st.e)?st.e:eqOfObjs(objs,ym)); } return out; }
 function recordVh(e,v,d){ const ym=ymOf(todayS()); if(!hub.vh||typeof hub.vh!=='object') hub.vh={}; const o=hub.vh[ym]; const r={e:Math.round(e),v:Math.round(v),d:Math.round(d),h:1}; if(!o||!o.h||o.e!==r.e||o.v!==r.v){ hub.vh[ym]=r; const ks=Object.keys(hub.vh).sort(); while(ks.length>60) delete hub.vh[ks.shift()]; saveHub(); } }
 function sparkPath(vals,w,hgt){ const mn=Math.min(...vals), mx=Math.max(...vals), rg=mx-mn||1; return vals.map((v,i)=>(i?'L':'M')+(i*w/(vals.length-1)).toFixed(1)+','+(hgt-3-(v-mn)/rg*(hgt-6)).toFixed(1)).join(''); }
 function heroCard(D,S){ const A=hObjs().filter(m=>owned(m,S)); if(!A.length) return '';
