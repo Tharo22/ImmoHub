@@ -1,7 +1,7 @@
 /* ImmoHub: gemeinsamer Offline-Speicher für alle Apps.
    Beim Installieren werden alle Dateien geladen, danach startet die App auch ohne Netz.
    Abruf: erst Netz (max. 2,5 s, damit Updates ankommen), sonst gespeicherte Kopie. */
-const V = 'immohub-13';
+const V = 'immohub-15';
 const FILES = [
 "./besichtigung/apple-touch-icon.png",
 "./besichtigung/fonts/bricolage-700.woff",
@@ -28,6 +28,7 @@ const FILES = [
 "./immobilien-hub/fonts/plexmono-400.woff",
 "./immobilien-hub/fonts/plexmono-600.woff",
 "./immobilien-hub/index.html",
+"./immobilien-hub/plus.js",
 "./index.html",
 "./manifest.webmanifest",
 "./pv-waermepumpe/apple-touch-icon.png",

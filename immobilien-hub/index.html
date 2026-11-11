@@ -193,6 +193,17 @@ details.fold>.fb{padding-bottom:2px}
 .g2 .fld input[type=date]{padding-left:8px;padding-right:6px;font-size:15px}
 .tile .s,.tile span.d{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .tile .big{font-size:18px}
+
+/* Druck und PDF (Berichte) */
+#printArea{display:none}
+@media print{body>*:not(#printArea){display:none!important}#printArea{display:block!important;color:#000;background:#fff}@page{size:A4;margin:16mm 14mm}
+.pr{font:10pt/1.4 -apple-system,"Helvetica Neue",Arial,sans-serif;color:#000}.pr h1{font-size:17pt;margin:0 0 2pt}.pr h2{font-size:12pt;margin:14pt 0 6pt}.pr h3{font-size:11pt;margin:0 0 5pt}
+.pr-sub{margin:0 0 10pt;color:#444}.pr-k{width:100%;border-collapse:collapse;margin:6pt 0}.pr-k td{border:1px solid #bbb;padding:5pt 6pt;font-size:8.5pt;color:#444;width:25%}.pr-k b{display:block;font-size:12pt;color:#000;margin-top:2pt}
+.pr-t{width:100%;border-collapse:collapse;margin:4pt 0 8pt}.pr-t th{text-align:left;font-size:8.5pt;border-bottom:1.5px solid #000;padding:3pt 4pt}.pr-t td{border-bottom:1px solid #ddd;padding:3pt 4pt;vertical-align:top}.pr-t td+td,.pr-t th+th{text-align:right;white-space:nowrap}
+.pr-docs td:nth-child(2),.pr-docs th:nth-child(2),.pr-docs td:nth-child(3),.pr-docs th:nth-child(3){text-align:left;white-space:normal}
+.pr-t tr.sum td{font-weight:700;border-top:1.5px solid #000;border-bottom:none}.pr-t small{display:block;color:#555;font-size:8pt}
+.pr-o{break-inside:avoid;page-break-inside:avoid;margin:0 0 10pt;padding:8pt 0 0;border-top:1px solid #999}.pr-kv{width:100%;border-collapse:collapse}.pr-kv td{padding:2pt 4pt;font-size:9pt}.pr-kv td:nth-child(odd){color:#555;width:22%}.pr-kv td:nth-child(even){width:28%}
+.pr-f{margin-top:12pt;font-size:8pt;color:#555}html,body{background:#fff!important}.pr h1,.pr h2,.pr h3{text-transform:none;letter-spacing:0;color:#000;font-weight:700}.pr h2{border:0}}
 </style>
 <link rel="stylesheet" href="../shared/ui.css">
 <script>window.IMMO_I18N=1;</script>
@@ -305,6 +316,7 @@ function icsItems(){
   { const have=new Set(cp&&Array.isArray(cp.objs)&&!cp.example?cp.objs.map(o=>String(o.id)):[]);
     const lone=hObjs().filter(m=>!(m.links&&m.links.cp&&have.has(String(m.links.cp)))&&(+m.loan>0||+m.rest>0)).map(m=>({o:{id:'h'+m.id,name:m.name,loan:m.loan,ratebk:m.ratebk,fin2:m.fin2,zins:m.zins,tilg:m.tilg,fix:m.fix,fixEnd:m.fixEnd,sonder:m.sonder},start:m.rate1||''}));
     ImmoCore.finItems(lone,td,eur).forEach(i=>items.push(i)); }
+  if(window.PX) PX.recurIcs().filter(i=>i.date>=td).forEach(i=>items.push(i));
   return items.sort((a,b)=>a.date<b.date?-1:(a.date>b.date?1:0));
 }
 /* Gemeinsame Grundlage für Kernzahlen-Karte und Portfolio: Bestand = „Halten“ oder „Verbessern“, Miete laut Vermietung */
@@ -320,8 +332,9 @@ function portfolioCard(S){
   h+=kpi('Restschuld im Bestand',inB.length?eur(rest):'–',inB.length?(val>0?'Beleihung '+nf(rest/val*100,0)+' %':inB.length+' Objekte'):'Noch kein Objekt im Bestand');
   h+=kpi('Raten pro Monat',held.length?eur(pay):'–',held.length?eur(pay*12)+' pro Jahr'+(held.every(x=>x.bk||!x.cb)?'':', teils berechnet'):'');
   h+=kpi('Kaltmiete pro Monat',held.length?eur(rent):'–',held.length?'laut Vermietung, mit Stellplatz':'Noch keine Mieter');
-  h+=kpi('Kaufpreise gesamt',eur(rows.reduce((a,r)=>a+r.kp,0)),O.length+' Objekt'+(O.length===1?'':'e'));
+  if(window.PX){ const c=PX.cfSum(inB.map(x=>x.m)); h+=kpi('Ist-Cashflow 12 Monate',c.n?(c.cf>=0?'+':'−')+eur(Math.abs(c.cf)):'–',c.n?'Ø '+(c.cf>=0?'+':'−')+eur(Math.abs(c.cf/12))+' pro Monat, nach Belegen':'Noch keine Daten',c.cf>=0?'t-good':'t-bad'); }
   h+='</div>';
+  h+=`<p class="note" style="margin:6px 4px 0">Kaufpreise gesamt ${eur(rows.reduce((a,r)=>a+r.kp,0))} · ${O.length} Objekt${O.length===1?'':'e'}</p>`;
   if(kauf.length) h+=`<p class="note" style="margin:8px 4px 0">Noch nicht eingerechnet, weil im Kauf: ${kauf.map(x=>esc(x.m.name||'Objekt')+(x.p?' (Rate '+eur(x.p)+')':'')).join(', ')}.</p>`;
   const rk=rows.slice().sort((a,b)=>(b.rend==null?-1:b.rend)-(a.rend==null?-1:a.rend));
   h+='<div class="card" style="margin-top:10px">'+rk.map((r,i)=>`<div class="kv"><div>${i+1}. ${esc(r.m.name||'Objekt')}<small>${r.rend!=null?'Rendite '+nf(r.rend*100,1)+' %':'Rendite offen'}${r.pay!=null?' · Rate '+eur(r.pay):''}${r.x&&!r.x.inB?' · im Kauf':''}${r.nodate?' · Datum der ersten Rate fehlt':''}</small></div><b>${r.rest!=null?eur(r.rest):'–'}</b></div>`).join('')+'</div><p class="note">Nach Bruttorendite sortiert (vermietete Objekte mit der Ist-Miete), rechts die Restschuld heute. „Miete − Rate“ und ihre Aufschlüsselung stehen oben in der Kernzahlen-Karte.</p>';
@@ -338,11 +351,12 @@ function ankaufCard(D,noBes){ const O=hObjs().filter(m=>!m.archived); if(!O.leng
 function viewHome(){
   const D=data(), S=ImmoCore.sums(); let h=bar(todayLong(),'Übersicht')+'<main>';
   const anyData=APPS.some(a=>found(a))||hObjs().length;
-  if(!anyData) h+=`<div class="ui-empty" style="margin-top:12px"><b>Willkommen im Hub</b>Leg dein erstes Objekt an oder prüfe ein Inserat. Hast du schon ein Backup, spielst du es unter „Mehr“ ein.<span class="row-actions" style="margin:0"><button class="btn primary" data-act="objNew">Objekt anlegen</button><button class="btn" data-act="sheet" data-v="inserat">Inserat prüfen</button></span></div>`;
+  if(!anyData) h+=(window.PX?PX.welcome():`<div class="ui-empty" style="margin-top:12px"><b>Willkommen im Hub</b>Leg dein erstes Objekt an oder prüfe ein Inserat. Hast du schon ein Backup, spielst du es unter „Mehr“ ein.<span class="row-actions" style="margin:0"><button class="btn primary" data-act="objNew">Objekt anlegen</button><button class="btn" data-act="sheet" data-v="inserat">Inserat prüfen</button></span></div>`);
   h+=`<div class="ui-field" style="margin:10px 0 4px"><input type="search" id="hsearch" placeholder="Objekte, Mieter, Belege …" aria-label="Suchen" autocomplete="off" autocorrect="off" value="${esc(searchQ)}"></div><div id="hsres">${searchQ.length>=2?searchHtml(searchQ):''}</div>`;
   h+=heroCard(D,S);
   const T=todayRows(D,S);
   h+='<h2>Heute</h2>'+(T.length?'<div class="ui-card ui-today">'+T.slice(0,8).map(rowHtml).join('')+(T.length>8?`<p class="note" style="margin:6px 0 0">${T.length-8} weitere unter Mieten und in den Objekten.</p>`:'')+'</div>':'<div class="ui-empty"><b>Heute ist nichts offen</b>Mieten, Fristen, Termine und Aufgaben erscheinen hier, sobald sie anstehen.</div>');
+  if(window.PX&&anyData) h+=PX.fristCard();
   { const n=icsItems().length; if(n) h+=`<div class="row-actions">${NATIVE_N()&&!ntf().on?'<button class="btn" data-act="tab" data-v="set">Erinnerungen einschalten</button>':''}<button class="btn" data-act="ics">Fristen in den Kalender (${n})</button></div>`; }
   h+=carousel(S);
   h+=ankaufCard(D,true);
@@ -381,7 +395,7 @@ function mietRaster(s){
 function viewMiete(){
   const D=data(), s=D.sum, cp=curCp(); let h=bar('Vermietung','Mieten')+'<main>';
   if(!s){ return h+`<div class="empty"><b>Keine Mieterdaten gefunden</b>Öffne die Vermietungs-App, trage Wohnungen mit Mieter ein und schließe sie wieder. Dann erscheinen die aktuellen Mieten hier.</div></main>`+tabbar(); }
-  h+=mietRaster(s);
+  h+=mietRaster(s); if(window.PX) h+=PX.mieteBtn();
   if(!s.mieten.length) return h+`<div class="empty"><b>Keine aktive Vermietung</b>In der Vermietungs-App läuft aktuell kein Mietverhältnis.</div></main>`+tabbar();
   h+='<h2>Abgleich mit dem Cockpit</h2>';
   if(!cp) h+='<div class="warn">Im Bestands-Cockpit sind noch keine Objekte gespeichert. Du siehst die Mieten, kannst sie aber noch nicht zuordnen.</div>';
@@ -850,9 +864,10 @@ function viewFin(){
   if(!O.length) return h+'<div class="empty"><b>Noch keine Objekte</b>Lege unter „Objekte“ ein Objekt an. Danach trägst du hier die Finanzierung ein.</div></main>'+tabbar();
   let id=ui['finObj']; if(!getM(id)) id=(O.find(m=>ImmoCore.currentBalance(m))||O[0]).id; const m=getM(id); ui['finObj']=id;
   if(O.length>1) h+=`<label class="fld">Objekt<select data-fo="1">${O.map(o=>`<option value="${esc(o.id)}" ${o.id===id?'selected':''}>${esc(o.name||'Objekt')}</option>`).join('')}</select></label>`;
-  const fseg=ui['finSeg']==='tax'?'tax':'loan';
-  h+=`<div class="seg" role="tablist" aria-label="Bereich" style="margin-top:10px"><button type="button" role="tab" data-act="finSeg" data-v="loan" aria-selected="${fseg==='loan'}">Darlehen</button><button type="button" role="tab" data-act="finSeg" data-v="tax" aria-selected="${fseg==='tax'}">Steuerjahr</button></div>`;
+  const fseg=ui['finSeg']==='tax'?'tax':ui['finSeg']==='rep'?'rep':'loan';
+  h+=`<div class="seg" role="tablist" aria-label="Bereich" style="margin-top:10px"><button type="button" role="tab" data-act="finSeg" data-v="loan" aria-selected="${fseg==='loan'}">Darlehen</button><button type="button" role="tab" data-act="finSeg" data-v="tax" aria-selected="${fseg==='tax'}">Steuerjahr</button><button type="button" role="tab" data-act="finSeg" data-v="rep" aria-selected="${fseg==='rep'}">Berichte</button></div>`;
   if(fseg==='tax') return h+taxView(m)+'</main>'+tabbar();
+  if(fseg==='rep'&&window.PX) return h+PX.reportsView()+'</main>'+tabbar();
   const pl=planOf(m), inp=finInputs(m);
   if(!pl) return h+inp+`<p class="note">Trage Darlehen, Zins, Tilgung und das Datum der ersten Rate ein, dann erscheinen hier Verlauf und Tilgungsplan.</p></main>`+tabbar();
   /* Finanzierungsverlauf */
@@ -949,6 +964,7 @@ function objOverview(m){
   h+='<p class="note">Jede Kachel zeigt das Ergebnis der App für dieses Objekt. Tippe darauf, um die App zu öffnen. Leere Kacheln führen zu „Apps“, wo du verknüpfst oder anlegst.</p>';
   /* Eigenkapital im Objekt über 12 Monate (Paket E) */
   if((+m.mw||+m.kp)&&ImmoCore.currentBalance(m)){ const ser=equitySeries([m]); h+=`<div class="ui-card" style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px"><span class="ui-label">Eigenkapital im Objekt</span><b class="mono">${eur(ser[ser.length-1])}</b></div><svg viewBox="0 0 300 36" preserveAspectRatio="none" style="width:100%;height:36px" aria-hidden="true"><path d="${sparkPath(ser,300,36)}" fill="none" stroke="var(--good)" stroke-width="2.2" vector-effect="non-scaling-stroke"/></svg><span class="note" style="margin:0">${signedEur(ser[ser.length-1]-ser[0])} in 12 Monaten durch Tilgung${m.mw?'':' (Kaufpreis als Wert)'}</span></div>`; }
+  if(window.PX) h+=PX.cfCard(m);
   h+=objExtras(m);
   return h;
 }
@@ -963,7 +979,7 @@ function viewObj(){
       h+='<div class="fchips" role="group" aria-label="Filter">'+FILTERS.filter(([f])=>f==='all'||cnt(f)).map(([f,l])=>`<button type="button" data-act="objFilter" data-v="${f}" aria-pressed="${flt===f}">${l} ${cnt(f)}</button>`).join('')+'</div>';
       const OL=O.filter(m=>flt==='all'?!m.archived:ST.get(m).grp.includes(flt));
       h+='<div class="cards">'+OL.map(m=>`<button type="button" class="ocard" data-act="objOpen" data-id="${esc(m.id)}"><span class="th"><span class="t">${esc(m.name||'Objekt')}</span><span class="pills">${ST.get(m).p.map(([t,c])=>`<span class="pill ${c}">${t}</span>`).join('')}</span></span><span class="a">${esc(m.adresse||'Adresse fehlt')}</span><span class="f">${esc(figsOf(m))||'Noch keine Eckdaten'}</span><span class="chips">${chipsOf(m)||'<span class="a">in keiner App verknüpft</span>'}</span></button>`).join('')+'</div>'; }
-    h+='<div class="row-actions"><button class="btn primary" data-act="objNew">Neues Objekt</button><button class="btn" data-act="objImport">Aus den Apps einlesen</button></div>';
+    h+='<div class="row-actions"><button class="btn primary" data-act="objNew">Neues Objekt</button><button class="btn" data-act="objImport">Aus den Apps einlesen</button>'+(window.PX?PX.objBtn():'')+'</div>';
     h+='<p class="note">Das Objekt ist die gemeinsame Quelle. Von hier schickst du Daten in Besichtigung, Schnellcheck, Cockpit, Renovierung und Flip. Änderungen in einer App holst du mit „Objekt ← App“ zurück.</p></main>';
     return h+tabbar();
   }
@@ -1130,7 +1146,7 @@ let rkT=null;
 /* Neuzeichnen nach einer Eingabe erst, wenn der Fokus beim nächsten Feld angekommen ist (iPhone schließt sonst die Tastatur). */
 function renderSoon(){ clearTimeout(rkT); rkT=setTimeout(()=>render(true),0); }
 function render(keep){ const y=keep?window.scrollY:0; const ae=keep?document.activeElement:null, fk=fKey(ae); let sel=null; try{ if(fk&&ae.selectionStart!=null) sel=[ae.selectionStart,ae.selectionEnd]; }catch(_){}
-  $('#app').innerHTML=tab==='home'?viewHome():tab==='miete'?viewMiete():tab==='obj'?viewObj():tab==='fin'?viewFin():viewSich(); foldify(); window.scrollTo(0,y);
+  $('#app').innerHTML=tab==='fristen'&&window.PX?PX.fristView():tab==='home'?viewHome():tab==='miete'?viewMiete():tab==='obj'?viewObj():tab==='fin'?viewFin():viewSich(); foldify(); window.scrollTo(0,y);
   if(fk){ const el=[...$('#app').querySelectorAll('input,select,textarea')].find(x=>fKey(x)===fk); if(el){ try{ el.focus({preventScroll:true}); if(sel&&el.setSelectionRange) el.setSelectionRange(el.value.length,el.value.length); }catch(_){} } }
   try{ paintCovers(); if(tab==='home') countUp(); }catch(_){}
   syncNotify(); }
@@ -1326,6 +1342,7 @@ function todayRows(D,S){ const td=todayS(), rows=[], add14=ImmoCore.addMonths(td
   icsItems().filter(x=>/^cp-/.test(x.uid)&&x.date<=in90).forEach(x=>rows.push({date:x.date,ic:'%',col:'var(--c-cp)',t:x.t,s:fmtD(x.date)+' · '+(x.sub||''),act:`<button class="act" data-act="tab" data-v="fin">Ansehen</button>`}));
   hItems().filter(x=>!x.done&&x.date&&(x.date<=ImmoCore.addMonths(td,0)||new Date(x.date+'T00:00:00')<=in14)).forEach(x=>{ const m=getM(x.obj);
     rows.push({date:x.date,over:x.date<td,ic:x.kind==='termin'?String(+x.date.slice(8,10)):'✓',col:x.kind==='termin'?'var(--c-hub)':(x.date<td?'var(--bad)':'var(--none)'),t:(x.kind==='termin'?(x.time?x.time+' · ':''):'')+x.text,s:(m?m.name+' · ':'')+fmtD(x.date),act:`<button class="act" data-act="taskDone" data-id="${esc(x.id)}">Erledigt</button>`,sw:`<button data-act="taskDone" data-id="${esc(x.id)}">Erledigt</button>`}); });
+  if(window.PX) PX.todayRows().forEach(r=>rows.push(r));
   return rows.sort((a,b)=>(b.over?1:0)-(a.over?1:0)||(a.date<b.date?-1:a.date>b.date?1:0)); }
 const rowHtml=r=>`<div class="ui-trow">${r.sw?`<div class="bk" aria-hidden="true">${r.sw.replace('<button ','<button tabindex="-1" ')}</div>`:''}<div class="in"${r.sw?' data-sw="1"':''}><span class="ic" style="background:${r.col}">${esc(r.ic)}</span><span class="tx"><span class="t">${esc(r.t)}</span><br><span class="s">${esc(r.s)}</span></span>${r.act||''}</div></div>`;
 /* Wischen nach links zeigt die Aktion (wie in Mail) */
@@ -1363,7 +1380,7 @@ function payCands(objId){ const V=rd('vermietung-v1'); if(!V) return []; const m
   (V.tens||[]).filter(t=>isActiveT(t,td)&&!L.some(x=>x.t.id===t.id)).forEach(t=>{ const so=soll(t,ym); if(so) L.push({t,m:ym,b:r2(so.total),u:((V.objs||[]).find(x=>x.id===t.objId)||{}).name||'Wohnung'}); });
   if(ids&&ids.size) L=L.filter(x=>ids.has(String(x.t.objId))); return L; }
 function sheetHtml(){ if(!sheet) return ''; const S=sheet, m=S.obj&&getM(S.obj), nm=m?' <span>für</span> <span translate="no">'+esc(m.name||'Objekt')+'</span>':''; let h='';
-  if(S.mode==='menu') h=`<h3>Erfassen${nm}</h3><div class="ui-qa"><button type="button" data-sa="pay" style="--c:var(--c-ver)"><i>€</i>Zahlung</button><button type="button" data-sa="beleg"><i>▤</i>Beleg</button><button type="button" data-sa="termin" style="--c:var(--c-bes)"><i>◷</i>Termin</button><button type="button" data-sa="aufgabe" style="--c:var(--none)"><i>✓</i>Aufgabe</button><button type="button" data-sa="inserat" style="--c:var(--c-sc)"><i>⌂</i>Inserat</button></div>`;
+  if(S.mode==='menu') h=`<h3>Erfassen${nm}</h3><div class="ui-qa"><button type="button" data-sa="pay" style="--c:var(--c-ver)"><i>€</i>Zahlung</button><button type="button" data-sa="beleg"><i>▤</i>Beleg</button><button type="button" data-sa="termin" style="--c:var(--c-bes)"><i>◷</i>Termin</button><button type="button" data-sa="aufgabe" style="--c:var(--none)"><i>✓</i>Aufgabe</button><button type="button" data-sa="inserat" style="--c:var(--c-sc)"><i>⌂</i>Inserat</button><button type="button" data-px="bank" style="--c:var(--c-ver)"><i>⇣</i>Kontoauszug</button></div>`;
   if(S.mode==='pay'){ const L=payCands(S.obj); S.cands=L; const k=S.pick||0, c=L[k];
     h=`<h3>Zahlung${nm}</h3>`+(L.length?`<div class="ui-chips">${L.map((x,i)=>`<button type="button" data-sa="pick" data-i="${i}" aria-pressed="${i===k}"><span translate="no">${esc(x.t.mieter||'Mieter')}</span> · ${esc(fmtYm(x.m))}</button>`).join('')}</div>
       <label class="ui-field">Betrag<input class="big" id="sp_amt" inputmode="decimal" value="${c?esc(nf(c.b,2)):''}"></label><div class="ui-row2"><label class="ui-field">Für Monat<input type="month" id="sp_mon" value="${c?c.m:ymOf(todayS())}"></label><label class="ui-field">Eingang am<input type="date" id="sp_dat" value="${todayS()}"></label></div>
@@ -1433,7 +1450,7 @@ function taxView(m){ const cy=new Date().getFullYear(), kd=kaufDate(m), y0=kd?Ma
   if(c.noVer) h+='<p class="note">Die Mieteinnahmen kommen aus der Vermietung. Öffne sie einmal, damit sie ihre Zahlen für das Steuerjahr ablegt.</p>';
   if(c.g15){ const over=c.g15.net>c.g15.lim; h+=`<div class="ui-card" style="flex-direction:row;align-items:center;gap:10px;margin-top:10px"><span class="ui-pill ${over?'bad':'mid'}">15-%-Grenze</span><span style="font-size:14px">${over?'Überschritten: ':'Noch '}${eur(Math.abs(c.g15.lim-c.g15.net))}${over?' über der Grenze. Die Kosten sind dann voraussichtlich anschaffungsnah und nur über die AfA absetzbar.':' bis zur Grenze (netto) bis '+fmtD(c.g15.end)+'.'}</span></div>`; }
   h+=`<h2>Annahmen</h2><div class="ui-card"><div class="ui-row2"><label class="ui-field">Kaufdatum<input type="date" data-tx="kauf" value="${esc(m.kauf||'')}" placeholder="${esc(kd)}"></label><label class="ui-field">AfA-Satz %<input inputmode="decimal" data-tx="afaPct" value="${+m.afaPct>0?esc(nf(m.afaPct,1)):''}" placeholder="${esc(nf(afaRateDefault(m.bj),1))}"></label></div><label class="ui-field">Gebäudewert für die AfA<input inputmode="decimal" data-tx="afaBasis" value="${+m.afaBasis>0?esc(nf(m.afaBasis,0)):''}" placeholder="${c.bb?esc(nf(c.bb.v,0)):''}"></label><p class="note" style="margin:0">Leer gelassen nutzt der Hub das Baujahr für den Satz und Bodenrichtwert und Grundstücksfläche aus Objekt → Daten für den Gebäudewert. Anschaffungsnebenkosten sind nicht enthalten.</p></div>`;
-  h+=`<div class="row-actions"><button class="btn primary" data-act="taxCopy">Für den Steuerberater kopieren</button></div><p class="note">Orientierung, keine Steuerberatung. Zahlungen zählen im Jahr des Eingangs. Geplante Renovierungen zählen erst, wenn du die Rechnung als Beleg ablegst.</p>`;
+  h+=`<div class="row-actions"><button class="btn primary" data-act="taxCopy">Für den Steuerberater kopieren</button><button class="btn" data-px="repTaxOne" data-id="${esc(m.id)}">Als PDF</button></div><p class="note">Orientierung, keine Steuerberatung. Zahlungen zählen im Jahr des Eingangs. Geplante Renovierungen zählen erst, wenn du die Rechnung als Beleg ablegst.</p>`;
   return h; }
 function taxText(m){ const Y=+ui['taxYear']||new Date().getFullYear()-1, c=taxCalc(m,Y), L=[];
   L.push('Anlage V '+Y+' – '+(m.name||'Objekt')+(m.adresse?', '+m.adresse:''),'');
@@ -1452,7 +1469,7 @@ loadDocs().then(()=>{ render(true); });
 
 /* Einsprung aus einer App: #t=<Bereich>&o=<Objekt> (gemeinsame Tab-Leiste, Kontextzeile) */
 function applyHash(){ const h=location.hash.replace(/^#/,''); if(!/(^|&)t=/.test(h)) return false; const q={}; h.split('&').forEach(x=>{ const i=x.indexOf('='); if(i>0) q[x.slice(0,i)]=decodeURIComponent(x.slice(i+1)); });
-  if(['home','obj','fin','miete','set'].includes(q.t)) tab=q.t;
+  if(['home','obj','fin','miete','set','fristen'].includes(q.t)) tab=q.t;
   if(q.t==='obj'){ objSel=(q.o&&getM(q.o))?q.o:''; if(objSel) objTab='ueb'; }
   if(q.add) setTimeout(()=>openSheet('menu',(q.o&&getM(q.o))?q.o:''),50);
   if(q.t==='fin'&&q.o&&getM(q.o)){ ui['finObj']=q.o; try{ localStorage.setItem(UIKEY,JSON.stringify(ui)); }catch(_){} }
@@ -1487,5 +1504,6 @@ if(location.protocol==='app:'){document.querySelectorAll('#legalDlg p').forEach(
 b.addEventListener('click',function(){if(d.showModal)d.showModal();else d.setAttribute('open','')})})();
 </script>
 
+<script src="plus.js"></script>
 </body>
 </html>

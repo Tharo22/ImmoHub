@@ -247,3 +247,28 @@ body { -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; }
 /* Titelbild direkt auf der Objektseite setzen */
 .ui-cover .cov-btn { position: absolute; top: 10px; right: 10px; z-index: 1; display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 999px; background: rgba(0,0,0,.42); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 .ui-cover .cov-btn:focus-within { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* ImmoHub Plus: Import, Fristen, Einstieg */
+.px-sheet { gap: 12px; }
+.px-file { position: relative; cursor: pointer; text-align: center; }
+.px-list { display: flex; flex-direction: column; gap: 10px; }
+.px-tx { border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; background: var(--bg, transparent); }
+.px-tx.on { border-color: color-mix(in srgb, var(--good) 55%, var(--line)); }
+.px-chk { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.4; cursor: pointer; }
+.px-chk input { width: 22px; height: 22px; margin: 1px 0 0; flex-shrink: 0; accent-color: var(--good); }
+.px-chk small { color: var(--muted); overflow-wrap: anywhere; }
+.px-nm { font-weight: 600; }
+.px-chk2 { display: flex; gap: 10px; align-items: center; font-size: 15px; min-height: 44px; }
+.px-chk2 input { width: 22px; height: 22px; accent-color: var(--good); }
+.px-prog { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.px-prog span { height: 5px; border-radius: 3px; background: var(--line); }
+.px-prog span.on { background: var(--good); }
+.px-welcome .px-steps { margin: 12px 0 14px; padding-left: 22px; line-height: 1.8; font-size: 15px; color: rgba(255,255,255,.88); }
+.px-welcome .row-actions { margin: 0; }
+.px-welcome .btn { min-height: 44px; }
+.px-sheet textarea { width: 100%; box-sizing: border-box; font: 13px/1.4 var(--font-mono, ui-monospace, monospace); }
+.px-welcome .px-wt { font-size: 25px; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; color: #fff; margin-top: 4px; }
+.px-welcome .btn { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.45); }
+.px-welcome .btn.primary { background: #fff; color: #11151a; border-color: #fff; }
+.px-bars { width: 100%; height: 70px; display: block; margin-top: 10px; }
+.px-ax { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); margin: 2px 0 6px; }

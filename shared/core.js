@@ -297,7 +297,7 @@ C.SUMKEY='immo-sum-v1';
 C.pubSum=function(app,map){ try{ var all=JSON.parse(localStorage.getItem(C.SUMKEY)||'{}')||{}; map=map||{}; if(JSON.stringify(all[app]||{})===JSON.stringify(map)) return; all[app]=map; localStorage.setItem(C.SUMKEY,JSON.stringify(all)); }catch(e){} };
 C.sums=function(){ try{ return JSON.parse(localStorage.getItem(C.SUMKEY)||'{}')||{}; }catch(e){ return {}; } };
 /* Stand der Web-Dateien, sichtbar im Hub unter Einstellungen */
-C.BUILD='13 · 10.11.2026';
+C.BUILD='15 · 11.11.2026';
 /* ---- Installierbare Web-App: ein Service Worker für alle Apps (www/sw.js) + Installieren-Knopf ---- */
 C.standalone=function(){ try{ return location.protocol==='app:'||matchMedia('(display-mode: standalone)').matches||navigator.standalone===true; }catch(e){ return false; } };
 C.native=(location.protocol==='app:');

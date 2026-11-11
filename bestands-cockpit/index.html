@@ -569,7 +569,7 @@ function finInfo(o, A, S) {
         var gross = rentOf(o) * 12, vacMax = gross > 0 ? 1 - (r1.opex + r1.ds) / gross : null;
         /* Szenario-Kennzahlen (Basisfall) für den Bereich Finanzierung im Hub */
         var x = { cf1: eur(r1.cf / 12), cf1n: r1.cf < 0, after: afterCf === null ? '–' : eur(afterCf), aftern: afterCf !== null && afterCf < 0, be: beTxt, vac: vacMax === null ? '–' : vacMax < 0 ? 'kein Puffer' : pct(vacMax, 0), need: eur(p.need), irr: pct(p.irr), stress: p.minCf >= 0 ? 'ok' : (p.minCf > -1800 ? 'mid' : 'bad'), h: state.assume.horizon };
-        map[p.o.hubId] = { v: (m >= 0 ? '+' : '−') + eur(Math.abs(m)), s: 'Cashflow/Mon. vor Steuern' + (k.dscr !== null ? ' · DSCR ' + nf(k.dscr, 2) : ''), st: k.dscr === null ? 'ok' : (k.dscr >= 1.2 ? 'ok' : (k.dscr >= 1 ? 'mid' : 'bad')), x: x }; }); }
+        map[p.o.hubId] = { cfm: Math.round(m * 100) / 100, v: (m >= 0 ? '+' : '−') + eur(Math.abs(m)), s: 'Cashflow/Mon. vor Steuern' + (k.dscr !== null ? ' · DSCR ' + nf(k.dscr, 2) : ''), st: k.dscr === null ? 'ok' : (k.dscr >= 1.2 ? 'ok' : (k.dscr >= 1 ? 'mid' : 'bad')), x: x }; }); }
     ImmoCore.pubSum('cp', map); } catch (e) {} }
   function load() {
     try {
