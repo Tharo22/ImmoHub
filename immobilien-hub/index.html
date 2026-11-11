@@ -441,7 +441,7 @@ function lastBackupInfo(){
 let bkText='', restoreText='', restoreFile=null;
 function langCard(){ const p=ImmoCore.langPref(); return `<h2>Sprache</h2><div class="card pad"><label class="fld">Sprache der Oberfläche<select data-lang="1"><option value="" ${p===''?'selected':''}>Automatisch (iPhone-Sprache)</option><option value="de" ${p==='de'?'selected':''}>Deutsch</option><option value="en" ${p==='en'?'selected':''}>English</option></select></label><p class="note" style="margin:0">Gilt für alle Apps. Datum und Zahlen folgen der Sprache.</p></div>`; }
 function viewSich(){
-  let h=bar('Einstellungen und Daten','Mehr')+'<main>'; const lb=lastBackupInfo(); h+=langCard(); h+=lockCard(); h+=ntfCard();
+  let h=bar('Einstellungen und Daten','Mehr')+'<main>'; const lb=lastBackupInfo(); h+=langCard(); if(window.PX) h+=PX.demoCard(); h+=lockCard(); h+=ntfCard();
   const abh=abCard();
   h+=`<h2>Backup</h2><div class="card pad"><p style="margin:0 0 8px">Ein Backup enthält die Daten aller Apps: ${APPS.filter(a=>a.key).map(a=>a.name).join(', ')}. Die Fotos der Besichtigung stecken in der Backup-Datei und im automatischen Backup, nicht im kopierten Text.</p><span class="pill ${lb.cls}">${lb.t}</span>
   ${abh?`<div style="margin-top:14px">${abh}</div><hr style="border:0;border-top:1px solid var(--line);margin:14px 0">`:''}

@@ -206,7 +206,7 @@ function recurHtml(){ const S=px.st, O=hObjs().filter(m=>!m.archived);
 px.welcome=function(){ return `<div class="ui-hero px-welcome" style="margin-top:12px"><div class="l">Willkommen</div><div class="px-wt">Richte ImmoHub in 3 Schritten ein</div>
   <ol class="px-steps"><li>Objekt anlegen</li><li>Darlehen eintragen</li><li>Mieter zuordnen</li></ol>
   <div class="row-actions"><button class="btn primary" data-px="wiz">Jetzt einrichten</button><button class="btn" data-px="objimp">Aus Tabelle importieren</button></div></div>
-  <p class="note">Nur ausprobieren? Unter „Mehr“ lädst du Beispieldaten. Hast du ein Backup, spielst du es dort ein.</p>`; };
+  <div class="row-actions" style="margin:10px 0 0"><button class="btn" data-px="demoLoad">Nur ausprobieren: Beispieldaten laden</button></div><p class="note">Hast du ein Backup, spielst du es unter „Mehr“ ein.</p>`; };
 function wizHtml(){ const S=px.st, st=S.step||1, m=S.obj&&getM(S.obj);
   let h=`<h3>Einrichten · Schritt ${st} von 3</h3><div class="px-prog" aria-hidden="true">${[1,2,3].map(i=>`<span class="${i<=st?'on':''}"></span>`).join('')}</div>`;
   if(st===1) h+=`<p class="note" style="margin:0">Beginne mit einem Objekt, das du schon besitzt. Weitere legst du später unter „Objekte“ an.</p>
@@ -285,9 +285,52 @@ px.cfCard=function(m){ const c=cfOf(m,12); if(!c.has) return ''; const T=c.T, av
     ${c.plan!=null?`<p class="note" style="margin:6px 0 0">${avg>=c.plan?'Besser':'Schlechter'} als geplant um ${eur(Math.abs(avg-c.plan))} pro Monat. Das Cockpit rechnet mit Annahmen für Leerstand, Kosten und Rücklage, hier zählen nur echte Zahlungen und Belege.</p>`:'<p class="note" style="margin:6px 0 0">Nur echte Zahlungen und abgelegte Belege. Tilgung ist enthalten, obwohl sie Vermögen aufbaut. Fehlen Belege, wirkt der Cashflow besser als er ist.</p>'}</div>`;
   return h; };
 
+
+/* ================= 6. Beispieldaten ================= */
+const isDemo=x=>!!(x&&x.demo);
+function realData(){ const V=rd('vermietung-v1'); return hObjs().some(m=>!isDemo(m))||((V&&V.tens)||[]).some(t=>!isDemo(t)); }
+function demoThere(){ return hObjs().some(isDemo); }
+px.demoCard=function(){ const has=demoThere(), real=realData();
+  return `<h2>Beispieldaten</h2><div class="card pad"><p style="margin:0 0 10px">Zum Ausprobieren: drei erfundene Objekte mit Darlehen, drei Mietern, Zahlungen, einem Beleg und Terminen. Alles ist mit „Beispiel“ markiert und lässt sich mit einem Tipp wieder entfernen, ohne deine eigenen Daten anzufassen.</p>
+    <div class="row-actions">${has?'<button class="btn" data-px="demoDel">Beispieldaten entfernen</button>':real?'':'<button class="btn primary" data-px="demoLoad">Beispieldaten laden</button>'}</div>
+    ${!has&&real?'<p class="note" style="margin:6px 0 0">Nicht verfügbar, weil schon eigene Objekte oder Mieter erfasst sind. So vermischen sich Beispiel und echte Zahlen nicht.</p>':''}</div>`; };
+function demoLoad(){ if(realData()||demoThere()) return; const y=new Date().getFullYear(), td=todayS(), cur=ymOf(td), uid=()=>'d'+Math.random().toString(36).slice(2,10);
+  const A=newMaster({name:'Beispiel: Wohnung Musterstraße'}), Bo=newMaster({name:'Beispiel: Altbau Lindenweg'}), C=newMaster({name:'Beispiel: Inserat Gartenstraße'});
+  Object.assign(A,{demo:true,adresse:'Musterstraße 12, 70173 Stuttgart',kp:240000,kauf:(y-4)+'-03-01',qm:64,bj:1994,mw:275000,mwDate:td,loan:190000,zins:1.4,tilg:2,rate1:(y-4)+'-03-30',fix:10,kalt:780});
+  Object.assign(Bo,{demo:true,adresse:'Lindenweg 5, 72072 Tübingen',kp:420000,kauf:(y-2)+'-06-01',qm:138,bj:1912,mw:450000,mwDate:td,loan:330000,zins:3.4,tilg:2,rate1:(y-2)+'-06-30',fix:10,kalt:1450});
+  Object.assign(C,{demo:true,adresse:'Gartenstraße 8, 71034 Böblingen',kp:199000,qm:55,bj:1972,kalt:690});
+  const V=rd('vermietung-v1')||{v:1,objs:[],tens:[],pays:[],abr:{},settings:{kappung:20}}; ['objs','tens','pays'].forEach(k=>{ if(!Array.isArray(V[k])) V[k]=[]; }); V.abr=V.abr||{}; V.settings=V.settings||{kappung:20};
+  const U=(name,hubId,qm)=>{ const o={id:uid(),name,adresse:'',qm,hubId,demo:true}; V.objs.push(o); return o; };
+  const T=(objId,x)=>{ const t=Object.assign({id:uid(),objId,mieter:'',tel:'',mail:'',personen:0,start:'',ende:'',kalt0:0,nk:0,stell:0,art:'fest',idxBasis:null,idxMonat:'',kaution:{betrag:0,eingang:'',anlage:'',rueck:''},changes:[],notiz:'',demo:true},x); V.tens.push(t); return t; };
+  const wA=U('Beispiel: Musterstraße 12',A.id,64), w1=U('Beispiel: Lindenweg EG',Bo.id,70), w2=U('Beispiel: Lindenweg OG',Bo.id,68);
+  const ts=[T(wA.id,{mieter:'Beispiel: Familie Berger',start:(y-4)+'-05-01',kalt0:720,nk:160,stell:40,kaution:{betrag:2160,eingang:(y-4)+'-05-01',anlage:'Mietkautionskonto',rueck:''},changes:[{ab:(y-1)+'-06',kalt:780,nk:null,grund:'vergleich',note:''}]}),
+    T(w1.id,{mieter:'Beispiel: Laura Kern',start:(y-2)+'-08-01',kalt0:690,nk:150,art:'index',idxBasis:117.8,idxMonat:(y-2)+'-08',kaution:{betrag:2070,eingang:(y-2)+'-08-01',anlage:'',rueck:''}}),
+    T(w2.id,{mieter:'Beispiel: Jonas Weber',start:(y-1)+'-01-01',kalt0:720,nk:140,art:'staffel',changes:[{ab:y+'-01',kalt:750,nk:null,grund:'staffel',note:''},{ab:(y+1)+'-01',kalt:780,nk:null,grund:'staffel',note:''}]})];
+  ts.forEach(t=>monthsList(ymOf(t.start),addM(cur,-1)).forEach(m=>{ const so=soll(t,m); if(so) V.pays.push({id:uid(),tid:t.id,datum:m+'-02',monat:m,betrag:so.total,note:'Beispiel',demo:true}); }));
+  recurs().push({id:nid('r'),text:'Rauchmelder prüfen',every:12,next:ImmoCore.addMonths(td,1),obj:A.id,demo:true});
+  hItems().push({id:nid('i'),kind:'aufgabe',text:'Beispiel: Angebot Dachrinne einholen',obj:Bo.id,date:ImmoCore.addMonths(td,0).slice(0,8)+'28',time:'',done:false,ts:Date.now(),demo:true});
+  A.links.ver=wA.id; Bo.links.ver=w1.id;
+  if(!wV(V)) return;
+  /* Kurzfassung wie sie die Vermietung schreibt, damit der Hub sofort rechnet (die Vermietung ersetzt sie beim nächsten Öffnen) */
+  try{ const sm=rd(SUMKEY)||{}; const keep=(sm.mieten||[]).filter(x=>!ts.some(t=>t.id===x.tid));
+    sm.mieten=keep.concat(ts.map(t=>{ const o=V.objs.find(u=>u.id===t.objId)||{}, so=soll(t,cur)||{kalt:t.kalt0,stell:t.stell,nk:t.nk}; return {tid:t.id,oid:o.id,name:o.name||'',qm:o.qm||0,mieter:t.mieter,art:t.art,kalt:so.kalt,nk:so.nk!=null?so.nk:t.nk,stell:so.stell!=null?so.stell:(t.stell||0)}; }));
+    sm.ts=Date.now(); localStorage.setItem(SUMKEY,JSON.stringify(sm)); }catch(e){}
+  refreshSummary(V); saveHub();
+  const blob=new Blob(['Beispielbeleg ImmoHub'],{type:'text/plain'});
+  ImmoCore.docs.add({obj:A.id,kind:'rechnung',name:'Beispiel: Heizungswartung',date:(y)+'-03-14',year:String(y),amount:285},blob).catch(()=>{}).then(()=>loadDocs()).then(()=>{ tab='home'; render(); window.scrollTo(0,0); ImmoCore.haptic('success'); toast('Beispieldaten geladen. Entfernen unter „Mehr“.'); }); }
+function demoDel(){ const ids=hObjs().filter(isDemo).map(m=>m.id); const V=rd('vermietung-v1');
+  if(V){ const tids=new Set((V.tens||[]).filter(isDemo).map(t=>t.id)); V.objs=(V.objs||[]).filter(o=>!isDemo(o)); V.tens=(V.tens||[]).filter(t=>!isDemo(t)); V.pays=(V.pays||[]).filter(p=>!isDemo(p)&&!tids.has(p.tid));
+    Object.keys(V.abr||{}).forEach(k=>{ if([...tids].some(t=>k.indexOf(t+'-')===0)) delete V.abr[k]; }); wV(V); refreshSummary(V); }
+  hub.objs=hub.objs.filter(m=>!isDemo(m)); hub.recur=recurs().filter(r=>!isDemo(r)); hub.items=hItems().filter(i=>!isDemo(i)&&!ids.includes(i.obj));
+  if(!hObjs().length) hub.vh={}; if(hub.payMap) Object.keys(hub.payMap).forEach(k=>{ if(!(V&&(V.tens||[]).some(t=>t.id===hub.payMap[k]))) delete hub.payMap[k]; });
+  saveHub();
+  Promise.all((DOCS||[]).filter(d=>ids.includes(d.obj)).map(d=>ImmoCore.docs.del(d.id).catch(()=>{}))).then(()=>loadDocs()).then(()=>{ objSel=''; render(true); toast('Beispieldaten entfernt.'); }); }
+
 /* ================= Ereignisse ================= */
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-px]'); if(!b) return; const a=b.dataset.px; const v=id=>{ const x=$('#'+id); return x?x.value.trim():''; };
   if(a==='close'){ close(); return; }
+  if(a==='demoLoad'){ demoLoad(); return; }
+  if(a==='demoDel'){ demoDel(); return; }
   if(a==='bank'){ open('bank',{}); return; }
   if(a==='bankNew'){ px.st={}; draw(); return; }
   if(a==='bankBook'){ bankBook(); return; }
