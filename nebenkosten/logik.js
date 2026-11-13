@@ -8,7 +8,11 @@ var NK = {};
 var r2 = NK.r2 = function (x) { var s = x < 0 ? -1 : 1; return s * Math.round((Math.abs(x) + 1e-9) * 100) / 100; };
 var dn = NK.dn = function (iso) { var p = String(iso).split('-'); return Math.round(Date.UTC(+p[0], +p[1] - 1, +p[2]) / 86400000); };
 var iso = NK.iso = function (n) { var d = new Date(n * 86400000); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0'); };
-NK.isDate = function (s) { return /^\d{4}-\d{2}-\d{2}$/.test(s || ''); };
+NK.isDate = function (s) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s || '')) return false;
+  var d = new Date(Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)));
+  return d.getUTCFullYear() === +s.slice(0, 4) && d.getUTCMonth() === +s.slice(5, 7) - 1 && d.getUTCDate() === +s.slice(8, 10);
+};
 var FAR = '9999-12-31';
 NK.FAR = FAR;
 NK.jahrPeriode = function (j) { return { von: j + '-01-01', bis: j + '-12-31' }; };
