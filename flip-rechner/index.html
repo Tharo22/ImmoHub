@@ -7,8 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Flip">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#F7F1F2" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#170F12" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F3F5F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#081225" media="(prefers-color-scheme: dark)">
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="../manifest.webmanifest">
@@ -248,7 +248,7 @@ function hubCardF(){
 /* =====================  HELFER  ===================== */
 const $=q=>document.querySelector(q);
 const {esc,nf,parseDE,toast,kpi}=ImmoCore;
-const eur=v=>(v<0?'−':'')+nf(Math.abs(Math.round(v)),0)+' €';
+const eur=v=>ImmoCore.eur(v,0);
 const eurS=v=>(v>0?'+':'')+eur(v);
 const pct=(v,d)=>v===null||v===undefined||!isFinite(v)?'–':nf(v*100,d===undefined?1:d)+' %';
 const qmE=v=>v===null||v===undefined||!isFinite(v)?'–':nf(Math.round(v),0)+' €/m²';

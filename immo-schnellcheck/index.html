@@ -7,8 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Schnellcheck">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#EEF1F5" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0C1219" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F3F5F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#081225" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/png" href="../shared/icons/icon-192.png">
@@ -410,8 +410,7 @@ function pubSc(){ const L={stark:['Stark','ok'],solide:['Solide','ok'],mittel:['
 /* ---------- Formatierung ---------- */
 const nf=(d)=>new Intl.NumberFormat(ImmoCore.loc,{minimumFractionDigits:0,maximumFractionDigits:d});
 const fmtNum=(v,d)=>nf(d).format(v);
-const eur=(v,d=0,sign=false)=>{ if(v===null||!isFinite(v)) return '–';
-  return new Intl.NumberFormat(ImmoCore.loc,{style:'currency',currency:'EUR',minimumFractionDigits:d,maximumFractionDigits:d,signDisplay:sign?'exceptZero':'auto'}).format(v); };
+const eur=(v,d=0,sign=false)=>ImmoCore.eur(v,d,sign);
 const pct=(v,d=2,sign=false)=>{ if(v===null||!isFinite(v)) return '–';
   return new Intl.NumberFormat(ImmoCore.loc,{minimumFractionDigits:d,maximumFractionDigits:d,signDisplay:sign?'exceptZero':'auto'}).format(v)+' %'; };
 const dec=(v,d=2)=>(v===null||!isFinite(v))?'–':new Intl.NumberFormat(ImmoCore.loc,{minimumFractionDigits:d,maximumFractionDigits:d}).format(v);

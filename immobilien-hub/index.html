@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" class="app-hub">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -7,8 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Immo-Hub">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#EEF0F3" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#11151A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F3F5F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#081225" media="(prefers-color-scheme: dark)">
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="../manifest.webmanifest">
@@ -222,19 +222,18 @@ const APPS=[
   {id:'bes',name:'Besichtigung', key:'besichtigung-v1', url:'../besichtigung/index.html', d:'Checkliste, Fotos und Fragen beim Termin.'},
   {id:'cp', name:'Bestands-Cockpit', short:'Cockpit', key:'bestands-cockpit-v1', url:'../bestands-cockpit/index.html', d:'Portfolio, Finanzierung und Szenarien.'},
   {id:'ver',name:'Vermietung', key:'vermietung-v1', url:'../vermietung/index.html', d:'Mieter, Staffel und Index, Eingang, Abrechnung.'},
-  {id:'nk',name:'Nebenkosten', key:'nebenkosten-v1', url:'../nebenkosten/index.html', d:'Abrechnung, Kaltmiete, Zähler, Belege, Anlage V.'},
   {id:'pv',name:'PV und Wärmepumpe', short:'PV und WP', key:'pvwp-v1', url:'../pv-waermepumpe/index.html', d:'Solar, Speicher, Wärmepumpe, Förderung, Mieter.'},
   {id:'ren',name:'Renovierung', key:'renovierung-v1', url:'../renovierung/index.html', d:'Gewerke, Angebote, 15-%-Grenze, Mieterhöhung.'},
   {id:'flip',name:'Flip-Rechner', short:'Flip', key:'flip-v1', url:'../flip-rechner/index.html', d:'Kauf, Sanierung, Verkauf in 10 Jahren, Spekulationssteuer.'}
 ];
-const GLYPH={"hub": "<rect x=\"14\" y=\"14\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\"/><rect x=\"35\" y=\"14\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\"/><rect x=\"14\" y=\"35\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\"/><rect x=\"35\" y=\"35\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\" opacity=\".55\"/>", "sc": "<path d=\"M13 43a19 19 0 0 1 38 0\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\"/><path d=\"M32 43L42 29\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\"/><circle cx=\"32\" cy=\"43\" r=\"4\" fill=\"#fff\"/>", "bes": "<path d=\"M12 31L32 14l20 17\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M17 28v22h30V28\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linejoin=\"round\"/><path d=\"M25 38l5 5 10-11\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "cp": "<rect x=\"13\" y=\"38\" width=\"9\" height=\"13\" rx=\"2\" fill=\"#fff\"/><rect x=\"27.5\" y=\"29\" width=\"9\" height=\"22\" rx=\"2\" fill=\"#fff\"/><rect x=\"42\" y=\"19\" width=\"9\" height=\"32\" rx=\"2\" fill=\"#fff\"/><path d=\"M14 27l15-9 10 5 12-11\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "ver": "<circle cx=\"23\" cy=\"32\" r=\"10\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\"/><path d=\"M33 32h20M46 32v9M53 32v6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "pv": "<circle cx=\"15\" cy=\"15\" r=\"5.5\" fill=\"#fff\"/><g stroke=\"#fff\" stroke-width=\"3.2\" stroke-linecap=\"round\"><path d=\"M15 5v2.5M5 15h2.5M8 8l1.8 1.8M22 8l-1.8 1.8\"/></g><path d=\"M26 11h28l-5 20H21z\" fill=\"#fff\"/><g stroke=\"#B45309\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M33.5 11l-4 20M43.5 11l-3.5 20M23.7 21h28.3\"/></g><g fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 39c-3 3 3 5 0 8s3 5 0 8\"/><path d=\"M32 39c-3 3 3 5 0 8s3 5 0 8\"/><path d=\"M46 39c-3 3 3 5 0 8s3 5 0 8\"/></g>", "ren": "<rect x=\"10\" y=\"12\" width=\"34\" height=\"14\" rx=\"3.5\" fill=\"#fff\"/><path d=\"M44 19h8v14H33v7\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect x=\"28\" y=\"40\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#fff\"/>", "nk": "<path d=\"M16 12h26l8 8v32H16z\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linejoin=\"round\"/><path d=\"M24 32h16M24 42h16\" stroke=\"#fff\" stroke-width=\"4.5\" stroke-linecap=\"round\"/>", "flip": "<path d=\"M32 11L9 31h7.5v21h31V31H55z\" fill=\"#fff\"/><path d=\"M32 46V32M25 38.5l7-7 7 7\" fill=\"none\" stroke=\"#9C3D54\" stroke-width=\"4.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"};
-const COLS={"hub": "#2A3441", "sc": "#2B4C9B", "bes": "#0E6B73", "cp": "#2E7D4F", "ver": "#5B3F8C", "pv": "#B45309", "ren": "#A63D2F", "flip": "#9C3D54", "nk": "#0F6E5A"};
+const GLYPH={"hub": "<rect x=\"14\" y=\"14\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\"/><rect x=\"35\" y=\"14\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\"/><rect x=\"14\" y=\"35\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\"/><rect x=\"35\" y=\"35\" width=\"15\" height=\"15\" rx=\"4\" fill=\"#fff\" opacity=\".55\"/>", "sc": "<path d=\"M13 43a19 19 0 0 1 38 0\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\"/><path d=\"M32 43L42 29\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\"/><circle cx=\"32\" cy=\"43\" r=\"4\" fill=\"#fff\"/>", "bes": "<path d=\"M12 31L32 14l20 17\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M17 28v22h30V28\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linejoin=\"round\"/><path d=\"M25 38l5 5 10-11\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "cp": "<rect x=\"13\" y=\"38\" width=\"9\" height=\"13\" rx=\"2\" fill=\"#fff\"/><rect x=\"27.5\" y=\"29\" width=\"9\" height=\"22\" rx=\"2\" fill=\"#fff\"/><rect x=\"42\" y=\"19\" width=\"9\" height=\"32\" rx=\"2\" fill=\"#fff\"/><path d=\"M14 27l15-9 10 5 12-11\" fill=\"none\" stroke=\"#fff\" stroke-opacity=\".6\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "ver": "<circle cx=\"23\" cy=\"32\" r=\"10\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\"/><path d=\"M33 32h20M46 32v9M53 32v6\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "pv": "<circle cx=\"15\" cy=\"15\" r=\"5.5\" fill=\"#fff\"/><g stroke=\"#fff\" stroke-width=\"3.2\" stroke-linecap=\"round\"><path d=\"M15 5v2.5M5 15h2.5M8 8l1.8 1.8M22 8l-1.8 1.8\"/></g><path d=\"M26 11h28l-5 20H21z\" fill=\"#fff\"/><g stroke=\"#B45309\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M33.5 11l-4 20M43.5 11l-3.5 20M23.7 21h28.3\"/></g><g fill=\"none\" stroke=\"#fff\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 39c-3 3 3 5 0 8s3 5 0 8\"/><path d=\"M32 39c-3 3 3 5 0 8s3 5 0 8\"/><path d=\"M46 39c-3 3 3 5 0 8s3 5 0 8\"/></g>", "ren": "<rect x=\"10\" y=\"12\" width=\"34\" height=\"14\" rx=\"3.5\" fill=\"#fff\"/><path d=\"M44 19h8v14H33v7\" fill=\"none\" stroke=\"#fff\" stroke-width=\"5\" stroke-linejoin=\"round\" stroke-linecap=\"round\"/><rect x=\"28\" y=\"40\" width=\"10\" height=\"14\" rx=\"3\" fill=\"#fff\"/>", "flip": "<path d=\"M32 11L9 31h7.5v21h31V31H55z\" fill=\"#fff\"/><path d=\"M32 46V32M25 38.5l7-7 7 7\" fill=\"none\" stroke=\"#9C3D54\" stroke-width=\"4.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"};
+const COLS={"hub": "#2A3441", "sc": "#2B4C9B", "bes": "#0E6B73", "cp": "#2E7D4F", "ver": "#5B3F8C", "pv": "#B45309", "ren": "#A63D2F", "flip": "#9C3D54"};
 const ICKEY={sc:'sc',bes:'bes',cp:'cp',ver:'ver',pv:'pv',ren:'ren',flip:'flip'};
 function icon(k,sz){ return `<svg width="${sz}" height="${sz}" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="ig${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#000" stop-opacity=".14"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="${COLS[k]}"/><rect width="64" height="64" rx="15" fill="url(#ig${k})"/>${GLYPH[k]}</svg>`; }
 const SUMKEY='vermietung-summary-v1';
 const $=s=>document.querySelector(s);
 const {esc,nf,toast,kpi}=ImmoCore;
-const eur=v=>nf(Math.round(v),0)+' €', eur2=v=>nf(v,2)+' €';
+const eur=v=>ImmoCore.eur(v,0), eur2=v=>ImmoCore.eur(v,2);
 const r2=v=>Math.round(v*100)/100;
 const fmtD=d=>d&&d.length>=10?ImmoCore.fmtDate(d.slice(0,10)):'';
 const rd=k=>{ try{ const r=localStorage.getItem(k); return r?JSON.parse(r):null; }catch(e){ return null; } };
@@ -250,9 +249,9 @@ function twice(k){ if(armed===k){ armed=null; return true; } armed=k; toast('Zum
 
 /* ---------- Daten der Apps ---------- */
 function data(){
-  const sum=rd(SUMKEY), cp=rd('bestands-cockpit-v1'), bes=rd('besichtigung-v1'), sc=rd('immobilien-schnellcheck-v1'), ver=rd('vermietung-v1');
-  /* Rückstand immer frisch aus den Mietdaten rechnen. Die Kurzfassung der Vermietung ist sonst nach einem Monatswechsel veraltet, bis die App wieder geöffnet wird. */
-  if(sum&&ver&&Array.isArray(ver.tens)){ try{ const a=r2(ver.tens.reduce((x,t)=>x+Math.max(0,saldoV(ver,t)),0)); if(Math.abs(a-(sum.arrears||0))>0.004){ sum.arrears=a; localStorage.setItem(SUMKEY,JSON.stringify(sum)); } }catch(e){} }
+  let sum=rd(SUMKEY); const cp=rd('bestands-cockpit-v1'), bes=rd('besichtigung-v1'), sc=rd('immobilien-schnellcheck-v1'), ver=rd('vermietung-v1');
+  /* Kurzfassung immer frisch aus den Mietdaten (gleiche Berechnung wie in der Vermietung, shared/core.js). Sonst wären Raster, Soll/Ist, Ist-Miete und Steuer-Zuflüsse nach einer Buchung im Hub oder einem Monatswechsel veraltet. */
+  if(ver&&Array.isArray(ver.tens)&&(ver.tens.length||sum)){ const s2=ImmoCore.verPublish(ver); if(s2) return {sum:s2,cp,bes,sc,ver}; }
   return {sum,cp,bes,sc,ver};
 }
 
@@ -379,10 +378,11 @@ function suggest(m,cp){ const n=(m.name||'').trim().toLowerCase(); if(!n||!cp) r
 let mietYear=0;
 function mietRaster(s){
   const vu=urlOf(appDef('ver')); let h='';
-  if(s.sollM!==undefined){ const off=Math.max(0,r2(s.sollM-s.istM));
-    h+='<div class="ui-kpis" style="margin-top:6px">'
-      +`<div class="ui-kpi"><span class="l">Soll ${esc(fmtYm(s.ym))}</span><span class="v">${eur2(s.sollM)}</span><span class="s">Kaltmiete, Nebenkosten, Stellplatz</span></div>`
-      +`<div class="ui-kpi"><span class="l">Offen gesamt</span><span class="v"${s.arrears>0.5?' style="color:var(--bad)"':''}>${eur2(s.arrears)}</span><span class="s">${off>0.5?eur2(off)+' im laufenden Monat':'laufender Monat bezahlt'}</span></div></div>`; }
+  if(s.sollM!==undefined){ const off=Math.max(0,r2(s.sollM-s.istM)), pc=s.sollM>0?Math.max(0,Math.min(100,Math.round(s.istM/s.sollM*100))):0;
+    h+=`<div class="ui-hero ui-prog" role="group" aria-label="Mieteingang im laufenden Monat"><div class="top"><div><div class="l"><span>Eingegangen im</span> <span>${esc(fmtYm(s.ym))}</span></div><div class="v">${eur2(s.istM)}</div></div><span class="l of"><span>von</span> <span>${eur2(s.sollM)}</span></span></div>
+      <div class="track" role="img" aria-label="${pc} Prozent der Mieten sind eingegangen"><i style="width:${pc}%"></i></div>
+      <div class="st ${s.arrears>0.5?'dn':'up'}">${s.arrears>0.5?'Offen gesamt '+eur2(s.arrears)+(off>0.5?' · davon '+eur2(off)+' im laufenden Monat':''):(off>0.5?eur2(off)+' im laufenden Monat noch offen':'Alles bezahlt')}</div></div>`; }
+  if(window.PX) h+=PX.mieteBtn();
   const R=s.raster||{}, ys=Object.keys(R).map(Number).sort();
   if(ys.length){ if(!ys.includes(mietYear)) mietYear=ys[ys.length-1]; const rows=R[mietYear]||[];
     const MS=ImmoCore.lang==='en'?'JFMAMJJASOND':'JFMAMJJASOND';
@@ -390,13 +390,15 @@ function mietRaster(s){
     if(!rows.length) h+='<p class="note" style="margin:0">In diesem Jahr gab es kein Mietverhältnis.</p>';
     else h+='<div class="mr"><div class="mrh"><span></span>'+MS.split('').map(c=>`<span>${c}</span>`).join('')+'</div>'+rows.map(r=>`<a class="mrr" href="${esc(vu+'#/t/'+r.tid)}"><span class="mrn" translate="no">${esc(r.m||r.n)}<small>${esc(r.m?r.n:'')}</small></span>${r.c.map((c,i)=>`<i class="mc-${c||'x'}" title="${esc(fmtYm(mietYear+'-'+String(i+1).padStart(2,'0')))}"></i>`).join('')}</a>`).join('')+'</div>'
       +'<div class="mrl"><span><i class="mc-good"></i>bezahlt</span><span><i class="mc-mid"></i>teilweise</span><span><i class="mc-bad"></i>überfällig</span><span><i class="mc-none"></i>offen</span><span><i class="mc-plan"></i>geplant</span></div>';
-    h+=`</div><div class="row-actions"><a class="btn primary" style="--accent:var(--c-ver)" href="${esc(vu+'#/miete')}">Zahlung erfassen</a></div>`; }
-  if(s.dl&&s.dl.length) h+='<h2>Fristen</h2><div class="card">'+s.dl.map(d=>`<div class="li ${d.state}"><div><div class="a">${esc(d.t)}</div><div class="b">${esc(d.sub||'')}</div></div><div class="when ${d.state==='over'?'t-bad':'t-mid'}">${fmtD(d.date)}</div></div>`).join('')+'</div>';
+    h+=`</div><div class="row-actions"><a class="btn" href="${esc(vu+'#/miete')}">Zahlung von Hand erfassen</a></div>`; }
+  /* Rückstände stehen oben unter „Offen gesamt“ (immer aktuell); die Zeilen der Vermietung dazu können nach einer Buchung im Hub veraltet sein */
+  const dlS=(s.dl||[]).filter(d=>!/^Rückstand/.test(d.t||''));
+  if(dlS.length) h+='<h2>Fristen</h2><div class="card">'+dlS.map(d=>`<div class="li ${d.state}"><div><div class="a">${esc(d.t)}</div><div class="b">${esc(d.sub||'')}</div></div><div class="when ${d.state==='over'?'t-bad':'t-mid'}">${fmtD(d.date)}</div></div>`).join('')+'</div>';
   return h; }
 function viewMiete(){
   const D=data(), s=D.sum, cp=curCp(); let h=bar('Vermietung','Mieten')+'<main>';
   if(!s){ return h+`<div class="empty"><b>Keine Mieterdaten gefunden</b>Öffne die Vermietungs-App, trage Wohnungen mit Mieter ein und schließe sie wieder. Dann erscheinen die aktuellen Mieten hier.</div></main>`+tabbar(); }
-  h+=mietRaster(s); if(window.PX) h+=PX.mieteBtn();
+  h+=mietRaster(s);
   if(!s.mieten.length) return h+`<div class="empty"><b>Keine aktive Vermietung</b>In der Vermietungs-App läuft aktuell kein Mietverhältnis.</div></main>`+tabbar();
   h+='<h2>Abgleich mit dem Cockpit</h2>';
   if(!cp) h+='<div class="warn">Im Bestands-Cockpit sind noch keine Objekte gespeichert. Du siehst die Mieten, kannst sie aber noch nicht zuordnen.</div>';
@@ -541,7 +543,9 @@ function objModel(o0,A,V){
   const oids=[...new Set(Object.keys(hub.map||{}).filter(k=>hub.map[k]===String(o0.id)).concat(hm?verIds(hm):[]))];
   const tens=V&&Array.isArray(V.tens)?V.tens.filter(t=>oids.includes(String(t.objId))):[];
   const meta=reMeta()[String(o0.id)]||{};
-  let kauf=validD(meta.kauf)?meta.kauf:(hm&&validD(kaufDate(hm))?kaufDate(hm):''), fallback=false;
+  /* Ein Kaufdatum für alles: das des Hub-Objekts (Steuer, Verlauf, Zeitleiste). Ein früher nur hier eingetragenes Datum wandert einmalig ins Hub-Objekt. */
+  if(hm&&!validD(hm.kauf)&&validD(meta.kauf)){ hm.kauf=meta.kauf; saveHub(); }
+  let kauf=hm&&validD(hm.kauf)?hm.kauf:(validD(meta.kauf)?meta.kauf:(hm&&validD(kaufDate(hm))?kaufDate(hm):'')), fallback=false;
   if(!kauf){ const st=tens.map(t=>t.start).filter(validD).sort(); if(st.length){ kauf=st[0]; fallback=true; } }
   const base={o,A,H,rows,tens,oids,meta,kauf,fallback};
   if(!kauf) return Object.assign(base,{need:true});
@@ -649,7 +653,7 @@ function viewZeit(cp,o0,D,V,besId){ let h='';
   M.meta=Object.assign({},M.meta,{bes:besId||''});
   /* Daten zum Objekt */
   const units=M.oids.map(id=>{ const x=V&&(V.objs||[]).find(u=>String(u.id)===id); return x?(x.name||'Wohnung').replace(/^Beispiel:\s*/,''):''; }).filter(Boolean);
-    let basis=`<div class="pad"><label class="fld">Kaufdatum<input type="date" data-meta="kauf" data-cid="${esc(o0.id)}" value="${esc(meta.kauf||(!M.fallback&&M.kauf)||'')}"></label>`;
+    let basis=`<div class="pad"><label class="fld">Kaufdatum<input type="date" data-meta="kauf" data-cid="${esc(o0.id)}" value="${esc((!M.fallback&&M.kauf)||meta.kauf||'')}"></label>`;
   basis+=`<p class="note" style="margin:2px 0 0">${units.length?'Zugeordnete Mieteinheiten: '+units.map(esc).join(', ')+'.':'Noch keine Mieteinheit zugeordnet. Das geht im Reiter Mieten. Bis dahin rechnet die Zeitleiste mit der Planmiete aus dem Cockpit.'}</p></div>`;
   h+='<h2>Daten zum Objekt</h2><div class="card">'+basis+'</div>';
   if(M.need) return h+`<div class="warn" style="margin-top:12px">Trage das Kaufdatum ein, dann berechnet der Hub Zeitleiste, Cashflow und Gesamtergebnis ab dem Kauf.</div>`;
@@ -704,7 +708,9 @@ const BRW=[['brw','Bodenrichtwert (€/m²)','num'],['brwDate','Stichtag (Datum)
 const LAENDER=[['BW','Baden-Württemberg','https://www.gutachterausschuesse-bw.de/borisbw/?lang=de'],['BY','Bayern','https://www.boris-bayern.de/'],['BE','Berlin','https://fbinter.stadt-berlin.de/boris/'],['BB','Brandenburg','https://www.boris-brandenburg.de/boris-bb/'],['HB','Bremen','https://www.gutachterausschuss.bremen.de/bodenrichtwerte/bodenrichtwertkarte-online-9915'],['HH','Hamburg','https://www.hamburg.de/bsw/gutachterausschuss/1388404/boris-hh/'],['HE','Hessen','https://hvbg.hessen.de/immobilienwerte/boris-hessen'],['MV','Mecklenburg-Vorpommern','https://www.laiv-mv.de/Geoinformation/Wertermittlung/Bodenrichtwerte/'],['NI','Niedersachsen','https://immobilienmarkt.niedersachsen.de/bodenrichtwerte'],['NW','Nordrhein-Westfalen','https://www.boris.nrw.de/borisplus/?lang=de'],['RP','Rheinland-Pfalz','https://www.boris.rlp.de'],['SL','Saarland','https://geoportal.saarland.de/article/Bodenrichtwerte/'],['SN','Sachsen','https://www.boris.sachsen.de/bodenrichtwerte-aktuell-4032.html'],['ST','Sachsen-Anhalt','https://www.lvermgeo.sachsen-anhalt.de/de/geodatendienst_bodenrichtwerte.html'],['SH','Schleswig-Holstein','https://danord.gdi-sh.de/view/VBORIS'],['TH','Thüringen','https://www.bodenrichtwerte-th.de']];
 const BORIS_D='https://www.bodenrichtwerte-boris.de/borisde/?lang=de';
 const MFT=Object.fromEntries(MF.concat(FIN,MKT,BRW).map(f=>[f[0],f[2]])), MFL=Object.fromEntries(MF.concat(FIN,MKT,BRW).map(f=>[f[0],f[1].replace(/ \(.*\)/,'')]));
-const AD={cp:{f:{name:'name',kp:'price',qm:'area',kalt:'rent',loan:'loan',zins:'zins',tilg:'tilg',rate1:'rate1',fix:'fix',fixEnd:'fixEnd',sonder:'sonder',ratebk:'ratebk',rest:'rest',restDate:'restDate'},create:1,chip:'Cockpit'},bes:{f:{name:'titel',adresse:'adresse',kp:'kp',qm:'qm',bj:'bj',zi:'zi',kalt:'kalt'},create:1,chip:'Besichtigung'},
+/* Steuerwerte, abgeglichen mit dem Bestands-Cockpit (Objekt → Steuer) */
+Object.assign(MFT,{geb:'num',afaPct:'num',nkPct:'num'}); Object.assign(MFL,{geb:'Gebäudeanteil',afaPct:'AfA-Satz',nkPct:'Kaufnebenkosten'});
+const AD={cp:{f:{name:'name',kp:'price',qm:'area',kalt:'rent',loan:'loan',zins:'zins',tilg:'tilg',rate1:'rate1',fix:'fix',fixEnd:'fixEnd',sonder:'sonder',ratebk:'ratebk',rest:'rest',restDate:'restDate',geb:'geb',afaPct:'afa',nkPct:'nk'},create:1,chip:'Cockpit'},bes:{f:{name:'titel',adresse:'adresse',kp:'kp',qm:'qm',bj:'bj',zi:'zi',kalt:'kalt'},create:1,chip:'Besichtigung'},
   ren:{f:{name:'name',adresse:'adresse',qm:'qm',bj:'bj',kp:'kp'},create:1,chip:'Renovierung'},ver:{f:{adresse:'adresse'},create:1,chip:'Vermietung'},pv:{single:1,hubTied:1,f:{name:'name',adresse:'adresse'},chip:'PV und WP'},
   sc:{single:1,hubTied:1,f:{kp:'kp',qm:'qm',bj:'bj',zi:'zi',kalt:'kalt'},chip:'Schnellcheck'},flip:{single:1,hubTied:1,f:{name:'name',qm:'qm',kp:'kp'},chip:'Flip'}};
 const AORDER=['bes','sc','cp','ren','flip','pv','ver'];
@@ -726,7 +732,7 @@ function readVals(app,item){ const o={}; Object.entries(AD[app].f).forEach(([k,a
 const sameV=(k,a,b)=>MFT[k]==='text'?String(a||'')===String(b||''):Math.abs((+a||0)-(+b||0))<0.005;
 const emptyV=v=>v===''||v===0||v==null;
 function diffsOf(m,app,r){ const av=readVals(app,r.item); return Object.keys(av).filter(k=>!sameV(k,m[k],av[k])&&!(emptyV(m[k])&&emptyV(av[k]))).map(k=>({k,mv:m[k],av:av[k]})); }
-function fmtMF(k,v){ if(emptyV(v)) return '–'; if(k==='loan'||k==='rest') return eur(+v); if(k==='zins'||k==='tilg') return nf(+v,2)+' %'; if(k==='restDate'||k==='rate1'||k==='fixEnd') return dDE(v); if(k==='fix') return nf(+v,Math.round(v)===+v?0:1)+' Jahre'; if(k==='sonder') return eur(+v); if(k==='ratebk') return eur2(+v); if(MFT[k]==='text') return esc(v); if(k==='kp'||k==='kalt') return eur(+v); if(k==='qm') return nf(+v,Math.round(v)===+v?0:1)+' m²'; if(k==='bj') return String(Math.round(v)); return nf(+v,Math.round(v)===+v?0:1); }
+function fmtMF(k,v){ if(emptyV(v)) return '–'; if(k==='loan'||k==='rest') return eur(+v); if(k==='zins'||k==='tilg') return nf(+v,2)+' %'; if(k==='geb'||k==='afaPct'||k==='nkPct') return nf(+v,1)+' %'; if(k==='restDate'||k==='rate1'||k==='fixEnd') return dDE(v); if(k==='fix') return nf(+v,Math.round(v)===+v?0:1)+' Jahre'; if(k==='sonder') return eur(+v); if(k==='ratebk') return eur2(+v); if(MFT[k]==='text') return esc(v); if(k==='kp'||k==='kalt') return eur(+v); if(k==='qm') return nf(+v,Math.round(v)===+v?0:1)+' m²'; if(k==='bj') return String(Math.round(v)); return nf(+v,Math.round(v)===+v?0:1); }
 function wApp(app,st){ try{ localStorage.setItem(appDef(app).key,JSON.stringify(st)); return true; }catch(e){ toast('Speichern nicht möglich.'); return false; } }
 /* Prozentfelder: ein einzelnes Trennzeichen ist immer das Dezimalzeichen (3.125 → 3,125 %). */
 const PCT=new Set(['zins','tilg']);
@@ -748,7 +754,7 @@ function createIn(app,m){
   if(app==='cp'){ const st=st0&&Array.isArray(st0.objs)&&!st0.example&&st0.objs.length?st0:{example:false,assume:{rentG:1.5,costG:2,valueG:1.5,anTilg:2,sale:4,horizon:15,grenz:42},scen:{dZins:2,xVac:5,capex:200,capexYear:5,exitDisc:5},nextId:1,fv:null,objs:[]};
     const id=Math.max(st.nextId||1,...st.objs.map(o=>(+o.id||0)+1),1); st.nextId=id+1;
     /* Werte nur aus dem Objekt (oder dem Schnellcheck), keine angenommene Finanzierung */
-    const co={id,name:m.name||'Neues Objekt',price:+m.kp||0,nk:10.6,area:+m.qm||0,loan:0,zins:0,tilg:0,fix:0,rent:+m.kalt||0,nonRec:60,maint:12,vac:2,sonder:0,geb:80,afa:2,hubId:m.id,hubSynced:true};
+    const co={id,name:m.name||'Neues Objekt',price:+m.kp||0,nk:+m.nkPct>0?+m.nkPct:10.6,area:+m.qm||0,loan:0,zins:0,tilg:0,fix:0,rent:+m.kalt||0,nonRec:60,maint:12,vac:2,sonder:0,geb:+m.geb>0?+m.geb:80,afa:+m.afaPct>0?+m.afaPct:afaRateDefault(m.bj),hubId:m.id,hubSynced:true};
     Object.entries(AD.cp.f).forEach(([k,af])=>{ if(!emptyV(m[k])) co[af]=MFT[k]==='text'?String(m[k]):+m[k]; }); if(Array.isArray(m.fin2)) co.fin2=JSON.parse(JSON.stringify(m.fin2));
     const sc=rd('immobilien-schnellcheck-v1'), sn=sc&&(sc.hubId===m.id?sc:((sc.offers||[]).find(x=>x.s&&x.s.hubId===m.id)||{}).s);
     if(sn&&!(co.loan>0)){ const n=v=>isFinite(+v)?+v:0; if(n(sn.darlehen)>0) co.loan=Math.round(n(sn.darlehen)); if(n(sn.zins)>0) co.zins=n(sn.zins); if(n(sn.tilg)>0) co.tilg=n(sn.tilg); if(n(sn.bindung)>0) co.fix=Math.round(n(sn.bindung)); co.dis=n(sn.dis);
@@ -793,7 +799,7 @@ function importObjs(){
 
 /* ---------- Ansicht: Liste, Detail ---------- */
 function chipsOf(m){ return AORDER.filter(a=>m.links&&m.links[a]).map(a=>`<span class="chip" style="--cc:${COLS[a]}">${AD[a].chip}</span>`).join(''); }
-function figsOf(m){ const t=[]; if(m.kp) t.push(eur(m.kp)); if(m.qm) t.push(fmtMF('qm',m.qm)); if(m.kalt) t.push(eur(m.kalt)+' kalt'); return t.join(' · '); }
+function figsOf(m){ const t=[], R=rentShow(m); if(m.kp) t.push(eur(m.kp)); if(m.qm) t.push(fmtMF('qm',m.qm)); if(R.v) t.push(eur(R.v)+(R.ist?' kalt (Ist)':' kalt (Soll)')); return t.join(' · '); }
 const isD=ImmoCore.isDate, dDE=ImmoCore.fmtDate;
 const MFDATE=new Set(['restDate','rate1','mwDate','fixEnd','brwDate']);
 function mfField(m,k,l,t){ const isD=MFDATE.has(k); return `<label class="fld">${l}<input ${isD?'type="date"':'type="text"'} ${(t==='text'||isD)?'':'inputmode="decimal"'} data-mf="${k}" data-oid="${esc(m.id)}" value="${esc(t==='text'?(m[k]||''):(m[k]?ImmoCore.numIn(m[k]):''))}" autocomplete="off"></label>`; }
@@ -840,7 +846,7 @@ function finInputs(m){
   const B=ImmoCore.bounds(m,m.rate1||''); if(!Array.isArray(m.fin2)) m.fin2=[];
   let h='<h2>Finanzierung</h2><div class="card pad"><div class="phh"><b>1. Darlehen</b></div>'
    +mfGrid(m,FIN,[['loan','rate1'],['zins','tilg'],['fix','fixEnd'],['ratebk','sonder']])
-   +'<p class="note" style="margin:2px 0 8px">Die Rate laut Bank (Zins plus Tilgung, ohne Versicherungen) ersetzt die Modellrate. So stimmen Restschuld und „Miete minus Rate“ mit dem Kontoauszug überein.</p>'
+   +'<p class="note" style="margin:2px 0 8px">Die Rate laut Bank (Zins plus Tilgung, ohne Versicherungen) ersetzt die Modellrate. So stimmen Restschuld und „Miete − Rate“ mit dem Kontoauszug überein.</p>'
    +'<p class="note" style="margin:6px 0 4px">Optional: Restschuld laut Bank. Sie überschreibt die Rechnung ab dem Stichtag.</p>'+mfGrid(m,FIN,[['rest','restDate']]);
   m.fin2.forEach((f,i)=>{ h+=`<div class="phb"><div class="phh"><b>${i+2}. Anschlussfinanzierung</b><button class="btn small danger" data-act="phDel" data-i="${i}" data-id="${esc(m.id)}">Entfernen</button></div>`
     +`<p class="note" style="margin:0 0 8px">${B[i]?'Beginnt am '+dDE(B[i])+', übernimmt die Restschuld des Vorgängers.':'Beginnt am Ende der Zinsbindung des Vorgängers. Trage dort die Jahre ein.'}</p>`
@@ -861,7 +867,7 @@ function szenCard(m){ const c=(ImmoCore.sums().cp||{})[m.id], a=appDef('cp'); co
     +`<div class="ui-kpi"><span class="l">EK-Verzinsung</span><span class="v">${esc(x.irr)}</span><span class="s"><span class="ui-pill ${ST[1]}">${ST[0]}</span></span></div>`
     +`</div><div class="row-actions">${link}</div><p class="note">Basisfall aus dem Bestands-Cockpit mit seinen Annahmen. Zinsänderung, Leerstand und Verkauf spielst du dort im Reiter Szenarien durch.</p>`; }
 function viewFin(){
-  const O=hObjs(); let h=bar('Darlehen und Steuer','Finanzen')+'<main>';
+  const O=hObjs(); let h=bar('Darlehen, Steuer, Berichte','Finanzen')+'<main>';
   if(!O.length) return h+'<div class="empty"><b>Noch keine Objekte</b>Lege unter „Objekte“ ein Objekt an. Danach trägst du hier die Finanzierung ein.</div></main>'+tabbar();
   let id=ui['finObj']; if(!getM(id)) id=(O.find(m=>ImmoCore.currentBalance(m))||O[0]).id; const m=getM(id); ui['finObj']=id;
   if(O.length>1) h+=`<label class="fld">Objekt<select data-fo="1">${O.map(o=>`<option value="${esc(o.id)}" ${o.id===id?'selected':''}>${esc(o.name||'Objekt')}</option>`).join('')}</select></label>`;
@@ -869,6 +875,7 @@ function viewFin(){
   h+=`<div class="seg" role="tablist" aria-label="Bereich" style="margin-top:10px"><button type="button" role="tab" data-act="finSeg" data-v="loan" aria-selected="${fseg==='loan'}">Darlehen</button><button type="button" role="tab" data-act="finSeg" data-v="tax" aria-selected="${fseg==='tax'}">Steuerjahr</button><button type="button" role="tab" data-act="finSeg" data-v="rep" aria-selected="${fseg==='rep'}">Berichte</button></div>`;
   if(fseg==='tax') return h+taxView(m)+'</main>'+tabbar();
   if(fseg==='rep'&&window.PX) return h+PX.reportsView()+'</main>'+tabbar();
+  if(window.PX) h+=PX.finOverview()+(O.length>1?'<h2>Dieses Objekt</h2>':'');
   const pl=planOf(m), inp=finInputs(m);
   if(!pl) return h+inp+`<p class="note">Trage Darlehen, Zins, Tilgung und das Datum der ersten Rate ein, dann erscheinen hier Verlauf und Tilgungsplan.</p></main>`+tabbar();
   /* Finanzierungsverlauf */
@@ -908,6 +915,8 @@ function verIds(m){ return unitsOf(m).map(x=>String(x.id)); }
 /* Ersatz, falls die Vermietung noch kein Ergebnis für den Hub geschrieben hat: aktive Mieter aus ihrer Kurzfassung */
 function verAgg(m){ const ids=new Set(verIds(m)); if(!ids.size) return null; const s=rd(SUMKEY); if(!s||!Array.isArray(s.mieten)) return null;
   const L=s.mieten.filter(x=>ids.has(String(x.oid))); return {n:L.length,k:L.reduce((a,x)=>a+(x.kalt||0)+(x.stell||0),0)}; }
+/* Miete für Anzeigen: Ist-Miete laut Vermietung, sobald Mieter verknüpft sind, sonst die Soll-Miete aus dem Objekt */
+function rentShow(m){ const g=verAgg(m); if(g&&g.n) return {v:g.k,ist:true,n:g.n}; return {v:+m.kalt||0,ist:false,n:0}; }
 /* Vorschlag: Wohnung mit gleichem Namen oder gleicher Adresse, die noch keinem Objekt gehört */
 const normN=v=>String(v||'').toLowerCase().replace(/^beispiel:\s*/,'').replace(/str\.?(\s|$)/g,'straße$1').replace(/\s+/g,' ').trim();
 function verSuggest(m){ if(verIds(m).length) return null; const used=new Set(hObjs().filter(o=>o!==m).flatMap(o=>verIds(o)));
@@ -958,7 +967,7 @@ function objOverview(m){
   h+='<div class="ui-kpis">'
     +`<div class="ui-kpi"><span class="l">${mw?'Marktwert':'Kaufpreis'}</span><span class="v">${mw||kp?eur(mw||kp):'–'}</span><span class="s">${mw&&m.mwDate?'Stand '+dDE(m.mwDate):(mw?'eigene Schätzung':(kp?'ohne Marktwert':'nicht eingetragen'))}</span></div>`
     +(cb?`<div class="ui-kpi"><span class="l">Restschuld heute</span><span class="v">${eur(cb.now)}</span><span class="s">Rate ${eur2(cb.pay)}</span></div>`
-        :`<div class="ui-kpi"><span class="l">Kaltmiete</span><span class="v">${+m.kalt?eur(+m.kalt):'–'}</span><span class="s">${+m.kalt&&kp?'Brutto '+nf(m.kalt*12/kp*100,1)+' %':'pro Monat'}</span></div>`)
+        :(()=>{ const R=rentShow(m); return `<div class="ui-kpi"><span class="l">${R.ist?'Kaltmiete (Ist)':'Kaltmiete (Soll)'}</span><span class="v">${R.v?eur(R.v):'–'}</span><span class="s">${R.v&&kp?'Brutto '+nf(R.v*12/kp*100,1)+' %':'pro Monat'}</span></div>`; })())
     +'</div>';
   const T=TILE_ORDER.map(a=>tileOf(m,a,S)), full=T.filter(t=>!t.empty), empty=T.filter(t=>t.empty);
   h+='<h2>Werkzeuge</h2><div class="ui-tiles">'+full.concat(empty).map(t=>t.h).join('')+'</div>';
@@ -1057,7 +1066,7 @@ function objVerlauf(m,D,linked){
 /* ---------- Schnell erfassen: Miete eingegangen ---------- */
 let lastPay=null;
 const wV=V=>{ try{ localStorage.setItem('vermietung-v1',JSON.stringify(V)); return true; }catch(e){ toast('Speichern nicht möglich.'); return false; } };
-function refreshSummary(V){ try{ const s=rd(SUMKEY); if(!s) return; s.arrears=r2((V.tens||[]).reduce((a,t)=>a+Math.max(0,saldoV(V,t)),0)); s.ts=Date.now(); localStorage.setItem(SUMKEY,JSON.stringify(s)); }catch(e){} }
+function refreshSummary(V){ ImmoCore.verPublish(V); }
 function dueList(V){
   const td=todayS(), ym=ymOf(td), late4=+td.slice(8,10)>=4, out=[];
   ((V&&V.tens)||[]).forEach(t=>{ if(!isActiveT(t,td)||!validD(t.start)) return;
@@ -1280,6 +1289,7 @@ document.addEventListener('change',e=>{
     saveHub(); renderSoon(); } return; }
   if(t.dataset&&t.dataset.objlink!==undefined){ const m=getM(objSel); if(m&&t.value){ const app=t.dataset.objlink; linkApp(m,app,t.value); const it=appItems(app).find(x=>String(x.id)===t.value); if(it&&!it.hubId){ /* Markierung, damit die Zuordnung stabil bleibt */ const st=appState(app); const arr=app==='ren'?st.projs:st.objs, x=arr.find(y=>String(y.id)===t.value); if(x){ x.hubId=m.id; wApp(app,st); } } const n=pullFrom(m,app); toast('Zugeordnet'+(n?', '+n+' leere oder abweichende Werte ins Objekt übernommen':'')+'.'); render(true); } return; }
   if(t.dataset&&t.dataset.objsel!==undefined){ objSel=t.value; ui['objSel']=objSel; try{ localStorage.setItem(UIKEY,JSON.stringify(ui)); }catch(_){} render(); return; }
+  if(t.dataset&&t.dataset.meta==='kauf'){ const id=String(t.dataset.cid), hm=hObjs().find(x=>x.links&&String(x.links.cp)===id); if(hm){ if(ImmoCore.isDate(t.value)) hm.kauf=t.value; else delete hm.kauf; const mm=reMeta(); if(mm[id]) delete mm[id].kauf; saveHub(); render(true); return; } }
   if(t.dataset&&t.dataset.meta!==undefined){ const m=reMeta(), id=String(t.dataset.cid); m[id]=m[id]||{}; if(t.value) m[id][t.dataset.meta]=t.value; else delete m[id][t.dataset.meta]; saveHub(); render(true); return; }
   if(t.dataset&&t.dataset.map!==undefined){ if(t.value) hub.map[t.dataset.map]=t.value; else hub.map[t.dataset.map]=''; saveHub(); render(true); return; }
   if(t.id==='rsf'&&t.files&&t.files[0]){ const rdr=new FileReader(); const fn=t.files[0].name; rdr.onload=()=>{ restoreFile={name:fn,text:String(rdr.result||'')}; restoreText=''; render(true); toast('Datei geladen. Jetzt „Wiederherstellen“ tippen.'); }; rdr.readAsText(t.files[0]); }
@@ -1307,7 +1317,7 @@ function undoHub(){ const snap=ImmoCore.snap(); return msg=>{ ImmoCore.haptic('l
 /* ---- Vermögensverlauf (Paket E) ---- */
 function owned(m,S){ return !m.archived&&phaseOf(m,S).i>=2; }
 function balAt(pl,ym){ if(!pl||!pl.rows||!pl.rows.length) return 0; if(ym<pl.rows[0].ym) return pl.start; const r=pl.rows.find(x=>x.ym===ym); return r?r.bal:0; }
-function eqOfObjs(objs,ym){ return objs.reduce((a,m)=>{ const v=+m.mw||+m.kp||0, pl=planOf(m); let d=0; if(pl) d=balAt(pl,ym); else { const cb=ImmoCore.currentBalance(m); d=cb?cb.now:0; } return a+v-d; },0); }
+function eqOfObjs(objs,ym){ return objs.reduce((a,m)=>{ const kd=kaufDate(m); if(kd&&ymOf(kd)>ym) return a; /* vor dem Kauf zählt das Objekt nicht */ const v=+m.mw||+m.kp||0, pl=planOf(m); let d=0; if(pl) d=balAt(pl,ym); else { const cb=ImmoCore.currentBalance(m); d=cb?cb.now:0; } return a+v-d; },0); }
 function equitySeries(objs){ const cur=ymOf(todayS()), out=[]; for(let i=12;i>=0;i--){ const ym=addM(cur,-i), st=hub.vh&&hub.vh[ym]; out.push(st&&st.h&&ym<cur&&isFinite(st.e)?st.e:eqOfObjs(objs,ym)); } return out; }
 function recordVh(e,v,d){ const ym=ymOf(todayS()); if(!hub.vh||typeof hub.vh!=='object') hub.vh={}; const o=hub.vh[ym]; const r={e:Math.round(e),v:Math.round(v),d:Math.round(d),h:1}; if(!o||!o.h||o.e!==r.e||o.v!==r.v){ hub.vh[ym]=r; const ks=Object.keys(hub.vh).sort(); while(ks.length>60) delete hub.vh[ks.shift()]; saveHub(); } }
 function sparkPath(vals,w,hgt){ const mn=Math.min(...vals), mx=Math.max(...vals), rg=mx-mn||1; return vals.map((v,i)=>(i?'L':'M')+(i*w/(vals.length-1)).toFixed(1)+','+(hgt-3-(v-mn)/rg*(hgt-6)).toFixed(1)).join(''); }
@@ -1323,7 +1333,7 @@ function heroCard(D,S){ const A=hObjs().filter(m=>owned(m,S)); if(!A.length) ret
   const eq=val-debt; if(O.length) recordVh(eq,val,debt);
   const ser=O.length?equitySeries(O):[0,0]; ser[ser.length-1]=eq; const d12=ser[ser.length-1]-ser[0], off=D.sum?D.sum.arrears:0, mr=rent-pay;
   return `<div class="ui-hero" role="group" aria-label="Kernzahlen" style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px"><div><div class="l">Eigenkapital im Bestand</div><div class="v" data-count="${Math.round(eq)}">${eur(eq)}</div></div>${O.length?`<span class="ui-pill" style="background:rgba(126,226,168,.16);color:${d12>=0?'#7ee2a8':'#ffb4ad'}">${signedEur(d12)} in 12 M.</span>`:''}</div>
-    <svg viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true"><path d="${sparkPath(ser,300,40)}" fill="none" stroke="#7ee2a8" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>
+    <svg viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true"><path d="${sparkPath(ser,300,40)}" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>
     <div class="split"><div><span class="l">Miete − Rate</span><b class="${mr>=0?'up':'dn'}">${signedEur(mr)}</b></div><div><span class="l">Offen</span><b class="${off>0.5?'dn':''}">${eur(off)}</b></div><div><span class="l">Beleihung</span><b>${val>0?nf(debt/val*100,0)+' %':'–'}</b></div></div></div>
     <p class="note" style="margin:6px 4px 0">Marktwert (oder Kaufpreis) minus Restschuld der Objekte in „Halten“ oder „Verbessern“. Objekte im Kauf zählen erst mit dem ersten Mieter. Der Verlauf folgt der Tilgung, Marktwerte werden ab jetzt monatlich gemerkt.</p>
     <details class="ui-card mrd"><summary>So setzen sich die Zahlen zusammen</summary>
@@ -1345,7 +1355,7 @@ function todayRows(D,S){ const td=todayS(), rows=[], add14=ImmoCore.addMonths(td
     rows.push({date:x.date,over:x.date<td,ic:x.kind==='termin'?String(+x.date.slice(8,10)):'✓',col:x.kind==='termin'?'var(--c-hub)':(x.date<td?'var(--bad)':'var(--none)'),t:(x.kind==='termin'?(x.time?x.time+' · ':''):'')+x.text,s:(m?m.name+' · ':'')+fmtD(x.date),act:`<button class="act" data-act="taskDone" data-id="${esc(x.id)}">Erledigt</button>`,sw:`<button data-act="taskDone" data-id="${esc(x.id)}">Erledigt</button>`}); });
   if(window.PX) PX.todayRows().forEach(r=>rows.push(r));
   return rows.sort((a,b)=>(b.over?1:0)-(a.over?1:0)||(a.date<b.date?-1:a.date>b.date?1:0)); }
-const rowHtml=r=>`<div class="ui-trow">${r.sw?`<div class="bk" aria-hidden="true">${r.sw.replace('<button ','<button tabindex="-1" ')}</div>`:''}<div class="in"${r.sw?' data-sw="1"':''}><span class="ic" style="background:${r.col}">${esc(r.ic)}</span><span class="tx"><span class="t">${esc(r.t)}</span><br><span class="s">${esc(r.s)}</span></span>${r.act||''}</div></div>`;
+const rowHtml=r=>`<div class="ui-trow">${r.sw?`<div class="bk" aria-hidden="true">${r.sw.replace('<button ','<button tabindex="-1" ')}</div>`:''}<div class="in"${r.sw?' data-sw="1"':''}><span class="ic" style="--c:${r.col}">${esc(r.ic)}</span><span class="tx"><span class="t">${esc(r.t)}</span><br><span class="s">${esc(r.s)}</span></span>${r.act||''}</div></div>`;
 /* Wischen nach links zeigt die Aktion (wie in Mail) */
 (function(){ let el=null,x0=0,y0=0,dx=0,lock=0;
   document.addEventListener('touchstart',e=>{ const t=e.target.closest('.ui-trow .in[data-sw]'); document.querySelectorAll('.ui-trow .in.open').forEach(x=>{ if(x!==t){ x.classList.remove('open'); x.style.transform=''; } }); if(!t) return; el=t; x0=e.touches[0].clientX; y0=e.touches[0].clientY; dx=0; lock=0; },{passive:true});
@@ -1356,7 +1366,7 @@ const rowHtml=r=>`<div class="ui-trow">${r.sw?`<div class="bk" aria-hidden="true
 /* ---- Objekt-Karussell und Titelbilder (Pakete B, C) ---- */
 function carousel(S){ const O=hObjs().filter(m=>!m.archived); if(!O.length) return '';
   return '<h2>Objekte</h2><div class="ui-carousel">'+O.map(m=>{ const st=stageOf(m,S), cp=(S.cp||{})[m.id], cb=ImmoCore.currentBalance(m);
-    const g=verAgg(m), rent=g&&g.n?g.k:(+m.kalt||0), v=cp?cp.v+' /Mon.':(cb&&rent?signedEur(rent-cb.pay)+' /Mon.':(rent?eur(rent)+' Miete':(+m.kp?eur(+m.kp):'')));
+    const R=rentShow(m), held=phaseOf(m,S).i>=3&&R.ist, v=held?(cb?'Miete − Rate '+signedEur(R.v-cb.pay):'Miete '+eur(R.v))+' /Mon.':(cb?'Im Kauf · Rate '+eur(cb.pay):(+m.kp?eur(+m.kp):''));
     return `<button type="button" class="ui-oc" data-act="objOpen" data-id="${esc(m.id)}"><span class="img" data-cover="${esc(m.id)}" style="display:block"><i>${esc(st.p[0][0])}</i></span><span class="b"><b translate="no">${esc(m.name||'Objekt')}</b><span>${esc(v)}</span></span></button>`; }).join('')+'</div>'; }
 const coverCache={};
 function coverURL(m){ const key=m.id+'|'+(m.cover||''); if(key in coverCache) return Promise.resolve(coverCache[key]);
@@ -1429,15 +1439,26 @@ function docViewer(id){ const d=(DOCS||[]).find(x=>x.id===id); if(!d) return; Im
 
 /* ---- Steuerjahr je Objekt, Anlage V (Paket D) ---- */
 const afaRateDefault=bj=>{ bj=+bj||0; return bj&&bj<1925?2.5:(bj>=2023?3:2); };
-function buildingBase(m){ if(+m.afaBasis>0) return {v:+m.afaBasis,src:'eigene Angabe'}; const kp=+m.kp||0; if(!kp) return null; const land=(+m.brw||0)*(+m.gf||0); if(land>0&&land<kp) return {v:kp-land,src:'Kaufpreis minus Bodenwert (Bodenrichtwert × Fläche)'}; return {v:kp*0.8,src:'Annahme: 80 % des Kaufpreises'}; }
+/* Steuerdaten aus den verknüpften Apps: zuerst Bestands-Cockpit (Objekt → Steuer), dann Schnellcheck */
+function taxLinked(m){ const n=v=>{ const x=+v; return isFinite(x)?x:0; };
+  if(n(m.geb)>0) return {app:'Objekt',own:true,price:n(m.kp),nk:n(m.nkPct),geb:n(m.geb),afa:n(m.afaPct)};
+  const cp=curCp(); if(cp&&!cp.example){ const o=cp.objs.find(x=>(m.links&&m.links.cp&&String(x.id)===String(m.links.cp))||String(x.hubId||'')===m.id);
+    if(o&&(n(o.geb)>0||n(o.afa)>0)) return {app:'Bestands-Cockpit',price:n(o.price)||n(m.kp),nk:n(o.nk),geb:n(o.geb),afa:n(o.afa)}; }
+  const sc=rd('immobilien-schnellcheck-v1'); if(sc){ const L=[sc].concat((sc.offers||[]).map(x=>x&&x.s)).filter(Boolean), st=L.find(x=>x.hubId===m.id);
+    if(st&&(n(st.geb)>0||n(st.afa)>0)) return {app:'Schnellcheck',price:n(st.kp)||n(m.kp),nk:n(st.grest)+n(st.notar)+n(st.makler),geb:n(st.geb),afa:n(st.afa)}; }
+  return null; }
+function afaRateOf(m){ if(+m.afaPct>0) return {v:+m.afaPct,src:'laut Objekt'}; const L=taxLinked(m); if(L&&L.afa>0) return {v:L.afa,src:'aus '+L.app}; return {v:afaRateDefault(m.bj),src:'nach Baujahr'}; }
+function buildingBase(m){ if(+m.afaBasis>0) return {v:+m.afaBasis,src:'eigene Angabe'};
+  const L=taxLinked(m); if(L&&L.geb>0&&L.price>0) return {v:L.price*(1+L.nk/100)*L.geb/100,src:(L.own?'':'aus '+L.app+': ')+'Gebäudeanteil '+nf(L.geb,0)+' % von Kaufpreis'+(L.nk>0?' plus '+nf(L.nk,1)+' % Nebenkosten':'')};
+  const kp=+m.kp||0; if(!kp) return null; const land=(+m.brw||0)*(+m.gf||0); if(land>0&&land<kp) return {v:kp-land,src:'Kaufpreis minus Bodenwert (Bodenrichtwert × Fläche)'}; return {v:kp*0.8,src:'Annahme: 80 % des Kaufpreises'}; }
 function kaufDate(m){ if(ImmoCore.isDate(m.kauf)) return m.kauf; if(ImmoCore.isDate(m.rate1)) return addM(ymOf(m.rate1),-1)+'-01'; return ''; }
 function taxCalc(m,Y){ const S=rd(SUMKEY), tx=(S&&S.tax&&S.tax[m.id]&&S.tax[m.id][Y])||{miete:0,umlage:0}, pl=planOf(m), y=String(Y);
   const zins=pl?pl.rows.filter(r=>r.ym.slice(0,4)===y).reduce((a,r)=>a+r.it,0):0, plan=pl&&(y+'-12')>ymOf(todayS());
-  const bb=buildingBase(m), rate=+m.afaPct>0?+m.afaPct:afaRateDefault(m.bj), kd=kaufDate(m); let mon=12; if(kd){ const ky=+kd.slice(0,4); mon=ky>Y?0:(ky===Y?13-(+kd.slice(5,7)):12); }
+  const bb=buildingBase(m), ar=afaRateOf(m), rate=ar.v, kd=kaufDate(m); let mon=12; if(kd){ const ky=+kd.slice(0,4); mon=ky>Y?0:(ky===Y?13-(+kd.slice(5,7)):12); }
   const afa=bb?bb.v*rate/100*mon/12:0, D=docsOf(m.id).filter(d=>(d.year||String(d.date||'').slice(0,4))===y), cs=k=>D.filter(d=>d.kind===k).reduce((a,d)=>a+(d.amount||0),0);
   const er=cs('rechnung'), bk=cs('betrieb'), vw=cs('verwaltung'), ein=tx.miete+tx.umlage, wk=zins+afa+er+bk+vw;
   let g15=null; if(kd&&bb){ const end=ImmoCore.addMonths(kd,36), net=docsOf(m.id).filter(d=>d.kind==='rechnung'&&d.date>=kd&&d.date<end).reduce((a,d)=>a+(d.amount||0)/1.19,0); if(todayS()<end||Y<=+end.slice(0,4)) g15={net,lim:bb.v*0.15,end}; }
-  return {tx,zins,plan,bb,rate,mon,afa,er,bk,vw,ein,wk,res:ein-wk,kd,g15,noVer:!(S&&S.tax),nDocs:D.length}; }
+  return {tx,zins,plan,bb,rate,rateSrc:ar.src,mon,afa,er,bk,vw,ein,wk,res:ein-wk,kd,g15,noVer:!(S&&S.tax),nDocs:D.length}; }
 function taxView(m){ const cy=new Date().getFullYear(), kd=kaufDate(m), y0=kd?Math.max(+kd.slice(0,4),cy-6):cy-3; let Y=+ui['taxYear']||cy-1; if(Y<y0||Y>cy) Y=Math.max(y0,cy-1);
   const c=taxCalc(m,Y), row=(l,v,sub,neg)=>`<tr><td>${l}${sub?`<small>${sub}</small>`:''}</td><td>${neg&&v?'−':''}${eur2(Math.abs(v))}</td></tr>`;
   let h=`<div class="ui-chips" role="group" aria-label="Jahr" style="margin:10px 0">${Array.from({length:cy-y0+1},(_,i)=>y0+i).map(y=>`<button type="button" data-act="taxYear" data-v="${y}" aria-pressed="${y===Y}">${y}</button>`).join('')}</div>`;
@@ -1445,12 +1466,12 @@ function taxView(m){ const cy=new Date().getFullYear(), kd=kaufDate(m), y0=kd?Ma
   h+='<h2>Anlage V</h2><div class="ui-card"><table class="ui-tax">'
     +row('Mieteinnahmen',c.tx.miete,'Kaltmiete und Stellplatz, nach Zahlungseingang')+row('Umlagen',c.tx.umlage,'Nebenkosten-Vorauszahlungen')
     +row('Schuldzinsen',c.zins,c.plan?'laut Tilgungsplan, Rest des Jahres geplant':'laut Tilgungsplan',1)
-    +row('AfA '+nf(c.rate,1)+' %'+(c.mon<12?' für '+c.mon+' Monate':''),c.afa,c.bb?'Gebäudewert '+eur(c.bb.v)+' · '+c.bb.src:'Kaufpreis fehlt',1)
+    +row('AfA '+nf(c.rate,1)+' %'+(c.mon<12?' für '+c.mon+' Monate':''),c.afa,(c.bb?'Gebäudewert '+eur(c.bb.v)+' · '+c.bb.src:'Kaufpreis fehlt')+' · Satz '+c.rateSrc,1)
     +row('Erhaltungsaufwand',c.er,'Belege „Rechnung Erhaltung“',1)+row('Betriebskosten',c.bk,'Belege „Betriebskosten“',1)+row('Verwaltung und Sonstiges',c.vw,'Belege',1)
     +`<tr class="sum"><td>${c.res>=0?'Überschuss':'Verlust'}</td><td>${(c.res>=0?'':'−')+eur2(Math.abs(c.res))}</td></tr></table></div>`;
   if(c.noVer) h+='<p class="note">Die Mieteinnahmen kommen aus der Vermietung. Öffne sie einmal, damit sie ihre Zahlen für das Steuerjahr ablegt.</p>';
   if(c.g15){ const over=c.g15.net>c.g15.lim; h+=`<div class="ui-card" style="flex-direction:row;align-items:center;gap:10px;margin-top:10px"><span class="ui-pill ${over?'bad':'mid'}">15-%-Grenze</span><span style="font-size:14px">${over?'Überschritten: ':'Noch '}${eur(Math.abs(c.g15.lim-c.g15.net))}${over?' über der Grenze. Die Kosten sind dann voraussichtlich anschaffungsnah und nur über die AfA absetzbar.':' bis zur Grenze (netto) bis '+fmtD(c.g15.end)+'.'}</span></div>`; }
-  h+=`<h2>Annahmen</h2><div class="ui-card"><div class="ui-row2"><label class="ui-field">Kaufdatum<input type="date" data-tx="kauf" value="${esc(m.kauf||'')}" placeholder="${esc(kd)}"></label><label class="ui-field">AfA-Satz %<input inputmode="decimal" data-tx="afaPct" value="${+m.afaPct>0?esc(nf(m.afaPct,1)):''}" placeholder="${esc(nf(afaRateDefault(m.bj),1))}"></label></div><label class="ui-field">Gebäudewert für die AfA<input inputmode="decimal" data-tx="afaBasis" value="${+m.afaBasis>0?esc(nf(m.afaBasis,0)):''}" placeholder="${c.bb?esc(nf(c.bb.v,0)):''}"></label><p class="note" style="margin:0">Leer gelassen nutzt der Hub das Baujahr für den Satz und Bodenrichtwert und Grundstücksfläche aus Objekt → Daten für den Gebäudewert. Anschaffungsnebenkosten sind nicht enthalten.</p></div>`;
+  h+=`<h2>Annahmen</h2><div class="ui-card"><div class="ui-row2"><label class="ui-field">Kaufdatum<input type="date" data-tx="kauf" value="${esc(m.kauf||'')}" placeholder="${esc(kd)}"></label><label class="ui-field">AfA-Satz %<input inputmode="decimal" data-tx="afaPct" value="${+m.afaPct>0?esc(nf(m.afaPct,1)):''}" placeholder="${esc(nf(c.rate,1))}"></label></div><div class="ui-row2"><label class="ui-field">Gebäudeanteil %<input inputmode="decimal" data-tx="geb" value="${+m.geb>0?esc(nf(m.geb,0)):''}" placeholder="${c.bb&&+m.kp>0?esc(nf(c.bb.v/((+m.kp)*(1+(+m.nkPct||0)/100))*100,0)):'80'}"></label><label class="ui-field">Kaufnebenkosten %<input inputmode="decimal" data-tx="nkPct" value="${+m.nkPct>0?esc(nf(m.nkPct,1)):''}" placeholder="0"></label></div><label class="ui-field">Gebäudewert direkt (ersetzt den Anteil)<input inputmode="decimal" data-tx="afaBasis" value="${+m.afaBasis>0?esc(nf(m.afaBasis,0)):''}" placeholder="${c.bb?esc(nf(c.bb.v,0)):''}"></label><p class="note" style="margin:0">Gebäudeanteil, Nebenkosten und AfA-Satz sind dieselben Werte wie im Bestands-Cockpit unter Objekt → Steuer und werden in beide Richtungen abgeglichen. Leer gelassen nimmt der Hub die Werte aus dem Schnellcheck, sonst Bodenrichtwert und Grundstücksfläche bzw. das Baujahr und erst zuletzt 80 % des Kaufpreises.</p></div>`;
   h+=`<div class="row-actions"><button class="btn primary" data-act="taxCopy">Für den Steuerberater kopieren</button><button class="btn" data-px="repTaxOne" data-id="${esc(m.id)}">Als PDF</button></div><p class="note">Orientierung, keine Steuerberatung. Zahlungen zählen im Jahr des Eingangs. Geplante Renovierungen zählen erst, wenn du die Rechnung als Beleg ablegst.</p>`;
   return h; }
 function taxText(m){ const Y=+ui['taxYear']||new Date().getFullYear()-1, c=taxCalc(m,Y), L=[];

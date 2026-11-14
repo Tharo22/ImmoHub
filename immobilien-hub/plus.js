@@ -115,14 +115,14 @@ function bankBook(){ const V=rd('vermietung-v1'); if(!V) return; const L=px.st.l
   L.forEach(x=>{ const t=(V.tens||[]).find(y=>y.id===x.tid); if(!t) return; const id=bookPay(V,t,x.mon,Math.round(x.a*100)/100); const p=V.pays.find(y=>y.id===id); if(p){ p.datum=x.d; p.note='Kontoauszug'; p.imp=x.key; } ids.push(id); if(x.name) hub.payMap[NORM(x.name)]=t.id; });
   if(!wV(V)) return; refreshSummary(V); saveHub(); const n=ids.length, s=L.reduce((a,x)=>a+x.a,0); close(); render(true); ImmoCore.haptic('success');
   ImmoCore.undoToast(n+' Zahlung'+(n===1?'':'en')+' gebucht, '+eur2(s),()=>{ const W=rd('vermietung-v1'); if(W){ W.pays=(W.pays||[]).filter(p=>!ids.includes(p.id)); if(wV(W)) refreshSummary(W); } render(true); }); }
-px.mieteBtn=()=>`<div class="row-actions" style="margin:10px 0 0"><button class="btn primary" data-px="bank">Kontoauszug einlesen</button></div><p class="note" style="margin:4px 0 0">CSV-Export deiner Bank: Mieteingänge werden erkannt und nach deiner Bestätigung gebucht.</p>`;
+px.mieteBtn=()=>`<button type="button" class="ui-btn primary wide ui-cta" data-px="bank"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M6 11l6 6 6-6M5 21h14"/></svg><span>Kontoauszug einlesen</span></button><p class="note" style="margin:6px 4px 0">CSV-Export deiner Bank: Mieteingänge werden erkannt und nach deiner Bestätigung gebucht.</p>`;
 
 /* ================= 2. Berichte und PDF ================= */
 function printHtml(title,html){ let a=$('#printArea'); if(!a){ a=document.createElement('div'); a.id='printArea'; document.body.appendChild(a); }
   a.innerHTML=html; const t0=document.title; document.title=title; setTimeout(()=>{ try{ window.print(); }catch(e){} setTimeout(()=>{ document.title=t0; },800); },60); }
-const P2=v=>nf(v,2)+' €', P0=v=>nf(Math.round(v),0)+' €';
+const P2=v=>ImmoCore.eur(v,2), P0=v=>ImmoCore.eur(v,0);
 function fixEndOf(m){ try{ return ImmoCore.nextFixEnd({loan:m.loan,zins:m.zins,tilg:m.tilg,fix:m.fix,fixEnd:m.fixEnd,fin2:m.fin2,ratebk:m.ratebk,sonder:m.sonder},m.rate1||'',todayS())||''; }catch(e){ return ''; } }
-function bankRows(incKauf){ const S=ImmoCore.sums(), B=bestandRows(S); return B.filter(x=>x.inB||incKauf).map(x=>{ const m=x.m, pl=planOf(m), cur=pl&&pl.rows?pl.rows.find(r=>r.ym===ymOf(todayS())):null;
+function bankRows(incKauf){ const S=ImmoCore.sums(), B=bestandRows(S); return B.filter(x=>x.inB||incKauf).map(x=>{ const m=x.m, pl=planOf(m), cur=pl&&pl.phases?(pl.phases.find(q=>q.status==='run')||pl.phases[pl.phases.length-1]):null;
   return {m,inB:x.inB,val:x.val,mw:+m.mw||0,kp:+m.kp||0,debt:x.debt,rate:x.p,rent:x.held?x.r:0,zins:cur&&cur.z!=null?cur.z:(+m.zins||0),fixEnd:fixEndOf(m),kd:kaufDate(m)}; }); }
 function bankReport(){ const o=ui['pxRep']||{}, R=bankRows(!!o.kauf), td=todayS();
   const T=R.reduce((a,r)=>{ a.val+=r.val; a.debt+=r.debt; a.rent+=r.rent; a.rate+=r.rate; return a; },{val:0,debt:0,rent:0,rate:0});
@@ -142,7 +142,7 @@ function taxReport(Y,ids){ const O=hObjs().filter(m=>ids.includes(m.id)); let to
     h+=`<div class="pr-o"><h3>${esc(m.name||'Objekt')}${m.adresse?' · '+esc(m.adresse):''}</h3><table class="pr-t pr-tax">`
       +row('Mieteinnahmen',c.tx.miete,'Kaltmiete und Stellplatz, nach Zahlungseingang')+row('Umlagen',c.tx.umlage,'Nebenkosten-Vorauszahlungen')
       +row('Schuldzinsen',c.zins,c.plan?'laut Tilgungsplan, Rest des Jahres geplant':'laut Tilgungsplan',1)
-      +row('AfA '+nf(c.rate,1)+' %'+(c.mon<12?' für '+c.mon+' Monate':''),c.afa,c.bb?'Gebäudewert '+P0(c.bb.v):'Kaufpreis fehlt',1)
+      +row('AfA '+nf(c.rate,1)+' %'+(c.mon<12?' für '+c.mon+' Monate':''),c.afa,(c.bb?'Gebäudewert '+P0(c.bb.v)+' · '+c.bb.src:'Kaufpreis fehlt')+' · Satz '+c.rateSrc,1)
       +row('Erhaltungsaufwand',c.er,'',1)+row('Betriebskosten',c.bk,'',1)+row('Verwaltung und Sonstiges',c.vw,'',1)
       +`<tr class="sum"><td>${c.res>=0?'Überschuss':'Verlust'}</td><td>${c.res>=0?'':'− '}${P2(Math.abs(c.res))}</td></tr></table>`;
     const D=docsOf(m.id).filter(d=>(d.year||String(d.date||'').slice(0,4))===String(Y)&&d.amount>0).sort((a,b)=>a.date<b.date?-1:1);
@@ -281,7 +281,7 @@ px.cfCard=function(m){ const c=cfOf(m,12); if(!c.has) return ''; const T=c.T, av
     <div class="kv"><div>Mieteingänge<small>Zahlungen laut Vermietung, mit Nebenkosten</small></div><b>${eur(T.inc)}</b></div>
     <div class="kv"><div>Darlehensraten<small>Zins und Tilgung laut Tilgungsplan</small></div><b>−${eur(T.rate)}</b></div>
     <div class="kv"><div>Kosten laut Belegen<small>${c.nDocs} Beleg${c.nDocs===1?'':'e'}: Erhaltung, Betriebskosten, Verwaltung</small></div><b>−${eur(T.cost)}</b></div>
-    ${c.miss?`<div class="warn" style="margin:8px 0 0">In ${c.miss} Monat${c.miss===1?'':'en'} ist keine Miete gebucht. Sind die Zahlungen eingegangen, buche sie (zum Beispiel über „Kontoauszug einlesen“ unter Mieten), sonst ist der Cashflow zu niedrig.</div>`:''}
+    ${c.miss?`<div class="warn" style="margin:8px 0 0">Monate ohne gebuchte Miete: <b>${c.miss}</b>. Sind die Zahlungen eingegangen, buche sie (zum Beispiel über „Kontoauszug einlesen“ unter Mieten), sonst ist der Cashflow zu niedrig.</div>`:''}
     ${c.plan!=null?`<p class="note" style="margin:6px 0 0">${avg>=c.plan?'Besser':'Schlechter'} als geplant um ${eur(Math.abs(avg-c.plan))} pro Monat. Das Cockpit rechnet mit Annahmen für Leerstand, Kosten und Rücklage, hier zählen nur echte Zahlungen und Belege.</p>`:'<p class="note" style="margin:6px 0 0">Nur echte Zahlungen und abgelegte Belege. Tilgung ist enthalten, obwohl sie Vermögen aufbaut. Fehlen Belege, wirkt der Cashflow besser als er ist.</p>'}</div>`;
   return h; };
 
@@ -325,6 +325,16 @@ function demoDel(){ const ids=hObjs().filter(isDemo).map(m=>m.id); const V=rd('v
   if(!hObjs().length) hub.vh={}; if(hub.payMap) Object.keys(hub.payMap).forEach(k=>{ if(!(V&&(V.tens||[]).some(t=>t.id===hub.payMap[k]))) delete hub.payMap[k]; });
   saveHub();
   Promise.all((DOCS||[]).filter(d=>ids.includes(d.obj)).map(d=>ImmoCore.docs.del(d.id).catch(()=>{}))).then(()=>loadDocs()).then(()=>{ objSel=''; render(true); toast('Beispieldaten entfernt.'); }); }
+
+
+/* ================= 7. Finanzen: Überblick über alle Darlehen ================= */
+px.finOverview=function(){ const S=ImmoCore.sums(), B=bestandRows(S).filter(x=>x.inB&&x.cb); if(!B.length) return '';
+  const now=B.reduce((a,x)=>a+x.debt,0), orig=B.reduce((a,x)=>a+(+x.m.loan>0?+x.m.loan:x.debt),0), pay=B.reduce((a,x)=>a+x.p,0), pc=orig>0?Math.max(0,Math.min(100,(1-now/orig)*100)):0, td=todayS();
+  let h=`<div class="ui-card ui-debt"><span class="l">Restschuld im Bestand</span><span class="v">${eur(now)}</span><div class="track" role="img" aria-label="${nf(pc,0)} Prozent getilgt"><i style="width:${pc.toFixed(1)}%"></i></div><div class="ft"><span>${nf(pc,0)} % getilgt</span><span>Raten ${eur(pay)} im Monat</span></div></div>`;
+  const L=loans().map(l=>{ const st=ImmoCore.isDate(l.m.rate1)?l.m.rate1:(kaufDate(l.m)||td), tot=Math.max(1,diffM(ymOf(st),ymOf(l.E))), done=Math.max(0,Math.min(tot,diffM(ymOf(st),ymOf(td)))), fw=Math.max(0,Math.min(100,(tot-36)/tot*100)), pl=planOf(l.m), ph=pl&&pl.phases?(pl.phases.find(q=>q.status==='run')||pl.phases[pl.phases.length-1]):null;
+    return {l,p:done/tot*100,fw,z:ph?ph.z:(+l.m.zins||0)}; });
+  if(L.length) h+=`<div class="ui-card ui-zb"><div class="hd"><b>Zinsbindung</b><span class="lg"><i></i>Forward möglich</span></div>${L.map(x=>`<div class="ln"><div class="tp"><span translate="no">${esc(x.l.m.name||'Objekt')}</span><span class="s">${nf(x.z,2)} % · bis ${fmtYm(ymOf(x.l.E))}</span></div><div class="track" role="img" aria-label="Zinsbindung läuft bis ${fmtYm(ymOf(x.l.E))}"><i style="width:${x.p.toFixed(1)}%"></i><u style="left:${x.fw.toFixed(1)}%"></u></div></div>`).join('')}<button type="button" class="ui-btn wide" data-px="fristen">Fristen und Anschlussfinanzierung</button></div>`;
+  return '<h2>Alle Darlehen</h2>'+h; };
 
 /* ================= Ereignisse ================= */
 document.addEventListener('click',e=>{ const b=e.target.closest('[data-px]'); if(!b) return; const a=b.dataset.px; const v=id=>{ const x=$('#'+id); return x?x.value.trim():''; };

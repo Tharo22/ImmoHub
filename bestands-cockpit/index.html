@@ -7,8 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Cockpit">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#F2F5F6" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0E1519" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F3F5F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#081225" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="../manifest.webmanifest">
 <link rel="icon" type="image/png" href="../shared/icons/icon-192.png">
@@ -482,6 +482,9 @@ function breakEvenZins(o, A) {
   for (var i = 0; i < 50; i++) { var m = (lo + hi) / 2; if (cfAt(m) > 0) lo = m; else hi = m; }
   return { k: 'v', v: z0 + lo };
 }
+/* Wert für den Beleihungsauslauf wie im Hub: Marktwert des verknüpften Hub-Objekts, sonst Kaufpreis */
+function ltvBase(o) { try { if (o.hubId) { var m = ImmoCore.hubMasters().filter(function (x) { return x.id === o.hubId; })[0]; if (m && +m.mw > 0) return { v: +m.mw, mw: true }; } } catch (e) {} return { v: o.price || 0, mw: false }; }
+function ltvNote(list) { var n = list.filter(function (o) { return ltvBase(o).mw; }).length; return 'Restschuld heute ÷ ' + (n === 0 ? 'Kaufpreis' : n === list.length ? 'Marktwert' : 'Marktwert, sonst Kaufpreis'); }
 function finInfo(o, A, S) {
   var rows = simObj(o, A, S0, 50), P = rows.P, rowsS = simObj(o, A, S, 50);
   /* Ende der laufenden Zinsbindung, in ganzen Jahren ab heute (0 = unbekannt). */
@@ -499,7 +502,7 @@ function finInfo(o, A, S) {
   return {
     rows: rows, fixY: fixY, rateM: rateM, int1: r1.int, tilg1: r1.pr, sp1: r1.sp, sumInt: sumInt, balFix: balFix,
     payAfter0: payAfter0, payAfterS: payAfterS, payoff: payoff, fixEndYm: fixEndYm, zNow: cb ? cb.z : (o.zins || 0), eff: Math.pow(1 + (cb ? cb.z : o.zins) / 1200, 12) - 1,
-    ltv: o.price > 0 ? dn / o.price : null, eq: eq, inv: inv, ekq: inv > 0 ? eq / inv : null, noi: noi,
+    ltv: ltvBase(o).v > 0 ? dn / ltvBase(o).v : null, eq: eq, inv: inv, ekq: inv > 0 ? eq / inv : null, noi: noi,
     icr: r1.int > 0 ? noi / r1.int : null, dscr: r1.ds > 0 ? noi / r1.ds : null, dsq: r1.rent > 0 ? r1.ds / r1.rent : null,
     dy: dn > 0 ? noi / dn : null, be: gross > 0 ? (r1.opex + r1.ds) / gross : null,
     tax1: r1.tax, afa1: r1.afa, cfA: r1.cfAfter, dis: disOf(o), effD: effRate(o)
@@ -554,7 +557,7 @@ function finInfo(o, A, S) {
   var $ = function (id) { return document.getElementById(id); };
 
   var nf = ImmoCore.nf;
-  function eur(v) { return nf(Math.round(v), 0) + ' €'; }
+  function eur(v) { return ImmoCore.eur(v, 0); }
   function pct(v, d) { return v === null || !isFinite(v) ? '–' : nf(v * 100, d === undefined ? 1 : d) + ' %'; }
   var esc = ImmoCore.esc;
   function neg(v) { return v < 0 ? ' neg' : ''; }
@@ -715,12 +718,12 @@ function finInfo(o, A, S) {
     var renoT = VO.reduce(function (a, o) { return a + (o.reno || 0); }, 0), renoNow = VO.reduce(function (a, o) { return a + ((o.renoYear || 0) <= 0 ? (o.reno || 0) : 0); }, 0), renoMieteT = VO.reduce(function (a, o) { return a + (o.reno > 0 ? (o.renoRent || 0) : 0); }, 0);
     var ekr = ev.eq > 0 ? (cf + pr1) / ev.eq : null, dscr = ds > 0 ? noi / ds : null;
     var repaid = loan > 0 ? 1 - ev.tot[9].bal / loan : null;
-    var main = kpi('Cashflow pro Monat vor Steuern', eur(cf / 12), nf(cf, 0) + ' € pro Jahr', cf < 0) +
+    var main = kpi('Cashflow pro Monat vor Steuern', eur(cf / 12), eur(cf) + ' pro Jahr', cf < 0) +
       kpi('Nettorendite', pct(inv > 0 ? noi / inv : null), 'auf ' + eur(inv) + ' Gesamtinvestition') +
       kpi('Eigenkapitalrendite', pct(ekr), 'mit ' + eur(ev.eq) + ' Eigenkapital', ekr !== null && ekr < 0) +
       kpi('DSCR', dscr === null ? '–' : nf(dscr, 2), 'Nettomiete ÷ Schuldendienst', dscr !== null && dscr < 1);
     var more = kpi('Cashflow pro Monat nach Steuern', eur(cfA / 12), (tax >= 0 ? 'Steuer ' : 'Erstattung ') + eur(Math.abs(tax)) + ' pro Jahr', cfA < 0) +
-      kpi('Beleihungsauslauf', pct(price > 0 ? loan / price : null, 0), 'Restschuld heute ÷ Kaufpreis') +
+      kpi('Beleihungsauslauf', (function () { var b = VO.reduce(function (a, o) { return a + ltvBase(o).v; }, 0); return pct(b > 0 ? loan / b : null, 0); })(), ltvNote(VO)) +
       kpi('Kaufpreisfaktor', rentY > 0 ? nf(price / rentY, 1) + '×' : '–', 'Kaufpreis ÷ Jahreskaltmiete') +
       kpi('Restschuld', eur(ev.tot[0].bal), 'in 12 Monaten, heute ' + eur(loan)) +
       kpi('Getilgt nach 10 Jahren', pct(repaid, 0), 'Restschuld ' + eur(ev.tot[9].bal)) +
@@ -1015,7 +1018,7 @@ function finInfo(o, A, S) {
       kpi('Ø Sollzins', nf(wz, 2) + ' %', 'aktuell, gewichtet nach Restschuld') +
       kpi('Raten pro Monat', eur(rate), eur(rate * 12) + ' pro Jahr') +
       kpi('Zinsen im 1. Jahr', eur(int1), 'Tilgung ' + eur(til1) + (sp1 > 0 ? ' plus Sondertilgung ' + eur(sp1) : '')) +
-      kpi('Beleihungsauslauf', pct(price > 0 ? loan / price : null, 0), 'Restschuld heute ÷ Kaufpreis') +
+      kpi('Beleihungsauslauf', (function () { var L = inf.map(function (x) { return x.o; }), b = L.reduce(function (a, o) { return a + ltvBase(o).v; }, 0); return pct(b > 0 ? loan / b : null, 0); })(), ltvNote(inf.map(function (x) { return x.o; }))) +
       kpi('Eigenkapitalquote', pct(invT > 0 ? Math.max(0, 1 - loan / invT) : null, 0), 'Eigenkapital ÷ Gesamtinvestition');
 
     var byFix = inf.slice().sort(function (a, b) { return (a.f.fixEndYm || '9999') < (b.f.fixEndYm || '9999') ? -1 : 1; });
@@ -1193,7 +1196,9 @@ function finInfo(o, A, S) {
 
   /* ---- Gemeinsames Objekt im Hub ---- */
   var HUBKEY = 'immobilien-hub-v1';
-  var HMAP = [['name', 'name'], ['price', 'kp'], ['area', 'qm'], ['rent', 'kalt'], ['loan', 'loan'], ['zins', 'zins'], ['tilg', 'tilg'], ['rate1', 'rate1'], ['fix', 'fix'], ['fixEnd', 'fixEnd'], ['sonder', 'sonder'], ['ratebk', 'ratebk'], ['rest', 'rest'], ['restDate', 'restDate']];
+  var HMAP = [['name', 'name'], ['price', 'kp'], ['area', 'qm'], ['rent', 'kalt'], ['loan', 'loan'], ['zins', 'zins'], ['tilg', 'tilg'], ['rate1', 'rate1'], ['fix', 'fix'], ['fixEnd', 'fixEnd'], ['sonder', 'sonder'], ['ratebk', 'ratebk'], ['rest', 'rest'], ['restDate', 'restDate'], ['geb', 'geb'], ['afa', 'afaPct'], ['nk', 'nkPct']];
+  /* Steuerwerte: Fehlen sie im Hub, übernimmt der Hub sie aus dem Cockpit (statt sie im Cockpit zu leeren). */
+  var FILLHUB = { geb: 1, afa: 1, nk: 1 };
   /* Leere Felder werden von der anderen Seite gefüllt, bei Abweichung gilt das Hub-Objekt. */
   var hubRead = ImmoCore.hubRead, hubSave = ImmoCore.hubSave, hubMasters = ImmoCore.hubMasters, hubAvail = ImmoCore.hubAvail, hEmpty = ImmoCore.hEmpty, hSame = ImmoCore.hSame;
   /* Abgleich mit dem Hub-Objekt. Beim ersten Verknüpfen füllt das Cockpit leere Felder im Hub.
@@ -1204,7 +1209,7 @@ function finInfo(o, A, S) {
     HMAP.forEach(function (p) {
       var mv = m[p[1]], ov = o[p[0]];
       if (hEmpty(mv) && !hEmpty(ov)) {
-        if (first) { m[p[1]] = ov; chM = true; }
+        if (first || FILLHUB[p[0]]) { m[p[1]] = ov; chM = true; }
         else if (p[0] !== 'name') { o[p[0]] = TXT[p[0]] ? '' : 0; chO = true; }
       }
       else if (!hEmpty(mv) && !hSame(mv, ov)) { o[p[0]] = TXT[p[0]] ? String(mv) : +mv; chO = true; }

@@ -135,6 +135,8 @@ C.currentBalance=function(o){ var P=C.plan(o); if(!P) return null; return {pay:P
 /* ---- Gemeinsame Hilfen für Anzeige und Eingabe ---- */
 C.esc=function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
 C.nf=function(v,d){ return Number(v).toLocaleString(C.loc,{minimumFractionDigits:d,maximumFractionDigits:d}); };
+/* Ein Euro-Format für alle Apps: „1.234 €“, negatives Vorzeichen als echtes Minus, in jeder Sprache mit nachgestelltem €. */
+C.eur=function(v,d,sign){ if(v===null||v===undefined||!isFinite(v)) return '–'; d=d||0; var p=Math.pow(10,d), r=Math.round(Math.abs(v)*p)/p; return (v<0&&r>0?'−':(sign&&r>0?'+':''))+C.nf(r,d)+' €'; };
 /* Zahl aus Texteingabe (deutsches Format, mit € % m² und Minuszeichen −). Bei leerer oder ungültiger Eingabe: fb (Standard 0). */
 C.parseDE=function(v,fb){ var t=String(v).trim().replace(/[\s€%²m]/g,'').replace(/−/g,'-');
   if(C.lang==='en'){ if(/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(t)||(t.indexOf(',')>=0&&t.indexOf('.')>=0)) t=t.replace(/,/g,''); else t=t.replace(',','.'); }
@@ -296,8 +298,49 @@ try{ var st=document.createElement('style'); st.textContent='svg[data-sc]{touch-
 C.SUMKEY='immo-sum-v1';
 C.pubSum=function(app,map){ try{ var all=JSON.parse(localStorage.getItem(C.SUMKEY)||'{}')||{}; map=map||{}; if(JSON.stringify(all[app]||{})===JSON.stringify(map)) return; all[app]=map; localStorage.setItem(C.SUMKEY,JSON.stringify(all)); }catch(e){} };
 C.sums=function(){ try{ return JSON.parse(localStorage.getItem(C.SUMKEY)||'{}')||{}; }catch(e){ return {}; } };
+/* ---- Kurzfassung der Vermietung: EINE Berechnung für Vermietung und Hub ----
+   Beide Apps rufen diese Funktion auf. So zeigen Raster, Soll/Ist, Rückstand, Steuer-Zuflüsse und Kacheln immer dasselbe,
+   egal in welcher App zuletzt gebucht wurde und auch nach einem Monatswechsel. */
+C.verHubId=function(o,h){ if(!o) return ''; if(o.hubId) return o.hubId; if(!h) return '';
+  var L=h.objs||[], m=L.filter(function(x){ return x.links&&String(x.links.ver)===String(o.id); })[0];
+  if(!m){ var cid=h.map&&h.map[String(o.id)]; if(cid) m=L.filter(function(x){ return x.links&&String(x.links.cp)===String(cid); })[0]; }
+  return m?m.id:''; };
+C.verCalc=function(db,td){ td=td||C.today(); var r2=function(v){ return Math.round(v*100)/100; }, p2=function(n){ return String(n).padStart(2,'0'); };
+  var ymOf=function(d){ return (d||'').slice(0,7); }, dim=function(ym){ var a=ym.split('-').map(Number); return new Date(a[0],a[1],0).getDate(); };
+  var months=function(a,b){ var o=[]; for(var m=a;m<=b;m=addYm(m,1)) o.push(m); return o; };
+  var tens=db.tens||[], pays=db.pays||[], objs=db.objs||[], h=C.hubRead(), cur=ymOf(td);
+  var payBy={}; pays.forEach(function(p){ var k=p.tid+'|'+p.monat; payBy[k]=(payBy[k]||0)+(p.betrag||0); });
+  function stateAt(t,ym){ var kalt=t.kalt0||0, nk=t.nk||0; (t.changes||[]).slice().sort(function(a,b){ return a.ab<b.ab?-1:(a.ab>b.ab?1:0); }).forEach(function(c){ if(c.ab&&c.ab<=ym){ if(c.kalt!==null&&c.kalt!==undefined) kalt=c.kalt; if(c.nk!==null&&c.nk!==undefined) nk=c.nk; } }); return {kalt:kalt,nk:nk}; }
+  function occ(t,ym){ var n=dim(ym), first=ym+'-01', last=ym+'-'+p2(n), s=t.start||'0000-01-01', e=t.ende||'9999-12-31'; if(e<first||s>last) return 0; var a=s>first?s:first, b=e<last?e:last; return (+b.slice(8,10)-+a.slice(8,10)+1)/n; }
+  function soll(t,ym){ var f=occ(t,ym); if(!f) return null; var st=stateAt(t,ym); return {f:f,kalt:st.kalt*f,nk:st.nk*f,stell:(t.stell||0)*f,total:(st.kalt+st.nk+(t.stell||0))*f}; }
+  function ist(t,ym){ return payBy[t.id+'|'+ym]||0; }
+  var cutoff=+td.slice(8,10)>=4?cur:addYm(cur,-1);
+  function saldo(t){ if(!t.start) return 0; var from=ymOf(t.start); if(from>cutoff) return 0; var s=0; months(from,cutoff).forEach(function(m){ var so=soll(t,m); if(so) s+=so.total-ist(t,m); }); pays.forEach(function(p){ if(p.tid===t.id&&p.monat>cutoff) s-=p.betrag||0; }); return r2(s); }
+  function active(t){ return (!t.start||t.start<=td)&&(!t.ende||t.ende>=td); }
+  function cell(t,ym){ var so=soll(t,ym); if(!so) return null; var is=ist(t,ym), rest=r2(so.total-is); if(ym>cur) return is>0?'good':'plan'; if(rest<=0.005) return 'good'; if(is>0) return 'mid'; if(ym<cur||+td.slice(8,10)>3) return 'bad'; return 'none'; }
+  var objOf=function(id){ return objs.filter(function(o){ return o.id===id; })[0]; }, tenOf=function(id){ return tens.filter(function(t){ return t.id===id; })[0]; };
+  var mieten=tens.filter(active).map(function(t){ var o=objOf(t.objId)||{}, st=stateAt(t,cur); return {tid:t.id,oid:o.id,name:o.name||'',qm:o.qm||0,mieter:t.mieter||'',art:t.art||'fest',kalt:st.kalt,nk:st.nk,stell:t.stell||0}; });
+  var arrears=r2(tens.reduce(function(a,t){ return a+Math.max(0,saldo(t)); },0));
+  var cy=+td.slice(0,4), raster={}; [cy-1,cy].forEach(function(y){ var ms=months(y+'-01',y+'-12'); raster[y]=tens.filter(function(t){ return ms.some(function(m){ return occ(t,m)>0; }); }).map(function(t){ return {tid:t.id,n:((objOf(t.objId)||{}).name||'Wohnung').replace(/^Beispiel:\s*/,''),m:t.mieter||'',c:ms.map(function(m){ return cell(t,m)||''; })}; }); });
+  var sollM=r2(tens.reduce(function(a,t){ var so=soll(t,cur); return a+(so?so.total:0); },0)), istM=r2(tens.reduce(function(a,t){ return a+(soll(t,cur)?ist(t,cur):0); },0));
+  var tax={}; pays.forEach(function(p){ var t=tenOf(p.tid); if(!t||!p.datum) return; var hid=C.verHubId(objOf(t.objId),h); if(!hid) return;
+    var y=p.datum.slice(0,4), so=soll(t,p.monat)||soll(t,ymOf(p.datum)), b=p.betrag||0, ks=so&&so.total>0?(so.kalt+so.stell)/so.total:1;
+    var e=((tax[hid]=tax[hid]||{})[y]=tax[hid][y]||{miete:0,umlage:0}); e.miete=r2(e.miete+b*ks); e.umlage=r2(e.umlage+b*(1-ks)); });
+  var map={}; objs.forEach(function(o){ var hid=C.verHubId(o,h); if(!hid) return; var e=map[hid]||(map[hid]={k:0,n:0,a:0});
+    tens.forEach(function(t){ if(t.objId!==o.id) return; if(active(t)){ var st=stateAt(t,cur); e.k+=(st.kalt||0)+(t.stell||0); e.n++; } e.a+=Math.max(0,saldo(t)); }); });
+  var e2=function(v){ return C.nf(v,2)+' €'; }, tile={}; Object.keys(map).forEach(function(k){ var e=map[k]; tile[k]={v:e.n?e2(e.k):'–',s:e.n?(e.n+' Mieter')+(e.a>0.5?' · '+e2(e.a)+' offen':' · nichts offen'):'Kein aktiver Mieter',st:e.a>0.5?'bad':(e.n?'ok':'none'),n:e.n}; });
+  return {sum:{n:tens.length,mieten:mieten,arrears:arrears,raster:raster,sollM:sollM,istM:istM,ym:cur,tax:tax},tile:tile}; };
+/* Schreibt die Kurzfassung. dl/dlAll (Fristen) liefert nur die Vermietung selbst; fehlen sie, bleiben die gespeicherten erhalten, ihr Status wird am Datum neu bestimmt. */
+C.verPublish=function(db,dl,dlAll){ try{ var KEY='vermietung-summary-v1', td=C.today(), r=C.verCalc(db,td), old=null; try{ old=JSON.parse(localStorage.getItem(KEY)||'null'); }catch(e){}
+  var s=r.sum; if(dl){ s.dl=dl; s.dlAll=dlAll||[]; }
+  else { var in60=C.localIso(new Date(Date.now()+60*864e5)).slice(0,10), A=((old&&old.dlAll)||[]).filter(function(d){ return d.date>=td; }), D=((old&&old.dl)||[]).slice();
+    A.forEach(function(d){ if(d.date<=in60&&!D.some(function(x){ return x.date===d.date&&x.t===d.t; })) D.push({date:d.date,t:d.t,sub:d.sub,state:'soon'}); });
+    s.dl=D.map(function(d){ return {date:d.date,t:d.t,sub:d.sub,state:C.isDate(d.date)&&d.date<td?'over':'soon'}; }).sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; }).slice(0,8); s.dlAll=A; }
+  var same=old&&JSON.stringify(Object.assign({},old,{ts:0}))===JSON.stringify(Object.assign({},s,{ts:0}));
+  if(!same){ s.ts=Date.now(); localStorage.setItem(KEY,JSON.stringify(s)); } else s.ts=old.ts;
+  C.pubSum('ver',r.tile); return s; }catch(e){ return null; } };
 /* Stand der Web-Dateien, sichtbar im Hub unter Einstellungen */
-C.BUILD='16 · 11.11.2026';
+C.BUILD='20 · 14.11.2026';
 /* ---- Installierbare Web-App: ein Service Worker für alle Apps (www/sw.js) + Installieren-Knopf ---- */
 C.standalone=function(){ try{ return location.protocol==='app:'||matchMedia('(display-mode: standalone)').matches||navigator.standalone===true; }catch(e){ return false; } };
 C.native=(location.protocol==='app:');

@@ -272,3 +272,165 @@ body { -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; }
 .px-welcome .btn.primary { background: #fff; color: #11151a; border-color: #fff; }
 .px-bars { width: 100%; height: 70px; display: block; margin-top: 10px; }
 .px-ax { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); margin: 2px 0 6px; }
+
+/* =====================================================================
+   DESIGN „NAVY & GOLD“ (Stand 20)
+   Eine Schicht über allem: Farben, Schrift, Formen für alle acht Apps.
+   Gold steht nur für Handlungen, Grün und Rot für Plus, Minus und offen.
+   Die Werkzeugfarben (--c-…) bleiben als Kennung der einzelnen Apps.
+   ===================================================================== */
+@font-face { font-family: 'Bricolage Grotesque'; src: url(../immobilien-hub/fonts/bricolage-700.woff) format('woff'); font-weight: 500 800; font-style: normal; font-display: swap; }
+:root {
+  --bg: #F3F5F8; --surface: #FFFFFF; --surface2: #EAEEF4; --surface-2: #EAEEF4;
+  --ink: #0E1F3F; --muted: #566277; --line: #E1E6ED;
+  --good: #17784D; --good-soft: #E3F3EA; --bad: #B8322A; --bad-soft: #FBE9E7;
+  --mid: #8A5A00; --mid-soft: #FBF0D2; --none: #566277; --none-soft: #EAEEF4;
+  --navy: #0E1F3F; --navy-muted: #B9C4D6; --gold: #E9AE2B; --on-gold: #0E1F3F;
+  --c-hub: #0E1F3F;
+  --font-head: 'Bricolage Grotesque', var(--font-body);
+  --font-mono: var(--font-body); --font-num: var(--font-body);
+  --r-sm: 10px; --r-md: 14px; --r-lg: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #081225; --surface: #12203C; --surface2: #1B2C4D; --surface-2: #1B2C4D;
+    --ink: #F1F4F9; --muted: #A9B5C8; --line: #243453;
+    --good: #7EE2A8; --good-soft: #173A33; --bad: #FF9E8F; --bad-soft: #43252B;
+    --mid: #F0C24D; --mid-soft: #3A2F12; --none: #A9B5C8; --none-soft: #1B2C4D;
+    --navy: #182B50; --c-hub: #C9D6EA;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #081225; --surface: #12203C; --surface2: #1B2C4D; --surface-2: #1B2C4D;
+  --ink: #F1F4F9; --muted: #A9B5C8; --line: #243453;
+  --good: #7EE2A8; --good-soft: #173A33; --bad: #FF9E8F; --bad-soft: #43252B;
+  --mid: #F0C24D; --mid-soft: #3A2F12; --none: #A9B5C8; --none-soft: #1B2C4D;
+  --navy: #182B50; --c-hub: #C9D6EA;
+}
+/* Hub: Akzent ist die Schriftfarbe, nicht mehr Schiefergrau */
+:root.app-hub { --accent: #0E1F3F; --accent-ink: #FFFFFF; --accent-soft: #EAEEF4; }
+@media (prefers-color-scheme: dark) { :root.app-hub:not([data-theme="light"]) { --accent: #F1F4F9; --accent-ink: #0E1F3F; --accent-soft: #1B2C4D; } }
+:root.app-hub[data-theme="dark"] { --accent: #F1F4F9; --accent-ink: #0E1F3F; --accent-soft: #1B2C4D; }
+
+/* ---- Schrift ---- */
+.mono, .num, .when { font-family: var(--font-body); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.code, textarea.code, .px-sheet textarea { font-family: ui-monospace, 'SF Mono', Menlo, monospace; }
+main h2, details.fold > summary h2 { font: 700 17px/1.25 var(--font-head); letter-spacing: -.01em; text-transform: none; color: var(--ink); }
+main h2 { margin: 24px 4px 10px; }
+details.fold > summary h2 { font-size: 17px; margin: 0; }
+.bar h1 { font: 700 26px/1.1 var(--font-head); letter-spacing: -.02em; }
+.bar .sub { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; }
+
+/* ---- Flächen ---- */
+.card, .mcard, .ocard, .panel, .ui-card, .empty { border-radius: 20px; }
+.kpi, .ui-kpi { border-radius: 18px; padding: 13px 14px; }
+.kpi .v, .ui-kpi .v, .ui-tile .v, .tile .big { font-family: var(--font-head); font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.kpi .v, .ui-kpi .v { font-size: 21px; line-height: 1.2; }
+.ui-tile { border-radius: 18px; padding: 12px 14px; }
+.warn, .ok { border-radius: 14px; border-color: transparent; }
+.ui-empty { border-radius: 20px; }
+
+/* ---- Knöpfe: Gold nur für die Haupthandlung ---- */
+.btn, .ui-btn { border-radius: 14px; min-height: 44px; font-weight: 600; }
+.btn.small { min-height: 36px; border-radius: 11px; }
+.btn.primary, .ui-btn.primary { background: var(--gold) !important; border-color: var(--gold) !important; color: var(--on-gold) !important; font-weight: 700; }
+.ui-cta { min-height: 52px; border-radius: 16px; font-size: 16px; gap: 10px; margin-top: 12px; }
+.ui-fab { width: 58px; height: 58px; border-radius: 20px; background: var(--gold) !important; color: var(--on-gold) !important; box-shadow: 0 8px 20px rgba(14, 31, 63, .28); }
+.fld input, .fld select, .fld textarea, .ui-field input, .ui-field select, .ui-field textarea { border-radius: 12px; }
+.ui-chips button { min-height: 40px; }
+.ui-chips button[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+/* ---- Umschalter ---- */
+.seg, .ui-seg { background: var(--surface2); border: 0; border-radius: 16px; padding: 4px; gap: 4px; }
+.seg button, .ui-seg button, .ui-seg a { min-height: 44px; border-radius: 12px; font-weight: 600; }
+.seg button[aria-selected="true"], .ui-seg [aria-current], .ui-seg [aria-selected="true"] { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: none; }
+.ui-seg button, .ui-seg a { min-height: 40px; }
+
+/* ---- Reiter unten ---- */
+.tabbar { background: var(--surface); }
+body:not(.hs) .tabbar button { border-radius: 14px; min-height: 52px; font-size: 11px; }
+body:not(.hs) .tabbar button[aria-current="page"] { background: var(--surface2); color: var(--ink); font-weight: 700; }
+body #hubBar a { border-radius: 14px; min-height: 52px; font-size: 11px; }
+body #hubBar a[aria-current] { background: var(--surface2); color: var(--ink); font-weight: 700; }
+
+/* ---- Kopfkarte ---- */
+.ui-hero { background: var(--navy); border-radius: 26px; padding: 20px; gap: 12px; }
+.ui-hero .l { font-size: 13px; color: var(--navy-muted); }
+.ui-hero .v { font: 700 42px/1 var(--font-head); letter-spacing: -.02em; font-variant-numeric: tabular-nums; margin-top: 6px; }
+.ui-hero .ui-pill { font-weight: 700; }
+.ui-hero svg { height: 50px; }
+.ui-hero .split { padding-top: 12px; gap: 10px; }
+.ui-hero .split .l { font-size: 12px; display: block; }
+.ui-hero .split b { font: 700 19px/1.3 var(--font-head); font-variant-numeric: tabular-nums; }
+.ui-hero .up { color: #7EE2A8; } .ui-hero .dn { color: #FF9E8F; }
+/* Fortschritt in der Kopfkarte (Mieten) */
+.ui-prog .top { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+.ui-prog .v { font-size: 34px; }
+.ui-prog .of { font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 14px; }
+.track { position: relative; height: 10px; border-radius: 5px; background: var(--line); }
+.track > i { display: block; height: 100%; border-radius: 5px; background: var(--good); max-width: 100%; }
+.ui-hero .track { background: rgba(255, 255, 255, .16); }
+.ui-hero .track > i { background: var(--gold); }
+.ui-prog .st { font-size: 13px; font-weight: 600; }
+
+/* ---- Finanzen: Überblick ---- */
+.ui-debt { padding: 18px; gap: 10px; }
+.ui-debt .l { font-size: 13px; color: var(--muted); }
+.ui-debt .v { font: 700 34px/1 var(--font-head); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.ui-debt .ft { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ui-zb { margin-top: 10px; padding: 16px 18px; gap: 14px; }
+.ui-zb .hd { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 15px; }
+.ui-zb .lg { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.ui-zb .lg i, .ui-zb .track u { width: 4px; height: 16px; border-radius: 2px; background: var(--gold); display: block; }
+.ui-zb .ln { display: flex; flex-direction: column; gap: 7px; }
+.ui-zb .tp { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; font-weight: 600; }
+.ui-zb .tp .s { font-size: 13px; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ui-zb .track { height: 8px; }
+.ui-zb .track > i { background: var(--ink); }
+.ui-zb .track u { position: absolute; top: -4px; }
+
+/* ---- Heute ---- */
+.ui-card.ui-today { padding: 4px 14px; }
+.ui-trow .in { gap: 12px; padding: 12px 0; }
+.ui-trow .ic { width: 40px; height: 40px; border-radius: 12px; font: 700 16px var(--font-body); background: color-mix(in srgb, var(--c, var(--muted)) 14%, var(--surface)); color: var(--c, var(--muted)); }
+.ui-trow .t { font-size: 15px; } .ui-trow .s { font-size: 13px; }
+.ui-trow .act { min-height: 44px; padding: 0 14px; border-radius: 12px; color: var(--ink); font-size: 14px; display: inline-flex; align-items: center; text-decoration: none; }
+
+/* ---- Objekte ---- */
+.ui-oc { width: 164px; border-radius: 20px; }
+.ui-oc .img, .ui-cover { background-color: var(--navy); background-image: none; }
+.ui-oc .img { height: 84px; }
+.ui-oc .img i { left: 10px; bottom: 8px; border-radius: 12px; padding: 3px 9px; font-size: 11.5px; background: var(--gold); color: var(--on-gold); }
+.ui-oc .b { padding: 10px 12px 12px; gap: 3px; }
+.ui-oc .b b { font-size: 15px; }
+.ui-oc .b span { font: 600 13px var(--font-body); font-variant-numeric: tabular-nums; color: var(--muted); }
+.ui-cover { height: 176px; border-radius: 24px; padding: 16px; }
+.ui-cover .t { font: 700 26px/1.1 var(--font-head); letter-spacing: -.02em; }
+.ui-cover .a { font-size: 14px; opacity: 1; color: #DCE3EE; }
+.ui-cover .cov-btn { top: 12px; right: 12px; min-height: 40px; padding: 0 14px; border-radius: 14px; background: rgba(255, 255, 255, .16); font-weight: 600; }
+/* Phase als Balken */
+.ui-steps { gap: 6px; }
+.ui-steps li { gap: 6px; font-size: 11px; font-weight: 500; }
+.ui-steps li::before { display: none; }
+.ui-steps li i, .ui-steps li.cur i { width: 100%; height: 6px; border-radius: 3px; border: 0; background: var(--line); }
+.ui-steps li.done i { background: var(--ink); }
+.ui-steps li.cur i { background: var(--gold); }
+.ui-steps li.done { color: var(--ink); } .ui-steps li.cur { color: var(--ink); font-weight: 700; }
+
+/* ---- Mietraster als Punkte ---- */
+.mrr i { height: 14px; width: 14px; border-radius: 5px; justify-self: center; }
+.mc-good { background: var(--good) !important; } .mc-bad { background: var(--bad) !important; } .mc-mid { background: var(--gold) !important; }
+.mrl i { border-radius: 4px; }
+
+/* ---- Listen ---- */
+.li.over, .li.soon { box-shadow: none; }
+.li.over .a::before, .li.soon .a::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; background: var(--bad); vertical-align: 1px; }
+.li.soon .a::before { background: var(--gold); }
+.pill, .ui-pill { font-weight: 700; }
+.ui-sheet { border-radius: 26px 26px 0 0; }
+.ui-qa button { border-radius: 16px; border-color: transparent; }
+.ui-qa i { width: 36px; height: 36px; border-radius: 11px; }
+.toast, .ui-undo { border-radius: 14px; }
+/* Hub: Kopfzeile ohne Verlauf und ohne Logo, wie im Entwurf */
+:root.app-hub .bar { padding-left: 16px; background: var(--bg); border-bottom: 0; padding-top: 14px; }
+:root.app-hub .bar::before { display: none; }

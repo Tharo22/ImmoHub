@@ -7,8 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Besichtigung">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#EDF0F1" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0B1115" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F3F5F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#081225" media="(prefers-color-scheme: dark)">
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="../manifest.webmanifest">
@@ -298,8 +298,8 @@ const $=(s,r)=> (r||document).querySelector(s);
 const {esc,parseDE}=ImmoCore;
 const NF={};
 const nf=d=>NF[d]||(NF[d]=new Intl.NumberFormat(ImmoCore.loc,{minimumFractionDigits:0,maximumFractionDigits:d}));
-const eur=(v,sign)=>(v===null||v===undefined||!isFinite(v))?'–':new Intl.NumberFormat(ImmoCore.loc,{style:'currency',currency:'EUR',maximumFractionDigits:0,signDisplay:sign?'exceptZero':'auto'}).format(v);
-const eur2=v=>(v===null||!isFinite(v))?'–':new Intl.NumberFormat(ImmoCore.loc,{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
+const eur=(v,sign)=>ImmoCore.eur(v,0,sign);
+const eur2=v=>ImmoCore.eur(v,2);
 const pct=(v,d)=>(v===null||!isFinite(v))?'–':new Intl.NumberFormat(ImmoCore.loc,{minimumFractionDigits:d==null?1:d,maximumFractionDigits:d==null?1:d}).format(v)+' %';
 const fmtIn=(v,d)=>v?nf(d||0).format(v):'';
 const fmtF=(k,v)=>k==='bj'?(v?String(v):''):fmtIn(v,k==='zi'?1:(k==='qm'?2:0));

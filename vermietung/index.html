@@ -7,8 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Vermietung">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#F0EEF3" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#121019" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F3F5F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#081225" media="(prefers-color-scheme: dark)">
 <meta name="format-detection" content="telephone=no">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="../manifest.webmanifest">
@@ -219,8 +219,8 @@ details.crow[open]>summary .hd::after{transform:translateY(-30%) rotate(-135deg)
 const $=(s,r)=>(r||document).querySelector(s);
 const {esc}=ImmoCore;
 const nfC={}; const nf=d=>nfC[ImmoCore.loc+d]||(nfC[ImmoCore.loc+d]=new Intl.NumberFormat(ImmoCore.loc,{minimumFractionDigits:d,maximumFractionDigits:d}));
-const eur=(v,sign)=>(v===null||v===undefined||!isFinite(v))?'–':new Intl.NumberFormat(ImmoCore.loc,{style:'currency',currency:'EUR',maximumFractionDigits:0,signDisplay:sign?'exceptZero':'auto'}).format(v);
-const eur2=(v,sign)=>(v===null||v===undefined||!isFinite(v))?'–':new Intl.NumberFormat(ImmoCore.loc,{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2,signDisplay:sign?'exceptZero':'auto'}).format(v);
+const eur=(v,sign)=>ImmoCore.eur(v,0,sign);
+const eur2=(v,sign)=>ImmoCore.eur(v,2,sign);
 const pct=(v,d)=>(v===null||!isFinite(v))?'–':nf(d==null?1:d).format(v)+' %';
 const fmtIn=(v,d)=>(v===null||v===undefined||v===''||!isFinite(v)||v===0)?'':nf(d==null?2:d).format(v).replace(/,00$/,'');
 const r2=v=>Math.round(v*100)/100;
@@ -250,25 +250,10 @@ function save(){ clearTimeout(saveT); saveT=setTimeout(flush,250); }
 function flush(){ try{ localStorage.setItem(KEY,JSON.stringify(db)); }catch(e){ storageOk=false; } publishSummary(); }
 /* Kurzfassung für den Immobilien-Hub (nur Zahlen, keine Telefon- oder Mailangaben) */
 function publishSummary(){ try{
-  const ym=ymOf(today());
-  const mieten=db.tens.filter(t=>isActive(t)).map(t=>{ const o=getObj(t.objId)||{}, st=stateAt(t,ym); return {tid:t.id,oid:o.id,name:o.name||'',qm:o.qm||0,mieter:t.mieter||'',art:t.art||'fest',kalt:st.kalt,nk:st.nk,stell:t.stell||0}; });
-  const arrears=r2(db.tens.reduce((a,t)=>a+Math.max(0,saldo(t)),0));
   const dl=deadlines().filter(d=>d.state!=='later').slice(0,8).map(d=>({date:d.date,t:d.t,sub:d.sub,state:d.state}));
   const dlAll=deadlines().filter(d=>d.kind!=='pay'&&d.date>=today()).map(d=>({date:d.date,t:d.t,sub:d.sub,kind:d.kind,tid:d.tid}));
-  /* Monatsraster für den Bereich Mieten im Hub: aktuelles und voriges Jahr */
-  const td=today(), cy=+td.slice(0,4), raster={};
-  [cy-1,cy].forEach(y=>{ const ms=monthsList(y+'-01',y+'-12'); raster[y]=db.tens.filter(t=>ms.some(m=>occ(t,m)>0)).map(t=>({tid:t.id,n:((getObj(t.objId)||{}).name||'Wohnung').replace(/^Beispiel:\s*/,''),m:t.mieter||'',c:ms.map(m=>cellState(t,m,ym,td)||'')})); });
-  const sollM=r2(db.tens.reduce((a,t)=>{ const so=soll(t,ym); return a+(so?so.total:0); },0)), istM=r2(db.tens.reduce((a,t)=>a+(soll(t,ym)?ist(t,ym):0),0));
-  /* Steuerjahr im Hub: Zuflüsse je Hub-Objekt und Kalenderjahr (Zahlungsdatum), aufgeteilt in Miete und Umlagen nach dem Soll des Monats */
-  const tax={}; db.pays.forEach(p=>{ const t=getTen(p.tid); if(!t||!p.datum) return; const hid=hubIdOf(getObj(t.objId)); if(!hid) return;
-    const y=p.datum.slice(0,4), so=soll(t,p.monat)||soll(t,ymOf(p.datum)), b=p.betrag||0, ks=so&&so.total>0?(so.kalt+so.stell)/so.total:1;
-    const e=((tax[hid]=tax[hid]||{})[y]=tax[hid][y]||{miete:0,umlage:0}); e.miete=r2(e.miete+b*ks); e.umlage=r2(e.umlage+b*(1-ks)); });
-  localStorage.setItem('vermietung-summary-v1',JSON.stringify({ts:Date.now(),n:db.tens.length,mieten,arrears,dl,dlAll,raster,sollM,istM,ym,tax}));
-  /* Kachel im Hub: Kaltmiete der aktiven Mieter je Hub-Objekt, offene Beträge */
-  const map={}; db.objs.forEach(o=>{ const hid=hubIdOf(o); if(!hid) return; const e=map[hid]||(map[hid]={k:0,n:0,a:0});
-    db.tens.filter(t=>t.objId===o.id).forEach(t=>{ if(isActive(t)){ const st=stateAt(t,ym); e.k+=(st.kalt||0)+(t.stell||0); e.n++; } e.a+=Math.max(0,saldo(t)); }); });
-  const out={}; Object.keys(map).forEach(h=>{ const e=map[h]; out[h]={v:e.n?eur2(e.k):'–',s:e.n?(e.n+(e.n===1?' Mieter':' Mieter'))+(e.a>0.5?' · '+eur2(e.a)+' offen':' · nichts offen'):'Kein aktiver Mieter',st:e.a>0.5?'bad':(e.n?'ok':'none'),n:e.n}; });
-  ImmoCore.pubSum('ver',out);
+  /* Raster, Soll/Ist, Rückstand, Steuer-Zuflüsse und Hub-Kachel rechnet shared/core.js, identisch für Vermietung und Hub */
+  ImmoCore.verPublish(db,dl,dlAll);
 }catch(e){} }
 window.addEventListener('pagehide',flush);
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) flush(); });
